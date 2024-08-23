@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VivaMQ Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: 'Work Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #EDEBE5;
+            height: 12vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2vw;
+        }
+        .logo {
+            height: 10vh;
+        }
+        .heading {
+            color: #A6192E;
+            font-size: 6vh;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .user-controls {
+            display: flex;
+            align-items: center;
+        }
+        .user-icon {
+            width: 4vh;
+            height: 4vh;
+            background-color: #D6D2C4;
+            margin-right: 1vw;
+            border-radius: 0.8vh;
+        }
+        .logout-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .logout-button img {
+            width: 3vh;
+            height: 3vh;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .toolbar {
+            width: 17.5vw;
+            background-color: #D9D9D9;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2vh;
+        }
+        .toolbar-top, .toolbar-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .toolbar-button {
+            background-color: #999595;
+            color: black;
+            border: none;
+            padding: 2vh 2vw;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 2.5vh;
+            margin: 1vh 0;
+            cursor: pointer;
+            border-radius: 0.5vh;
+            width: 80%;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .new-project-box {
+            text-align: center;
+            padding: 2vh;
+            background-color: #D6D2C4;
+            border-radius: 1vh;
+        }
+        .new-project-box img {
+            width: 5vh;
+            height: 5vh;
+            margin-top: 1vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <img src="MqLogo.png" alt="MQ Logo" class="logo">
+            <a href="dashboard.html" class="heading">VivaMQ</a>
+            <div class="user-controls">
+                <div class="user-icon"></div>
+                <button class="logout-button">
+                    <img src="logout.png" alt="Logout">
+                </button>
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="toolbar">
+                <div class="toolbar-top">
+                    <a href="classes.html" class="toolbar-button">Classes</a>
+                </div>
+                <div class="toolbar-bottom">
+                    <a href="settings.html" class="toolbar-button">Settings</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="new-project-box">
+                    <p>Start a new project</p>
+                    <img src="plus.png" alt="New Project">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
