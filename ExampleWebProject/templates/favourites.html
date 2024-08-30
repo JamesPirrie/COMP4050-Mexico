@@ -1,0 +1,19 @@
+{% extends 'layouts/base.html' %}  {% block content %}
+
+<h3>Favourites</h3>
+<div>
+  Here they are (if this was working)
+</div>
+{% endblock content %}
+
+<!-- Task 9: 
+Secure coding principles:
+- Design to fail securely - Error handling with use of appropriate pages.
+- Principle of least privilege - functional for only logged in users.
+- Logging and monitoring to alert suspicious activity and failures
+Tests that would be implemented:
+- A logged in user favourites a photo; should be successful.
+- A non logged in user favourites a photo; nothing happens.
+- A logged in user navigates to the favourites page; it should be successful.
+- A non logged in user navigates to the favourites page; it should result in an error.
+-->
