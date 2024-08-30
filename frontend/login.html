@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VivaMQ Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="MqLogo.png" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
+            <h1 style="color: #A6192E;">VivaMQ Login</h1>
+            <p>Choose an option to continue:</p>
+            <button onclick="redirectToOkta()" class="login-button">Login with MQ</button>
+            <button onclick="skipLogin()" class="admin-button">Skip Login (Admin)</button>
+        </div>
+    </div>
+
+    <script>
+        function redirectToOkta() {
+            // Replace this URL with your actual Okta login URL
+            window.location.href = "https://mq.okta.com/app/mq_estudentnew_1/exkijv9d06f840gdl2p7/sso/saml";
+        }
+
+function skipLogin() {
+    // Redirect to dashboard for admin access
+    window.location.href = "dashboard.html";
+}
+</script>
+</body>
+</html>
