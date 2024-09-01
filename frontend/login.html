@@ -14,7 +14,7 @@
             <h1 style="color: #A6192E;">VivaMQ Login</h1>
             <p>Choose an option to continue:</p>
             <button onclick="redirectToOkta()" class="login-button">Login with MQ</button>
-            <button onclick="skipLogin()" class="admin-button">Skip Login (Admin)</button>
+            <button onclick="userLogin()" class="admin-button"> Login Normally</button>
         </div>
     </div>
 
@@ -24,9 +24,9 @@
             window.location.href = "https://mq.okta.com/app/mq_estudentnew_1/exkijv9d06f840gdl2p7/sso/saml";
         }
 
-function skipLogin() {
+function userLogin() {
     // Redirect to dashboard for admin access
-    window.location.href = "dashboard.html";
+    window.location.href = "loginDirect.html";
 }
 </script>
 </body>
