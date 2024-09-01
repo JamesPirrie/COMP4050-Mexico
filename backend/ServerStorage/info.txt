@@ -1,0 +1,4 @@
+Welcome to the ServerStorage folder.
+
+Inside this folder we will store everything that isn’t inside the database.
+This will include the student submissions for the MVP and the rubrics and marking criteria in the future.
