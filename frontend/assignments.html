@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VivaMQ - Assignments and Students</title>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+    <style>
+        .content {
+            padding: 20px;
+            position: relative;
+            height: calc(100% - 40px);
+            display: flex;
+        }
+        .assignments-section, .students-section {
+            /* width: 50%;
+            padding: 0 10px;
+            position: relative;
+            height: 100%;
+            text-align: center; */
+            padding: 30px;
+            background-color: #D6D2C4;
+            border-radius: 10px;
+            margin: 20px;
+            position: relative;
+            height: 100%;
+            width: 800px;
+        }
+        .assignments-list, .students-list {
+            margin-top: 20px;
+            height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+        .add-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .add-button:hover {
+            background-color: #8a1426;
+        }
+        .new-assignment-bar {
+            display: none;
+            background-color: #D6D2C4;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .new-assignment-bar input {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #999595;
+            border-radius: 3px;
+        }
+        .save-button {
+            display: block;
+            margin: 10px auto 0;
+            padding: 5px 20px;
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .save-button:hover {
+            background-color: #8a1426;
+        }
+        .drop-zone {
+            border: 2px dashed #D6D2C4;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .drop-zone.dragover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <img src="MqLogo.png" alt="MQ Logo" class="logo">
+            <a href="dashboard.html" class="heading">VivaMQ</a>
+            <div class="user-controls">
+                <div class="user-icon"></div>
+                <a href="login.html" class="logout-button"><img src="logout.png" alt="Logout"></a>
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="toolbar">
+                <div>
+                    <a href="classes.html" class="toolbar-button">Classes</a>
+                </div>
+                <div>
+                    <a href="settings.html" class="toolbar-button">Settings</a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="assignments-section">
+                    <h2>Assignments</h2>
+                    <div id="assignments-list" class="assignments-list"></div>
+                    <button id="add-assignment-button" class="add-button">Add Assignment</button>
+                    <div id="new-assignment-bar" class="new-assignment-bar">
+                        <input type="text" id="new-assignment-name" placeholder="Assignment name">
+                        <button id="save-assignment-button" class="save-button">Save</button>
+                    </div>
+                </div>
+                <div class="students-section">
+                    <h2>Students</h2>
+                    <div id="students-list" class="students-list"></div>
+                    <div id="drop-zone" class="drop-zone">
+                        Drag and drop an Excel spreadsheet here or click to upload
+                    </div>
+                    <input type="file" id="file-input" style="display: none;" accept=".xlsx, .xls">
+                    <button id="add-students-button" class="add-button">Add Students</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const assignmentsList = document.getElementById('assignments-list');
+            const addAssignmentButton = document.getElementById('add-assignment-button');
+            const newAssignmentBar = document.getElementById('new-assignment-bar');
+            const newAssignmentName = document.getElementById('new-assignment-name');
+            const saveAssignmentButton = document.getElementById('save-assignment-button');
+            const studentsList = document.getElementById('students-list');
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const addStudentsButton = document.getElementById('add-students-button');
+
+            // Fetch assignments from backend
+            fetch('/api/assignments')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.assignments && data.assignments.length > 0) {
+                        assignmentsList.innerHTML = data.assignments.map(assignment => `<p>${assignment.name}</p>`).join('');
+                    } else {
+                        assignmentsList.innerHTML = '<p>You have no assignments yet, add one!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    assignmentsList.innerHTML = '<p>Error loading assignments. Please try again later.</p>';
+                });
+
+            // Fetch students from backend
+            fetch('/api/students')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.students && data.students.length > 0) {
+                        studentsList.innerHTML = data.students.map(student => `<p>${student.name}</p>`).join('');
+                    } else {
+                        studentsList.innerHTML = '<p>No students added yet.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    studentsList.innerHTML = '<p>Error loading students. Please try again later.</p>';
+                });
+
+            // Show new assignment bar
+            addAssignmentButton.addEventListener('click', function() {
+                newAssignmentBar.style.display = 'block';
+            });
+
+            // Save new assignment
+            saveAssignmentButton.addEventListener('click', function() {
+                const assignmentName = newAssignmentName.value.trim();
+                if (assignmentName) {
+                    fetch('/api/assignments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name: assignmentName }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Refresh assignments list
+                            location.reload();
+                        } else {
+                            alert('Error saving assignment. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error saving assignment. Please try again.');
+                    });
+                } else {
+                    alert('Please enter an assignment name.');
+                }
+            });
+
+            // Handle file drop
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // Handle file selection
+            dropZone.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                        uploadFile(file);
+                    } else {
+                        alert('Please upload an Excel file (.xlsx or .xls)');
+                    }
+                }
+            }
+
+            function uploadFile(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/api/students/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Students uploaded successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error uploading students. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error uploading students. Please try again.');
+                });
+            }
+
+            // Add Students button functionality
+            addStudentsButton.addEventListener('click', function() {
+                fileInput.click();
+            });
+        });
+    </script>
+</body>
+</html>
