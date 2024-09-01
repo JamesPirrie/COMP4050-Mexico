@@ -192,3 +192,12 @@ body, html {
 .admin-button:hover {
     background-color: #7a7a7a;
 }
+.bodysection {
+    text-align: center;
+    padding: 30px;
+    background-color: #D6D2C4;
+    border-radius: 10px;
+    margin: 20px;
+    height: 600px;
+    width: 800px;
+}
