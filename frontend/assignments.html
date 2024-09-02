@@ -2,102 +2,140 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VivaMQ - Assignments and Students</title>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-styles.css">
     <style>
         .content {
-            padding: 20px;
-            position: relative;
-            height: calc(100% - 40px);
-            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 30px;
         }
         .assignments-section, .students-section {
-            /* width: 50%;
-            padding: 0 10px;
-            position: relative;
-            height: 100%;
-            text-align: center; */
-            padding: 30px;
+            width: 45%;
             background-color: #D6D2C4;
             border-radius: 10px;
-            margin: 20px;
-            position: relative;
-            height: 100%;
-            width: 800px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
         .assignments-list, .students-list {
-            margin-top: 20px;
-            height: calc(100% - 100px);
-            overflow-y: auto;
+            margin-bottom: 20px;
+            min-height: 50px;
         }
-        .add-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
+        .new-item-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .new-item-bar button {
             background-color: #A6192E;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 5px 10px;
+            font-size: 14px;
             cursor: pointer;
+            border-radius: 5px;
         }
-        .add-button:hover {
-            background-color: #8a1426;
-        }
-        .new-assignment-bar {
+        .edit-button {
             display: none;
-            background-color: #D6D2C4;
-            padding: 10px;
-            margin-top: 20px;
+            background-color: #999595;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
             border-radius: 5px;
+            margin-left: auto;
         }
-        .new-assignment-bar input {
-            width: 100%;
-            padding: 5px;
-            font-size: 16px;
-            border: 1px solid #999595;
-            border-radius: 3px;
+        .item {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .save-button {
-            display: block;
-            margin: 10px auto 0;
-            padding: 5px 20px;
+        .assignment-item {
+            background-color: #A6192E;
+            color: white;
+            cursor: pointer;
+        }
+        .remove-button {
+            display: none;
             background-color: #A6192E;
             color: white;
             border: none;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .placeholder-text {
+            color: #999;
+            font-style: italic;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #EDEBE5;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 300px;
+        }
+        .popup input {
+            width: 96%;
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #D6D2C4;
             border-radius: 5px;
             font-size: 16px;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup-buttons button {
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            padding: 5px 10px;
             cursor: pointer;
-        }
-        .save-button:hover {
-            background-color: #8a1426;
-        }
-        .drop-zone {
-            border: 2px dashed #D6D2C4;
             border-radius: 5px;
-            padding: 20px;
-            text-align: center;
-            margin-top: 20px;
-            cursor: pointer;
+            font-size: 16px;
         }
-        .drop-zone.dragover {
-            background-color: #f0f0f0;
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <div class="header">
+        <header class="header">
             <img src="MqLogo.png" alt="MQ Logo" class="logo">
             <a href="dashboard.html" class="heading">VivaMQ</a>
             <div class="user-controls">
                 <div class="user-icon"></div>
-                <a href="login.html" class="logout-button"><img src="logout.png" alt="Logout"></a>
+                <a href="login.html" class="logout-button" title="Logout">
+                    <img src="logout.png" alt="Logout">
+                </a>
             </div>
-        </div>
+        </header>
+
         <div class="main-container">
             <div class="toolbar">
                 <div>
@@ -107,169 +145,527 @@
                     <a href="settings.html" class="toolbar-button">Settings</a>
                 </div>
             </div>
+
             <div class="content">
                 <div class="assignments-section">
-                    <h2>Assignments</h2>
-                    <div id="assignments-list" class="assignments-list"></div>
-                    <button id="add-assignment-button" class="add-button">Add Assignment</button>
-                    <div id="new-assignment-bar" class="new-assignment-bar">
-                        <input type="text" id="new-assignment-name" placeholder="Assignment name">
-                        <button id="save-assignment-button" class="save-button">Save</button>
+                    <h2></h2>
+                    <div id="assignments-list" class="assignments-list">
+                        <div class="placeholder-text">There are no assignments for this class.</div>
+                    </div>
+                    <div class="new-item-bar">
+                        <button id="add-assignment-button" onclick="showPopup('assignment')">Add Assignment</button>
+                        <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
                     </div>
                 </div>
+
                 <div class="students-section">
-                    <h2>Students</h2>
-                    <div id="students-list" class="students-list"></div>
-                    <div id="drop-zone" class="drop-zone">
-                        Drag and drop an Excel spreadsheet here or click to upload
+                    <h2></h2>
+                    <div id="students-list" class="students-list">
+                        <div class="placeholder-text">There are no students for this class.</div>
                     </div>
-                    <input type="file" id="file-input" style="display: none;" accept=".xlsx, .xls">
-                    <button id="add-students-button" class="add-button">Add Students</button>
+                    <div class="new-item-bar">
+                        <button id="add-student-button" onclick="showPopup('student')">Add Student</button>
+                        <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="overlay" class="overlay"></div>
+    <div id="popup" class="popup">
+        <input type="text" id="popup-input" placeholder="">
+        <div class="popup-buttons">
+            <button onclick="hidePopup()">Cancel</button>
+            <button onclick="addItem()">Add</button>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const assignmentsList = document.getElementById('assignments-list');
-            const addAssignmentButton = document.getElementById('add-assignment-button');
-            const newAssignmentBar = document.getElementById('new-assignment-bar');
-            const newAssignmentName = document.getElementById('new-assignment-name');
-            const saveAssignmentButton = document.getElementById('save-assignment-button');
-            const studentsList = document.getElementById('students-list');
-            const dropZone = document.getElementById('drop-zone');
-            const fileInput = document.getElementById('file-input');
-            const addStudentsButton = document.getElementById('add-students-button');
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+    
+        window.onload = function() {
+            const className = getQueryParameter('class');
+            if (className) {
+                document.title = `Assignments - ${className} - VivaMQ`;
+                const heading = document.querySelector('.assignments-section h2');
+                if (heading) {
+                    heading.textContent = `Assignments - ${className}`;
+                }
+                const heading2 = document.querySelector('.students-section h2');
+                if (heading2) {
+                    heading2.textContent = `Students - ${className}`;
+                }
+            }
+        };
 
-            // Fetch assignments from backend
-            fetch('/api/assignments')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.assignments && data.assignments.length > 0) {
-                        assignmentsList.innerHTML = data.assignments.map(assignment => `<p>${assignment.name}</p>`).join('');
-                    } else {
-                        assignmentsList.innerHTML = '<p>You have no assignments yet, add one!</p>';
+
+        let currentType = '';
+
+        function showPopup(type) {
+            currentType = type;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('popup-input').placeholder = `Enter ${type} name`;
+            document.getElementById('popup-input').focus();
+        }
+
+        function hidePopup() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('popup-input').value = '';
+        }
+
+        function addItem() {
+            const input = document.getElementById('popup-input');
+            const list = document.getElementById(`${currentType}s-list`);
+            const editButton = document.getElementById(`edit-${currentType}s-button`);
+            const addButton = document.getElementById(`add-${currentType}-button`);
+            
+            if (input.value.trim() !== '') {
+                const placeholder = list.querySelector('.placeholder-text');
+                if (placeholder) {
+                    list.removeChild(placeholder);
+                }
+
+                const item = document.createElement('div');
+                item.className = `item ${currentType}-item`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = input.value;
+                item.appendChild(textSpan);
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'X';
+                removeButton.className = 'remove-button';
+                removeButton.onclick = function(e) {
+                    e.stopPropagation();
+                    list.removeChild(item);
+                    if (list.children.length === 0) {
+                        editButton.style.display = 'none';
+                        editButton.textContent = 'Edit';
+                        addButton.style.display = 'inline-block';
+                        const newPlaceholder = document.createElement('div');
+                        newPlaceholder.className = 'placeholder-text';
+                        newPlaceholder.textContent = `There are no ${currentType}s for this class.`;
+                        list.appendChild(newPlaceholder);
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    assignmentsList.innerHTML = '<p>Error loading assignments. Please try again later.</p>';
-                });
+                };
+                item.appendChild(removeButton);
 
-            // Fetch students from backend
-            fetch('/api/students')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.students && data.students.length > 0) {
-                        studentsList.innerHTML = data.students.map(student => `<p>${student.name}</p>`).join('');
-                    } else {
-                        studentsList.innerHTML = '<p>No students added yet.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    studentsList.innerHTML = '<p>Error loading students. Please try again later.</p>';
-                });
-
-            // Show new assignment bar
-            addAssignmentButton.addEventListener('click', function() {
-                newAssignmentBar.style.display = 'block';
-            });
-
-            // Save new assignment
-            saveAssignmentButton.addEventListener('click', function() {
-                const assignmentName = newAssignmentName.value.trim();
-                if (assignmentName) {
-                    fetch('/api/assignments', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ name: assignmentName }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Refresh assignments list
-                            location.reload();
-                        } else {
-                            alert('Error saving assignment. Please try again.');
+                if (currentType === 'assignment') {
+                    item.onclick = function() {
+                        if (!this.isContentEditable) {
+                            redirectToVivas(item.textContent.substring(0,item.textContent.length-1))
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error saving assignment. Please try again.');
-                    });
-                } else {
-                    alert('Please enter an assignment name.');
+                    };
+                    
                 }
-            });
 
-            // Handle file drop
-            dropZone.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('dragover');
-            });
+                list.appendChild(item);
+                
+                if (list.children.length === 1) {
+                    editButton.style.display = 'inline-block';
+                }
 
-            dropZone.addEventListener('dragleave', function() {
-                this.classList.remove('dragover');
-            });
+                hidePopup();
+            }
+        }
 
-            dropZone.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
-            });
-
-            // Handle file selection
-            dropZone.addEventListener('click', function() {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function() {
-                handleFiles(this.files);
-            });
-
-            function handleFiles(files) {
-                if (files.length > 0) {
-                    const file = files[0];
-                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                        uploadFile(file);
-                    } else {
-                        alert('Please upload an Excel file (.xlsx or .xls)');
+        function toggleEdit(type) {
+            const list = document.getElementById(`${type}s-list`);
+            const items = list.getElementsByClassName('item');
+            const editButton = document.getElementById(`edit-${type}s-button`);
+            const addButton = document.getElementById(`add-${type}-button`);
+            const removeButtons = list.getElementsByClassName('remove-button');
+            
+            if (editButton.textContent === 'Edit') {
+                editButton.textContent = 'Done';
+                addButton.style.display = 'none';
+                for (let item of items) {
+                    item.contentEditable = true;
+                    item.style.backgroundColor = '#f0f0f0';
+                    if (type === 'assignment') {
+                        item.style.color = '#A6192E';
                     }
                 }
-            }
-
-            function uploadFile(file) {
-                const formData = new FormData();
-                formData.append('file', file);
-
-                fetch('/api/students/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Students uploaded successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error uploading students. Please try again.');
+                for (let button of removeButtons) {
+                    button.style.display = 'inline-block';
+                }
+            } else {
+                editButton.textContent = 'Edit';
+                addButton.style.display = 'inline-block'; 
+                for (let item of items) {
+                    item.contentEditable = false;
+                    item.style.backgroundColor = type === 'assignment' ? '#A6192E' : 'white';
+                    if (type === 'assignment') {
+                        item.style.color = 'white';
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error uploading students. Please try again.');
-                });
+                }
+                for (let button of removeButtons) {
+                    button.style.display = 'none';
+                }
             }
+        }
 
-            // Add Students button functionality
-            addStudentsButton.addEventListener('click', function() {
-                fileInput.click();
-            });
-        });
+        function redirectToVivas(assignmentName) {
+            const className = getQueryParameter('class');
+            window.location.href = `vivas.html?class=${className}&assignment=${encodeURIComponent(assignmentName)}`;
+        }
     </script>
 </body>
 </html>
+
+<!-- ------------------------------------------------------------------------------------------------------------ -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+    <style>
+        /* Your existing styles remain unchanged */
+        .content {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 30px;
+        }
+        .assignments-section, .students-section {
+            width: 45%;
+            background-color: #D6D2C4;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .assignments-list, .students-list {
+            margin-bottom: 20px;
+            min-height: 50px;
+        }
+        .new-item-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .new-item-bar button {
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .edit-button {
+            display: none;
+            background-color: #999595;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: auto;
+        }
+        .item {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .assignment-item {
+            background-color: #A6192E;
+            color: white;
+            cursor: pointer;
+        }
+        .remove-button {
+            display: none;
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .placeholder-text {
+            color: #999;
+            font-style: italic;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #EDEBE5;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 300px;
+        }
+        .popup input {
+            width: 96%;
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #D6D2C4;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup-buttons button {
+            background-color: #A6192E;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <img src="MqLogo.png" alt="MQ Logo" class="logo">
+            <a href="dashboard.html" class="heading">VivaMQ</a>
+            <div class="user-controls">
+                <div class="user-icon"></div>
+                <a href="login.html" class="logout-button" title="Logout">
+                    <img src="logout.png" alt="Logout">
+                </a>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <div class="toolbar">
+                <div>
+                    <a href="classes.html" class="toolbar-button">Classes</a>
+                </div>
+                <div>
+                    <a href="settings.html" class="toolbar-button">Settings</a>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="assignments-section">
+                    <h2>Assignments</h2>
+                    <div id="assignments-list" class="assignments-list">
+                        <div class="placeholder-text">There are no assignments for this class.</div>
+                    </div>
+                    <div class="new-item-bar">
+                        <button id="add-assignment-button" onclick="showPopup('assignment')">Add Assignment</button>
+                        <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
+                    </div>
+                </div>
+
+                <div class="students-section">
+                    <h2>Students</h2>
+                    <div id="students-list" class="students-list">
+                        <div class="placeholder-text">There are no students for this class.</div>
+                    </div>
+                    <div class="new-item-bar">
+                        <button id="add-student-button" onclick="showPopup('student')">Add Student</button>
+                        <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+    <div id="popup" class="popup">
+        <input type="text" id="popup-input" placeholder="">
+        <div class="popup-buttons">
+            <button onclick="hidePopup()">Cancel</button>
+            <button onclick="addItem()">Add</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000'; // backend API URL
+        let currentType = '';
+
+
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+    
+        window.onload = function() {
+            const className = getQueryParameter('class');
+            if (className) {
+                document.title = `Assignments - ${className} - VivaMQ`;
+                const heading = document.querySelector('.assignments-section h2');
+                if (heading) {
+                    heading.textContent = `Assignments - ${className}`;
+                }
+                const heading2 = document.querySelector('.students-section h2');
+                if (heading2) {
+                    heading2.textContent = `Students - ${className}`;
+                }
+            }
+
+            fetchAssignments();
+            fetchStudents();
+        };
+
+        async function fetchAssignments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/assignments`);
+                const assignments = await response.json();
+                updateList('assignments-list', assignments);
+            } catch (error) {
+                console.error('Error fetching assignments:', error);
+            }
+        }
+
+        async function fetchStudents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`);
+                const students = await response.json();
+                updateList('students-list', students);
+            } catch (error) {
+                console.error('Error fetching students:', error);
+            }
+        }
+
+        function updateList(listId, items) {
+            const list = document.getElementById(listId);
+            list.innerHTML = ''; 
+            if (items.length === 0) {
+                const type = listId.includes('assignment') ? 'assignments' : 'students';
+                list.innerHTML = `<div class="placeholder-text">There are no ${type} for this class.</div>`;
+            } else {
+                items.forEach(item => createItemElement(item, listId));
+            }
+        }
+
+        function createItemElement(item, listId) {
+            const list = document.getElementById(listId);
+            const itemElement = document.createElement('div');
+            itemElement.className = `item ${listId.includes('assignment') ? 'assignment-item' : 'student-item'}`;
+            itemElement.setAttribute('data-id', item.id);
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = item.name;
+            itemElement.appendChild(textSpan);
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.className = 'remove-button';
+            removeButton.onclick = function(e) {
+                e.stopPropagation();
+                removeItem(item.id, listId, itemElement);
+            };
+            itemElement.appendChild(removeButton);
+
+            list.appendChild(itemElement);
+        }
+
+        async function addItem() {
+            const input = document.getElementById('popup-input');
+            if (input.value.trim() !== '') {
+                const itemType = currentType; // 'assignment' or 'student'
+                try {
+                    const response = await fetch(`${API_BASE_URL}/${itemType}s`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: input.value })
+                    });
+                    const newItem = await response.json();
+                    createItemElement(newItem, `${itemType}s-list`);
+                    hidePopup();
+                } catch (error) {
+                    console.error(`Error adding ${itemType}:`, error);
+                }
+            }
+        }
+
+        async function removeItem(id, listId, itemElement) {
+            const itemType = listId.includes('assignment') ? 'assignments' : 'students';
+            try {
+                await fetch(`${API_BASE_URL}/${itemType}/${id}`, {
+                    method: 'DELETE'
+                });
+                itemElement.remove(); // Remove item from DOM
+            } catch (error) {
+                console.error(`Error removing ${itemType}:`, error);
+            }
+        }
+
+        function showPopup(type) {
+            currentType = type;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('popup-input').placeholder = `Enter ${type} name`;
+            document.getElementById('popup-input').focus();
+        }
+
+        function hidePopup() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('popup-input').value = '';
+        }
+
+        function toggleEdit(type) {
+            const list = document.getElementById(`${type}s-list`);
+            const items = list.getElementsByClassName('item');
+            const editButton = document.getElementById(`edit-${type}s-button`);
+            const addButton = document.getElementById(`add-${type}-button`);
+            const removeButtons = list.getElementsByClassName('remove-button');
+            
+            if (editButton.textContent === 'Edit') {
+                editButton.textContent = 'Done';
+                addButton.style.display = 'none';
+                for (let item of items) {
+                    item.contentEditable = true;
+                    item.style.backgroundColor = '#f0f0f0';
+                    if (type === 'assignment') {
+                        item.style.color = '#A6192E';
+                    }
+                }
+                for (let button of removeButtons) {
+                    button.style.display = 'inline-block';
+                }
+            } else {
+                editButton.textContent = 'Edit';
+                addButton.style.display = 'inline-block'; 
+                for (let item of items) {
+                    item.contentEditable = false;
+                    item.style.backgroundColor = type === 'assignment' ? '#A6192E' : 'white';
+                    if (type === 'assignment') {
+                        item.style.color = 'white';
+                    }
+                }
+                for (let button of removeButtons) {
+                    button.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html> -->
