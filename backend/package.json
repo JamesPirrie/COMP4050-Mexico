@@ -1,0 +1,13 @@
+{
+    "name": "comp4050-mexico-backend",
+    "type": "module",
+    "main": "./dist/BackendServer.js",
+    "scripts": {
+        "build": "tsc -p ."
+    },
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "postgres": "^3.4.4"
+    }
+}
