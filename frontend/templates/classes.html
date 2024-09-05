@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}VivaMQ Classes{% endblock %}
+
+{% block content %}
+<h2>Classes</h2>
+<p>This is where we display a list of classes, based on user email and backend DB results.</p>
+<button class="test-assignment-button" onclick="redirectToAssignments('COMP4050')">COMP4050</button>
+<button class="add-class-button">Add New Class</button>
+
+<script>
+    function redirectToAssignments(className) {
+        window.location.href = `assignments.html?class=${encodeURIComponent(className)}`;
+    }
+</script>
+{% endblock %}

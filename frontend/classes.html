@@ -6,28 +6,6 @@
     <title>VivaMQ Classes</title>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-styles.css">
-    <style>
-        .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-        }
-        .test-assignment-button {
-            padding: 10px 20px;
-            width: 600px;
-            height: 50px;
-            background-color: #A6192E;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-        .test-assignment-button:hover {
-            background-color: #8a1426;
-        }
-    </style>
 </head>
 
 <body>
@@ -54,8 +32,8 @@
             <div class="content">
                 <h2>Classes</h2>
                 <p>This is where we display a list of classes, based on user email and backend DB results.</p>
-                <!-- <button class="test-assignment-button" onclick="window.location.href='assignments.html'">COMP4050</button> -->
                 <button class="test-assignment-button" onclick="redirectToAssignments('COMP4050')">COMP4050</button>
+                <button class="add-class-button">Add New Class</button>
 
                 <script>
                 function redirectToAssignments(className) {
@@ -69,5 +47,3 @@
     </div>
 </body>
 </html>
-
-
