@@ -8,7 +8,7 @@ const sql = postgres(`postgres://${process.env.USER}:${process.env.PASS}@${proce
 /* --------------------------------------------------------------------------- */
 
 // Convert email to user_id. Returns integer if found, null otherwise.
-async function getUserIDbyEmail(email: string) {
+export async function getUserIDbyEmail(email: string) {
     try {
         const users = await sql`SELECT user_id FROM users WHERE email LIKE ${email};`;
         return users.length ? users[0]['user_id'] : null;
@@ -19,7 +19,7 @@ async function getUserIDbyEmail(email: string) {
 }
 
 // Check if user email exists. Return false otherwise.
-async function loginUserCheck(email: string) {
+export async function loginUserCheck(email: string) {
     try {
         const users = await sql`SELECT * FROM users WHERE email LIKE ${email};`;
         return users.length ? true : false;
@@ -30,7 +30,7 @@ async function loginUserCheck(email: string) {
 }
 
 // Add user into users table based on placeholder values and the email parameter.
-async function signupUser(email: string) {
+export async function signupUser(email: string) {
     try {
         console.log('awoo');
         //await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
@@ -82,15 +82,114 @@ export async function getClasses(email: string) {
 }
 
 // post classes by user from email. Input: email, class code
-// TODO
+export async function createClass(email: string, code: string) {
+    try {
+        const users = await getUserIDbyEmail(email);
+        await sql`INSERT INTO assignments (author_id, code) VALUES
+                                    (${users}, ${code});`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 // get assignments based on class.
+export async function getAssignments(email: string, specificClass: string) {
+    try {
+        const users = await getUserIDbyEmail(email);
+		if (users) {
+			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
+			if (verifyUser['author_id'] === users['user_id']) {const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
+				return results.length ? results : null;
+			}
+		}
+        else {
+            throw new Error('User not found');
+        }
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 // post assignments based on class.
+export async function createAssignment(email: string, class_id: number, name: string, description: string) {
+    try {
+        const users = await getUserIDbyEmail(email);
+        await sql`INSERT INTO assignments (class_id, name, description) VALUES
+                                    (${class_id}, ${name}, ${description});`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 // get viva based on submissions JOIN viva_output
+// TO DO
+export async function getVivaForSubmission(email: string, specificSubmission: string, specificGenQ: string){
+    try {
+        const users = await getUserIDbyEmail(email);
+		if (users) {
+			//TO DO
+		}
+        else {
+            throw new Error('User not found');
+        }
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+// get specific submissions with submission_id
+export async function getSubmissionFilePathForSubID(specificSubmission: string){
+    try {
+        const submission = await sql`SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
+		const sPath = submission[0].submission_filepath;
+        return sPath;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+// get submissions with user, class, and assignment
+export async function getSubmissionsForAssignments(email: string, specificClass: string, specificAssignment: string){
+    try {
+        const users = await getUserIDbyEmail(email);
+		if (users) {
+			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
+			if (verifyUser[0]['author_id'] === users['user_id']) {				
+				const verifyClass = await sql`SELECT class_id FROM assignments WHERE assignments = ${specificAssignment};`
+				if (verifyClass[0]['class_id'] === verifyUser[0]['class_id']) {
+					const results = await sql`SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
+					return results.length ? results : null;
+				}
+			}
+		}
+        else {
+            throw new Error('User not found');
+        }
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 // post submissions with document, class, placeholder student
+export async function createSubmission(email: string, assignment_id: number, student_id: number, submission_date: Date, submission_filepath: string) {
+    try {
+        const users = await getUserIDbyEmail(email);
+        await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
+                                    (${assignment_id}, ${student_id}, ${submission_date}, ${submission_filepath});`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
 
 // internal query to export PDF file filepath
 export async function getPDFFile(student_id: number, assignment_id: number) {
@@ -117,7 +216,7 @@ export async function postAIOutputForSubmission(submission_id: number, generated
     }
 }
 
-// get viva outputs based on submission id.
+// get AI Gen Questions based on submission id.
 export async function getQuestions(submission_id: number) {
     try {
         const result = await sql`SELECT generated_questions, generation_date FROM ai_output WHERE submission_id = ${submission_id};`;
@@ -140,10 +239,11 @@ export async function getExams(submission_id: number) {
 }
 
 // post exams
-export async function createExams(submission_id: number, student_id: number, user_id: number) {
+export async function createExams(submission_id: number, student_id: number, email: string) {
     try {
+        const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
-                                    (${submission_id}, ${student_id}, ${user_id});`;
+                                    (${submission_id}, ${student_id}, ${users});`;
         return true;
     }
     catch (error) {
