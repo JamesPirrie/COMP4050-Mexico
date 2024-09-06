@@ -32,8 +32,7 @@ export async function loginUserCheck(email: string) {
 // Add user into users table based on placeholder values and the email parameter.
 export async function signupUser(email: string) {
     try {
-        console.log('awoo');
-        //await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
+        await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
         return true;
     }
     catch (error) {
@@ -100,7 +99,7 @@ export async function getAssignments(email: string, specificClass: string) {
         const users = await getUserIDbyEmail(email);
 		if (users) {
 			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
-			if (verifyUser['author_id'] === users['user_id']) {const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
+			if (verifyUser[0]['author_id'] === users['user_id']) {const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
 				return results.length ? results : null;
 			}
 		}

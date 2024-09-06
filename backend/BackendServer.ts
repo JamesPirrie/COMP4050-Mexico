@@ -16,7 +16,7 @@ import {createClass} from "./DatabaseUtil.ts";
 import {createAssignment} from "./DatabaseUtil.ts";
 import {createSubmission} from "./DatabaseUtil.ts";
 import {postAIOutputForSubmission} from "./DatabaseUtil.ts";
-import * as AIService from "./AIService.ts";
+import * as AIService from "comp4050ai";
 
 const app = express();
 const port = 3000;
