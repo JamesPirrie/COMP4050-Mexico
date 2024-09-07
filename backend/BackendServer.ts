@@ -58,30 +58,34 @@ app.put('/', (req: Request, res: Response) => {
 });
 
 //actual endpoints (my understanding of how this will work please correct this if im wrong)
-app.post('/api/login', async (req: Request, res: Response) => {
+app.post('/api/login', async (req: loginRequest, res: Response) => {
     //for MVP (logging in)
     //we will receive email and password
     try {
-        if (await loginUserCheck(req.email) === true) {
-            return true;
+        if(typeof(req.email) != 'undefined'){//because these have to be optional, it will also serve as a did we receive anything check
+            if (await loginUserCheck(req.email) === true) {
+                return true;//optimise this later
+            }
         }
-        return false;
         console.log('Error: Login Failed', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: ', error)
     }
 });
 
-app.post('/api/signup', async (req: Request, res: Response) => {
+app.post('/api/signup', async (req: loginRequest, res: Response) => {
     //for MVP (signing up)
     //we will receive email and password
     try {
-        if (await signupUser(Request.email) === true) {
-            return true;
+        if(typeof(req.email) != 'undefined'){
+            if (await signupUser(req.email) === true) {
+                return true;
+            }
         }
-        return false;
         console.log('Error: Sign Up Failed', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: ', error)
@@ -90,16 +94,18 @@ app.post('/api/signup', async (req: Request, res: Response) => {
     //if not used success = true
 });
 
-app.get('/api/classes', (req: Request, res: Response) =>{
+app.get('/api/classes', (req: getClassesRequest, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        const userClasses = getClasses(Request.email);
-        if (userClasses != null) {
-            return JSON.stringify(userClasses);
+        if(typeof(req.email) != 'undefined'){
+            const userClasses = getClasses(req.email);
+            if (userClasses != null) {
+                return JSON.stringify(userClasses);
+            }
         }
-        return false;
         console.log('Error: No Classes Found', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error)
@@ -107,80 +113,90 @@ app.get('/api/classes', (req: Request, res: Response) =>{
 });
 
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
-app.post('/api/classes', async (req: Request, res: Response) =>{
+app.post('/api/classes', async (req: postClassesRequest, res: Response) =>{
     //for MVP adding classes, add removal in later (should be simple)
     //adding classes for that user
     try {
-        const success = createClass(Request.email, Request.code); // more fields added post MVP
-        if (await success) {
-            return true;
+        if(typeof(req.email) != 'undefined' && typeof(req.code) != 'undefined'){
+            const success = createClass(req.email, req.code); // more fields added post MVP
+            if (await success) {
+                return true;
+            }
         }
-        return false;
         console.log('Error: Classes Creation Failed', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: ', error)
     }    
 });
 
-app.get('/api/assignments', (req: Request, res: Response) =>{
+app.get('/api/assignments', (req: getAssignmentsRequest, res: Response) =>{
     //for MVP (listing classes)
     //list assignments for a specific class
     try {
-        const userClassAssignments = getAssignments(Request.email, Request.class_id);
-        if (userClassAssignments != null) {
-            return JSON.stringify(userClassAssignments);
+        if(typeof(req.email) != 'undefined' && typeof(req.class_id) != 'undefined'){
+            const userClassAssignments = getAssignments(req.email, req.class_id);
+            if (userClassAssignments != null) {
+                return JSON.stringify(userClassAssignments);
+            }
         }
-        return false;
         console.log('Error: No Assignments Found', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: Assignment Check Failed', error)
     }
 });
 
-app.post('/api/assignments', async (req: Request, res: Response) =>{
+app.post('/api/assignments', async (req: postAssignmentsRequest, res: Response) =>{
     //for MVP adding assignments, add removal in later (should be simple)
     //adding assignments to that class
     try {
-        const success = createAssignment(Request.email, Request.class_id, Request._name, Request.description); // more fields added post MVP
-        if (await success) {
-            return true;
+        if(typeof(req.email) != 'undefined' && typeof(req.class_id) != 'undefined' && typeof(req._name) != 'undefined' && typeof(req.description) != 'undefined'){
+            const success = createAssignment(req.email, req.class_id, req._name, req.description); // more fields added post MVP
+            if (await success) {
+                return true;
+            }
         }
-        return false;
         console.log('Error: Assignment Creation Failed', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: ', error)
     }  
 });
 
-app.get('/api/submissions', (req: Request, res: Response) =>{
+app.get('/api/submissions', (req: getSubmissionsRequest, res: Response) =>{
     //for MVP (listing classes)
     //list submissions for a specific assignment
     try {
-        const userSubmissions = getSubmissionsForAssignments(Request.email, Request.class_id, Request.assignment_id);
-        if (userSubmissions != null) {
-            return JSON.stringify(userSubmissions);
+        if(typeof(req.email) != 'undefined' && typeof(req.class_id) != 'undefined' && typeof(req.assignment_id) != 'undefined'){
+            const userSubmissions = getSubmissionsForAssignments(req.email, req.class_id, req.assignment_id);
+            if (userSubmissions != null) {
+                return JSON.stringify(userSubmissions);
+            }
         }
-        return false;
         console.log('Error: No Submissions Found', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: Submission Check Failed', error)
     }
 });
 
-app.post('/api/submissions', async (req: Request, res: Response) =>{
+app.post('/api/submissions', async (req: postSubmissionsRequest, res: Response) =>{
     //for MVP adding removing submissions
     //adding submissions to an assignment
     try {
-        const success = createSubmission(Request.email, Request.assignment_id, Request.student_id, Request.submission_date, Request.submission_filepath);
-        if (await success) {
-            return true;
+        if(typeof(req.email) != 'undefined' && typeof(req.assignment_id) != 'undefined' && typeof(req.student_id) != 'undefined' && typeof(req.submission_date) != 'undefined' && typeof(req.submission_filepath) != 'undefined'){
+            const success = createSubmission(req.email, req.assignment_id, req.student_id, req.submission_date, req.submission_filepath);
+            if (await success) {
+                return true;
+            }
         }
-        return false;
         console.log('Error: Classes Creation Failed', Error)
+        return false;
     }
     catch (error) {
         console.log('Error: ', error)
@@ -188,25 +204,26 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
 });
 
 //AI Generate Questions request (qgen = questions generate)
-app.post('/api/qgen', async (req: Request, res: Response) => {
+app.post('/api/qgen', async (req: qGenRequest, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
-		const submission_id = Request.submission_id;
-		const sPath = getSubmissionFilePathForSubID(submission_id);
-		let ai = new AIService("./ServerStorage");
-		//Writes questions/answers file to "./ServerStorage" specified in constructor
-		let doc_id = ai.generateQuestions(sPath);
-		//Accesses the storage location specified in the contructor
-		let questions = ai.getQuestions(doc_id);
-		postAIOutputForSubmission(submission_id, questions);
-		//verify any questions exist for submission
-        const foundAIQs = getVivaForSubmission(Request.email, Request.submission_id, Request.result_id);
-		if (foundAIQs != null){
-			return true;
-		}
+        if(typeof(req.email) != 'undefined' && typeof(req.submission_id) != 'undefined' && typeof(req.result_id) != 'undefined'){
+            const sPath = getSubmissionFilePathForSubID(req.submission_id);
+            let ai = new AIService("./ServerStorage");
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id = ai.generateQuestions(sPath);
+            //Accesses the storage location specified in the contructor
+            let questions = ai.getQuestions(doc_id);
+            postAIOutputForSubmission(parseInt(req.submission_id), questions);
+            //verify any questions exist for submission
+            const foundAIQs = getVivaForSubmission(req.email, req.submission_id, req.result_id);
+            if (foundAIQs != null){
+                return true;
+            }
+        }
+        console.log('Error: AI Question Generation Failed', Error)
 		return false;
-		console.log('Error: AI Question Generation Failed', Error)
 	}
 	catch (error) {
 	    console.log('Error: ', error)

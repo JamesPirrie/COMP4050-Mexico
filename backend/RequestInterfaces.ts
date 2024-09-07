@@ -12,39 +12,41 @@ export interface getClassesRequest extends Request {
 }
 
 export interface postClassesRequest extends Request {
-    email: string;
-    code: string;
+    email?: string;
+    code?: string;
 }
 
 export interface getAssignmentsRequest extends Request {
-    email: string;
-    classID: string;
+    email?: string;
+    class_id?: string;
 }
 
 export interface postAssignmentsRequest extends Request {
-    email: string;
-    classID: string;
-    _name: string;//_ to differenciate from the global Function classes .name
-    description: string;
+    email?: string;
+    class_id?: number;
+    _name?: string;//_ to differenciate from the global Function classes .name
+    description?: string;
 }
 
 export interface getSubmissionsRequest extends Request {
-    email: string;
-    classID: string;
-    assignment_id: string;
+    email?: string;
+    class_id?: string;
+    assignment_id?: string;
 }
 
 export interface postSubmissionsRequest extends Request {
-    email: string;
-    classID: string;
-    assignment_id: string;
-    submission_date: string;
+    email?: string;
+    class_id?: string;
+    student_id?: number;
+    assignment_id?: number;
+    submission_date?: Date;
+    submission_filepath?: string;
 }
 
 export interface qGenRequest extends Request {
-    email: string;
-    submission_id: string;
-    resultID: string;
+    email?: string;
+    submission_id?: string;
+    result_id?: string;
 }
 
 //to be continued
