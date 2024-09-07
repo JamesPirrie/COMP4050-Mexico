@@ -1,9 +1,8 @@
 {
-    "name": "comp4050-mexico-backend",
-    "type": "module",
-    "main": "./dist/BackendServer.js",
+
     "scripts": {
-        "build": "tsc -p ."
+        "build": "tsc -p .",
+        "server": "tsc -p . & node ./dist/BackendServer.js"
     },
     "dependencies": {
         "comp4050ai": "github:stroogle/COMP4050AI",

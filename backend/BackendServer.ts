@@ -2,24 +2,24 @@
 
 import express from 'express';
 import {Response, Request} from 'express';
-import {getUserIDbyEmail} from "./DatabaseUtil.ts";
-import {loginUserCheck} from "./DatabaseUtil.ts";
-import {signupUser} from "./DatabaseUtil.ts";
-import {getUser} from "./DatabaseUtil.ts";
-import {signup} from "./DatabaseUtil.ts";
-import {getClasses} from "./DatabaseUtil.ts";
-import {getAssignments} from "./DatabaseUtil.ts";
-import {getSubmissionsForAssignments} from "./DatabaseUtil.ts";
-import {getVivaForSubmission} from "./DatabaseUtil.ts";
-import {getSubmissionFilePathForSubID} from "./DatabaseUtil.ts";
-import {createClass} from "./DatabaseUtil.ts";
-import {createAssignment} from "./DatabaseUtil.ts";
-import {createSubmission} from "./DatabaseUtil.ts";
-import {postAIOutputForSubmission} from "./DatabaseUtil.ts";
+import {getUserIDbyEmail} from "./DatabaseUtil";
+import {loginUserCheck} from "./DatabaseUtil";
+import {signupUser} from "./DatabaseUtil";
+import {getUser} from "./DatabaseUtil";
+import {signup} from "./DatabaseUtil";
+import {getClasses} from "./DatabaseUtil";
+import {getAssignments} from "./DatabaseUtil";
+import {getSubmissionsForAssignments} from "./DatabaseUtil";
+import {getVivaForSubmission} from "./DatabaseUtil";
+import {getSubmissionFilePathForSubID} from "./DatabaseUtil";
+import {createClass} from "./DatabaseUtil";
+import {createAssignment} from "./DatabaseUtil";
+import {createSubmission} from "./DatabaseUtil";
+import {postAIOutputForSubmission} from "./DatabaseUtil";
 import * as AIService from "comp4050ai";
 
-import {loginRequest, getClassesRequest, postClassesRequest, getAssignmentsRequest, postAssignmentsRequest} from './RequestInterfaces.ts'
-import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest, getVivasRequest, postVivasRequest} from './RequestInterfaces.ts'
+import {loginRequest, getClassesRequest, postClassesRequest, getAssignmentsRequest, postAssignmentsRequest} from './RequestInterfaces'
+import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest, getVivasRequest, postVivasRequest} from './RequestInterfaces'
 
 const app = express();
 const port = 3000;
