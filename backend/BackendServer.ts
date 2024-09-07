@@ -1,7 +1,7 @@
 //https://expressjs.com/en/5x/api.html    
 
-import * as express from 'express';
-import {Request, Response} from 'express';
+import express from 'express';
+import {Response, Request} from 'express';
 import {getUserIDbyEmail} from "./DatabaseUtil.ts";
 import {loginUserCheck} from "./DatabaseUtil.ts";
 import {signupUser} from "./DatabaseUtil.ts";
@@ -17,6 +17,9 @@ import {createAssignment} from "./DatabaseUtil.ts";
 import {createSubmission} from "./DatabaseUtil.ts";
 import {postAIOutputForSubmission} from "./DatabaseUtil.ts";
 import * as AIService from "comp4050ai";
+
+import {loginRequest, getClassesRequest, postClassesRequest, getAssignmentsRequest, postAssignmentsRequest} from './RequestInterfaces.ts'
+import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest} from './RequestInterfaces.ts'
 
 const app = express();
 const port = 3000;
@@ -59,7 +62,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
     //for MVP (logging in)
     //we will receive email and password
     try {
-        if (await loginUserCheck(Request.email) === true) {
+        if (await loginUserCheck(req.email) === true) {
             return true;
         }
         return false;
@@ -140,7 +143,7 @@ app.post('/api/assignments', async (req: Request, res: Response) =>{
     //for MVP adding assignments, add removal in later (should be simple)
     //adding assignments to that class
     try {
-        const success = createAssignment(Request.email, Request.class_id, Request.name, Request.description); // more fields added post MVP
+        const success = createAssignment(Request.email, Request.class_id, Request._name, Request.description); // more fields added post MVP
         if (await success) {
             return true;
         }
