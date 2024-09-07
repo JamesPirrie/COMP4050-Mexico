@@ -19,7 +19,7 @@ import {postAIOutputForSubmission} from "./DatabaseUtil.ts";
 import * as AIService from "comp4050ai";
 
 import {loginRequest, getClassesRequest, postClassesRequest, getAssignmentsRequest, postAssignmentsRequest} from './RequestInterfaces.ts'
-import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest} from './RequestInterfaces.ts'
+import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest, getVivasRequest, postVivasRequest} from './RequestInterfaces.ts'
 
 const app = express();
 const port = 3000;
@@ -210,12 +210,19 @@ app.post('/api/qgen', async (req: qGenRequest, res: Response) => {
 	try {
         if(typeof(req.email) != 'undefined' && typeof(req.submission_id) != 'undefined' && typeof(req.result_id) != 'undefined'){
             const sPath = getSubmissionFilePathForSubID(req.submission_id);
-            let ai = new AIService("./ServerStorage");
+
+            //let ai = new AIService("./ServerStorage");
+
             //Writes questions/answers file to "./ServerStorage" specified in constructor
-            let doc_id = ai.generateQuestions(sPath);
+
+            //let doc_id = ai.generateQuestions(sPath);
+
             //Accesses the storage location specified in the contructor
-            let questions = ai.getQuestions(doc_id);
-            postAIOutputForSubmission(parseInt(req.submission_id), questions);
+
+            //let questions = ai.getQuestions(doc_id);
+
+            //postAIOutputForSubmission(parseInt(req.submission_id), questions);
+            
             //verify any questions exist for submission
             const foundAIQs = getVivaForSubmission(req.email, req.submission_id, req.result_id);
             if (foundAIQs != null){
@@ -231,11 +238,11 @@ app.post('/api/qgen', async (req: qGenRequest, res: Response) => {
 	//if AI function succeeds return true else return false
 });
 
-app.get('/api/vivas', (req: Request, res: Response) =>{
+app.get('/api/vivas', (req: getVivasRequest, res: Response) =>{
     //for MVP listing vivas
 });
 
-app.post('/api/vivas', (req: Request, res: Response) =>{
+app.post('/api/vivas', (req: postVivasRequest, res: Response) =>{
     //for MVP adding and removing vivas
 });
 

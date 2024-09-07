@@ -1,5 +1,6 @@
 import * as http from 'http';
 
+
 const PORT: number = 8080;
 
 //send the request as a JSON 
@@ -20,7 +21,7 @@ const requestBody = JSON.stringify({message: 'Hello, server!',
     };
 
 //the response handler for when we receive the response from the server
-    const req = http.request(options, (response: serverResponse) => {
+    const req = http.request(options, (response: any) => {
         let ResponseString = '';//start building response
     
 

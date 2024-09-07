@@ -49,6 +49,14 @@ export interface qGenRequest extends Request {
     result_id?: string;
 }
 
+export interface getVivasRequest extends Request {
+
+}
+
+export interface postVivasRequest extends Request {
+
+}
+
 //to be continued
 
 /* --------------------------------------------------------------------------- */
