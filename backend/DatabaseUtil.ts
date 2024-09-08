@@ -92,8 +92,9 @@ export async function getClasses(email: string) {
 export async function createClass(email: string, code: string) {
     try {
         const users = await getUserIDbyEmail(email);
+        //we should probably ass some sort of class already exists protection in future
         await sql`INSERT INTO class (author_id, code) VALUES
-                                    (${users}, TRIM(both '"' from ${code}));`;//was INSERT INTO assignments before 
+                                    (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
         return true;
     }
     catch (error) {
@@ -122,7 +123,7 @@ export async function getAssignments(email: string, specificClass: string) {
 }
 
 // post assignments based on class.
-export async function createAssignment(email: string, class_id: number, name: string, description: string) {
+export async function createAssignment(email: string, class_id: string, name: string, description: string) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO assignments (class_id, name, description) VALUES
@@ -187,7 +188,7 @@ export async function getSubmissionsForAssignments(email: string, specificClass:
 }
 
 // post submissions with document, class, placeholder student
-export async function createSubmission(email: string, assignment_id: number, student_id: number, submission_date: Date, submission_filepath: string) {
+export async function createSubmission(email: string, assignment_id: string, student_id: string, submission_date: string, submission_filepath: string) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES

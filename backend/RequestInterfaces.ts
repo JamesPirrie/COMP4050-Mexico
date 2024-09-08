@@ -1,7 +1,6 @@
 import {Request} from 'express';
 
 //REQUEST INTERFACES
-
 export interface loginRequest extends Request {
     email?: string;
     password?: string; 
