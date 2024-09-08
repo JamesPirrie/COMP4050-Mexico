@@ -32,8 +32,14 @@ export async function loginUserCheck(email: string) {
 // Add user into users table based on placeholder values and the email parameter.
 export async function signupUser(email: string) {
     try {
-        await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
-        return true;
+        if(await loginUserCheck(email) != true){//if name isnt already present
+            await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
+            return true;
+        }
+        else{
+            console.log('email: ' + email + ' already in use');
+            return false;
+        }
     }
     catch (error) {
         throw error;
@@ -67,12 +73,14 @@ export async function signup(email: string) {
 export async function getClasses(email: string) {
     try {
         const users = await getUserIDbyEmail(email);
-        if (users) {
+        if (users != null) {
             const results = await sql`SELECT * FROM class WHERE author_id = ${users};`
             return results;
         }
         else {
-            throw new Error('User not found');
+            
+            //throw new Error('User not found');
+            return null;
         }
     }
     catch (error) {
@@ -84,12 +92,13 @@ export async function getClasses(email: string) {
 export async function createClass(email: string, code: string) {
     try {
         const users = await getUserIDbyEmail(email);
-        await sql`INSERT INTO assignments (author_id, code) VALUES
-                                    (${users}, ${code});`;
+        await sql`INSERT INTO class (author_id, code) VALUES
+                                    (${users}, TRIM(both '"' from ${code}));`;//was INSERT INTO assignments before 
         return true;
     }
     catch (error) {
-        throw error;
+        //throw error;
+        return false;
     }
 }
 

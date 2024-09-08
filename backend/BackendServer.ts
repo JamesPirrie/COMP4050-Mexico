@@ -49,43 +49,49 @@ app.post('/', (req: Request, res: Response) => {
 
     console.log('ip');
     console.log(req.ip);//will probably be ::1 in localhost
+
+    console.log(req.query);//seems to contain what we want
 });
 
 //PUT requests
 app.put('/', (req: Request, res: Response) => {
     console.log('PUT request received');
-    res.send('PUT Request received')
+    res.send('PUT Request received');
 });
 
 //actual endpoints (my understanding of how this will work please correct this if im wrong)
-app.post('/api/login', async (req: loginRequest, res: Response) => {
+app.post('/api/login', async (req: Request, res: Response) => {
     //for MVP (logging in)
     //we will receive email and password
     try {
-        if(typeof(req.email) != 'undefined'){//because these have to be optional, it will also serve as a did we receive anything check
-            if (await loginUserCheck(req.email) === true) {
-                return true;//optimise this later
-            }
+        console.log('Received POST to /api/login');
+        if (await loginUserCheck(JSON.stringify(req.query.email)) === true) {
+            console.log('login with: ' + JSON.stringify(req.query.email) + 'successful');
+            res.send(JSON.stringify(true));
         }
-        console.log('Error: Login Failed', Error)
-        return false;
+        else{
+            console.log('Error: Login Failed', Error)
+            res.send(JSON.stringify(false));
+        }
     }
     catch (error) {
         console.log('Error: ', error)
     }
 });
 
-app.post('/api/signup', async (req: loginRequest, res: Response) => {
+app.post('/api/signup', async (req: Request, res: Response) => {
     //for MVP (signing up)
     //we will receive email and password
     try {
-        if(typeof(req.email) != 'undefined'){
-            if (await signupUser(req.email) === true) {
-                return true;
-            }
+        console.log('Received POST to /api/signup');
+        if (await signupUser(JSON.stringify(req.query.email)) === true) {
+            console.log('signup with: ' + req.query.email + ' successful');
+            res.send(JSON.stringify(true));
         }
-        console.log('Error: Sign Up Failed', Error)
-        return false;
+        else{
+            console.log('Error: Sign Up with ' + req.query.email + 'Failed', Error)
+            res.send(JSON.stringify(false));
+        }
     }
     catch (error) {
         console.log('Error: ', error)
@@ -94,18 +100,20 @@ app.post('/api/signup', async (req: loginRequest, res: Response) => {
     //if not used success = true
 });
 
-app.get('/api/classes', (req: getClassesRequest, res: Response) =>{
+app.get('/api/classes', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        if(typeof(req.email) != 'undefined'){
-            const userClasses = getClasses(req.email);
-            if (userClasses != null) {
-                return JSON.stringify(userClasses);
-            }
+        console.log('Received GET to /api/classes from: ' + req.query.email + ' = ' + await getUserIDbyEmail(JSON.stringify(req.query.email)));
+        const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
+        if (userClasses != null) {//if something has returned
+            res.send(JSON.stringify(userClasses));//send them
+            console.log('GET classes successful for: ' + req.query.email + ' with result: ' + JSON.stringify(userClasses));
         }
-        console.log('Error: No Classes Found', Error)
-        return false;
+        else{
+            res.send(JSON.stringify({}));
+            console.log('Error: No Classes Found', Error)
+        }
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error)
@@ -113,25 +121,27 @@ app.get('/api/classes', (req: getClassesRequest, res: Response) =>{
 });
 
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
-app.post('/api/classes', async (req: postClassesRequest, res: Response) =>{
+app.post('/api/classes', async (req: Request, res: Response) =>{
     //for MVP adding classes, add removal in later (should be simple)
     //adding classes for that user
     try {
-        if(typeof(req.email) != 'undefined' && typeof(req.code) != 'undefined'){
-            const success = createClass(req.email, req.code); // more fields added post MVP
-            if (await success) {
-                return true;
-            }
+        console.log('Received POST to /api/classes from: ' + req.query.email + ' = ' + await getUserIDbyEmail(JSON.stringify(req.query.email)));
+        const success = await createClass(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
+        if (success) {
+            res.send('true');
+            console.log('Create class successful for: ' + req.query.email);
         }
-        console.log('Error: Classes Creation Failed', Error)
-        return false;
+        else{
+            console.log('Error: Classes Creation Failed for: ' + req.query.email, Error);
+            res.send('false');
+        }
     }
     catch (error) {
         console.log('Error: ', error)
     }    
 });
-
-app.get('/api/assignments', (req: getAssignmentsRequest, res: Response) =>{
+/*
+app.get('/api/assignments', (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list assignments for a specific class
     try {
@@ -149,7 +159,7 @@ app.get('/api/assignments', (req: getAssignmentsRequest, res: Response) =>{
     }
 });
 
-app.post('/api/assignments', async (req: postAssignmentsRequest, res: Response) =>{
+app.post('/api/assignments', async (req: Request, res: Response) =>{
     //for MVP adding assignments, add removal in later (should be simple)
     //adding assignments to that class
     try {
@@ -167,7 +177,7 @@ app.post('/api/assignments', async (req: postAssignmentsRequest, res: Response) 
     }  
 });
 
-app.get('/api/submissions', (req: getSubmissionsRequest, res: Response) =>{
+app.get('/api/submissions', (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list submissions for a specific assignment
     try {
@@ -185,7 +195,7 @@ app.get('/api/submissions', (req: getSubmissionsRequest, res: Response) =>{
     }
 });
 
-app.post('/api/submissions', async (req: postSubmissionsRequest, res: Response) =>{
+app.post('/api/submissions', async (req: Request, res: Response) =>{
     //for MVP adding removing submissions
     //adding submissions to an assignment
     try {
@@ -204,7 +214,7 @@ app.post('/api/submissions', async (req: postSubmissionsRequest, res: Response) 
 });
 
 //AI Generate Questions request (qgen = questions generate)
-app.post('/api/qgen', async (req: qGenRequest, res: Response) => {
+app.post('/api/qgen', async (req: Request, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
@@ -238,16 +248,16 @@ app.post('/api/qgen', async (req: qGenRequest, res: Response) => {
 	//if AI function succeeds return true else return false
 });
 
-app.get('/api/vivas', (req: getVivasRequest, res: Response) =>{
+app.get('/api/vivas', (req: Request, res: Response) =>{
     //for MVP listing vivas
 });
 
-app.post('/api/vivas', (req: postVivasRequest, res: Response) =>{
+app.post('/api/vivas', (req: Request, res: Response) =>{
     //for MVP adding and removing vivas
 });
 
 
-
+*/
 //start the server
 app.listen(port, () => {
     console.log('listening at port:', port);

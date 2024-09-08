@@ -73,8 +73,14 @@ async function loginUserCheck(email) {
 // Add user into users table based on placeholder values and the email parameter.
 async function signupUser(email) {
     try {
-        await sql `INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
-        return true;
+        if (await loginUserCheck(email) != true) { //if name isnt already present
+            await sql `INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
+            return true;
+        }
+        else {
+            console.log('email: ' + email + ' already in use');
+            return false;
+        }
     }
     catch (error) {
         throw error;
@@ -105,12 +111,13 @@ async function signup(email) {
 async function getClasses(email) {
     try {
         const users = await getUserIDbyEmail(email);
-        if (users) {
+        if (users != null) {
             const results = await sql `SELECT * FROM class WHERE author_id = ${users};`;
             return results;
         }
         else {
-            throw new Error('User not found');
+            //throw new Error('User not found');
+            return null;
         }
     }
     catch (error) {
@@ -121,12 +128,13 @@ async function getClasses(email) {
 async function createClass(email, code) {
     try {
         const users = await getUserIDbyEmail(email);
-        await sql `INSERT INTO assignments (author_id, code) VALUES
-                                    (${users}, ${code});`;
+        await sql `INSERT INTO class (author_id, code) VALUES
+                                    (${users}, TRIM(both '"' from ${code}));`; //was INSERT INTO assignments before 
         return true;
     }
     catch (error) {
-        throw error;
+        //throw error;
+        return false;
     }
 }
 // get assignments based on class.
