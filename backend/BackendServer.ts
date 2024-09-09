@@ -146,7 +146,7 @@ app.get('/api/assignments', async (req: Request, res: Response) =>{
     //list assignments for a specific class
     try {
         console.log('Received GET to /api/assignments');
-        const userClassAssignments = await getAssignments(JSON.stringify(req.query.email), JSON.stringify(req.query.class_id));
+        const userClassAssignments = await getAssignments(JSON.stringify(req.query.email), Number(JSON.stringify(req.query.class_id)));
         if (userClassAssignments != null) {
             res.send(JSON.stringify(userClassAssignments));
             console.log('GET assignments successful');
@@ -166,7 +166,7 @@ app.post('/api/assignments', async (req: Request, res: Response) =>{
     //adding assignments to that class
     try {
         console.log('Received POST to /api/assignments');
-        const success = await createAssignment(JSON.stringify(req.query.email), JSON.stringify(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description)); // more fields added post MVP
+        const success = await createAssignment(JSON.stringify(req.query.email), Number(JSON.stringify(req.query.class_id)), JSON.stringify(req.query.name), JSON.stringify(req.query.description)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -186,7 +186,7 @@ app.get('/api/submissions', async (req: Request, res: Response) =>{
     //list submissions for a specific assignment
     try {
         console.log('Received GET to /api/submissions');
-        const userSubmissions = await getSubmissionsForAssignments(JSON.stringify(req.query.email), JSON.stringify(req.query.class_id), JSON.stringify(req.query.assignment_id));
+        const userSubmissions = await getSubmissionsForAssignments(JSON.stringify(req.query.email), Number(JSON.stringify(req.query.class_id)), Number(JSON.stringify(req.query.assignment_id)));
         if (userSubmissions != null) {
             res.send(JSON.stringify(userSubmissions));
             console.log('GET submissions successful');
@@ -206,7 +206,7 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
-            const success = await createSubmission(JSON.stringify(req.query.email), JSON.stringify(req.query.assignment_id), JSON.stringify(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+            const success = await createSubmission(JSON.stringify(req.query.email), Number(JSON.stringify(req.query.assignment_id)), Number(JSON.stringify(req.query.student_id)), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
             if (success) {
                 res.send(JSON.stringify(true));
                 console.log('Create submission successful')
@@ -226,7 +226,7 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
-        const sPath = getSubmissionFilePathForSubID(JSON.stringify(req.query.submission_id));
+        const sPath = getSubmissionFilePathForSubID(Number(JSON.stringify(req.query.submission_id)));
 
         //let ai = new AIService("./ServerStorage");
 
@@ -241,7 +241,7 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         //postAIOutputForSubmission(parseInt(req.submission_id), questions);
             
         //verify any questions exist for submission
-        const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), JSON.stringify(req.query.submission_id), JSON.stringify(req.query.result_id));
+        const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(JSON.stringify(req.query.submission_id)), Number(JSON.stringify(req.query.result_id)));
         if (foundAIQs != null){
             res.send(JSON.stringify(true));
             console.log('AI question generation successful');

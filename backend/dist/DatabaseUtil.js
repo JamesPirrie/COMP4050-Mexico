@@ -53,7 +53,7 @@ const sql = (0, postgres_1.default)(`postgres://${process.env.USER}:${process.en
 // Convert email to user_id. Returns integer if found, null otherwise.
 async function getUserIDbyEmail(email) {
     try {
-        const users = await sql `SELECT user_id FROM users WHERE email LIKE ${email};`;
+        const users = await sql `SELECT user_id FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? users[0]['user_id'] : null;
     }
     catch (error) {
@@ -63,7 +63,7 @@ async function getUserIDbyEmail(email) {
 // Check if user email exists. Return false otherwise.
 async function loginUserCheck(email) {
     try {
-        const users = await sql `SELECT * FROM users WHERE email LIKE ${email};`;
+        const users = await sql `SELECT * FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? true : false;
     }
     catch (error) {
@@ -74,7 +74,7 @@ async function loginUserCheck(email) {
 async function signupUser(email) {
     try {
         if (await loginUserCheck(email) != true) { //if name isnt already present
-            await sql `INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
+            await sql `INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), false)`;
             return true;
         }
         else {
@@ -128,8 +128,9 @@ async function getClasses(email) {
 async function createClass(email, code) {
     try {
         const users = await getUserIDbyEmail(email);
+        //we should probably ass some sort of class already exists protection in future
         await sql `INSERT INTO class (author_id, code) VALUES
-                                    (${users}, TRIM(both '"' from ${code}));`; //was INSERT INTO assignments before 
+                                    (${users}, TRIM(both '"' from ${code}));`; //the TRIM bit is because this has "" on it because typescript/javascript
         return true;
     }
     catch (error) {
@@ -161,7 +162,7 @@ async function createAssignment(email, class_id, name, description) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql `INSERT INTO assignments (class_id, name, description) VALUES
-                                    (${class_id}, ${name}, ${description});`;
+                                    (TRIM(both '"' from ${class_id}), ${name}, ${description});`;
         return true;
     }
     catch (error) {

@@ -10,7 +10,7 @@ const sql = postgres(`postgres://${process.env.USER}:${process.env.PASS}@${proce
 // Convert email to user_id. Returns integer if found, null otherwise.
 export async function getUserIDbyEmail(email: string) {
     try {
-        const users = await sql`SELECT user_id FROM users WHERE email LIKE ${email};`;
+        const users = await sql`SELECT user_id FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? users[0]['user_id'] : null;
     }
     catch (error) {
@@ -21,7 +21,7 @@ export async function getUserIDbyEmail(email: string) {
 // Check if user email exists. Return false otherwise.
 export async function loginUserCheck(email: string) {
     try {
-        const users = await sql`SELECT * FROM users WHERE email LIKE ${email};`;
+        const users = await sql`SELECT * FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? true : false;
     }
     catch (error) {
@@ -33,7 +33,7 @@ export async function loginUserCheck(email: string) {
 export async function signupUser(email: string) {
     try {
         if(await loginUserCheck(email) != true){//if name isnt already present
-            await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', ${email}, false)`;
+            await sql`INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), false)`;
             return true;
         }
         else{
@@ -74,7 +74,7 @@ export async function getClasses(email: string) {
     try {
         const users = await getUserIDbyEmail(email);
         if (users != null) {
-            const results = await sql`SELECT * FROM class WHERE author_id = ${users};`
+            const results = await sql`SELECT * FROM class WHERE author_id = TRIM(both '"' from ${users});`
             return results;
         }
         else {
@@ -94,7 +94,7 @@ export async function createClass(email: string, code: string) {
         const users = await getUserIDbyEmail(email);
         //we should probably ass some sort of class already exists protection in future
         await sql`INSERT INTO class (author_id, code) VALUES
-                                    (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
+                                    (TRIM(both '"' from ${users}), TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
         return true;
     }
     catch (error) {
@@ -104,12 +104,13 @@ export async function createClass(email: string, code: string) {
 }
 
 // get assignments based on class.
-export async function getAssignments(email: string, specificClass: string) {
+export async function getAssignments(email: string, specificClass: number) {
     try {
         const users = await getUserIDbyEmail(email);
 		if (users) {
 			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
-			if (verifyUser[0]['author_id'] === users['user_id']) {const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
+			if (verifyUser[0]['author_id'] === users['user_id']) {
+                const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
 				return results.length ? results : null;
 			}
 		}
@@ -123,11 +124,11 @@ export async function getAssignments(email: string, specificClass: string) {
 }
 
 // post assignments based on class.
-export async function createAssignment(email: string, class_id: string, name: string, description: string) {
+export async function createAssignment(email: string, class_id: number, name: string, description: string) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO assignments (class_id, name, description) VALUES
-                                    (${class_id}, ${name}, ${description});`;
+                                    (TRIM(both '"' from ${class_id}), ${name}, ${description});`;
         return true;
     }
     catch (error) {
@@ -137,7 +138,7 @@ export async function createAssignment(email: string, class_id: string, name: st
 
 // get viva based on submissions JOIN viva_output
 // TO DO
-export async function getVivaForSubmission(email: string, specificSubmission: string, specificGenQ: string){
+export async function getVivaForSubmission(email: string, specificSubmission: number, specificGenQ: number){
     try {
         const users = await getUserIDbyEmail(email);
 		if (users) {
@@ -153,7 +154,7 @@ export async function getVivaForSubmission(email: string, specificSubmission: st
 }
 
 // get specific submissions with submission_id
-export async function getSubmissionFilePathForSubID(specificSubmission: string){
+export async function getSubmissionFilePathForSubID(specificSubmission: number){
     try {
         const submission = await sql`SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
 		const sPath = submission[0].submission_filepath;
@@ -165,7 +166,7 @@ export async function getSubmissionFilePathForSubID(specificSubmission: string){
 }
 
 // get submissions with user, class, and assignment
-export async function getSubmissionsForAssignments(email: string, specificClass: string, specificAssignment: string){
+export async function getSubmissionsForAssignments(email: string, specificClass: number, specificAssignment: number){
     try {
         const users = await getUserIDbyEmail(email);
 		if (users) {
@@ -188,7 +189,7 @@ export async function getSubmissionsForAssignments(email: string, specificClass:
 }
 
 // post submissions with document, class, placeholder student
-export async function createSubmission(email: string, assignment_id: string, student_id: string, submission_date: string, submission_filepath: string) {
+export async function createSubmission(email: string, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
