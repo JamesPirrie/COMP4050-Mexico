@@ -126,6 +126,15 @@ app.post('/api/classes', async (req: Request, res: Response) =>{
     }    
 });
 
+app.delete('/api/classes', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received DELETE to /api/classes');
+    }
+    catch (error) {
+        console.log('Error: ', error)
+    }    
+});
+
 app.get('/api/assignments', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list assignments for a specific class
@@ -166,6 +175,15 @@ app.post('/api/assignments', async (req: Request, res: Response) =>{
     }  
 });
 
+app.delete('/api/assignments', async (req: Request, res: Response) => {
+    try{
+        console.log('Received DELETE to /api/assignments');
+    }
+    catch (error) {
+        console.log('Error: ', error)
+    }  
+});
+
 app.get('/api/submissions', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list submissions for a specific assignment
@@ -187,7 +205,7 @@ app.get('/api/submissions', async (req: Request, res: Response) =>{
 });
 
 app.post('/api/submissions', async (req: Request, res: Response) =>{
-    //for MVP adding removing submissions
+    //for MVP adding submissions
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -205,6 +223,15 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
         console.log('Error: ', error)
     }  
 });
+
+app.delete('/api/submissions', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received DELETE to /api/submissions');
+    }
+    catch(error){
+        console.log('Error: ', error)
+    }
+})
 
 app.get('/api/students', async (req: Request, res: Response) =>{//placeholder for now just dumps all students in database
     try{
@@ -236,6 +263,15 @@ app.post('/api/students', async (req: Request, res: Response) =>{
             console.log('Error: student Creation Failed', Error)
             res.send(JSON.stringify(false));
         }
+    }
+    catch(error){
+        console.log('Error: ', error)
+    }
+});
+
+app.delete('/api/students', async (req: Request, res: Response) =>{//for deleting students
+    try{
+        console.log('Received DELETE to /api/students');
     }
     catch(error){
         console.log('Error: ', error)
@@ -283,7 +319,11 @@ app.get('/api/vivas', async (req: Request, res: Response) =>{
 });
 
 app.post('/api/vivas', async (req: Request, res: Response) =>{
-    //for MVP adding and removing vivas
+    //for MVP adding and 
+});
+
+app.delete('/api/vivas', async (req: Request, res: Response) => {
+    //for MVP removing vivas
 });
 
 //start the server
