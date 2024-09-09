@@ -10,13 +10,21 @@ def dashboard():
 def classes():
     return render_template('classes.html')
 
+@app.route('/assignments')
+def classes():
+    return render_template('assignments.html')
+
+@app.route('/vivas')
+def classes():
+    return render_template('vivas.html')
+
 @app.route('/settings')
 def settings():
     return render_template('settings.html')
 
 @app.route('/new_project')
 def new_project():
-    return render_template('new_project.html')
+    return render_template('newProj.html')
 
 @app.route('/assignments')
 def assignments():
