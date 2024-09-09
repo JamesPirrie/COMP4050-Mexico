@@ -2,24 +2,9 @@
 
 import express from 'express';
 import {Response, Request} from 'express';
-import {addStudent, getAllStudents, getUserIDbyEmail} from "./DatabaseUtil";
-import {loginUserCheck} from "./DatabaseUtil";
-import {signupUser} from "./DatabaseUtil";
-import {getUser} from "./DatabaseUtil";
-import {signup} from "./DatabaseUtil";
-import {getClasses} from "./DatabaseUtil";
-import {getAssignments} from "./DatabaseUtil";
-import {getSubmissionsForAssignments} from "./DatabaseUtil";
-import {getVivaForSubmission} from "./DatabaseUtil";
-import {getSubmissionFilePathForSubID} from "./DatabaseUtil";
-import {createClass} from "./DatabaseUtil";
-import {createAssignment} from "./DatabaseUtil";
-import {createSubmission} from "./DatabaseUtil";
-import {postAIOutputForSubmission} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments} from "./DatabaseUtil";
+import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission} from "./DatabaseUtil";
 import * as AIService from "comp4050ai";
-
-import {loginRequest, getClassesRequest, postClassesRequest, getAssignmentsRequest, postAssignmentsRequest} from './RequestInterfaces'
-import {getSubmissionsRequest, postSubmissionsRequest, qGenRequest, getVivasRequest, postVivasRequest} from './RequestInterfaces'
 
 const app = express();
 const port = 3000;
