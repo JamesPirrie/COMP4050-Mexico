@@ -8,7 +8,7 @@ const sql = postgres(`postgres://${process.env.USER}:${process.env.PASS}@${proce
 /* --------------------------------------------------------------------------- */
 
 // Convert email to user_id. Returns integer if found, null otherwise.
-export async function getUserIDbyEmail(email: string) {
+export async function getUserIDbyEmail(email: string){
     try {
         const users = await sql`SELECT user_id FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? users[0]['user_id'] : null;
@@ -74,7 +74,7 @@ export async function getClasses(email: string) {
     try {
         const users = await getUserIDbyEmail(email);
         if (users != null) {
-            const results = await sql`SELECT * FROM class WHERE author_id = TRIM(both '"' from ${users});`
+            const results = await sql`SELECT * FROM class WHERE author_id = ${users};`
             return results;
         }
         else {
@@ -92,9 +92,9 @@ export async function getClasses(email: string) {
 export async function createClass(email: string, code: string) {
     try {
         const users = await getUserIDbyEmail(email);
-        //we should probably ass some sort of class already exists protection in future
+        //we should probably add some sort of class already exists protection in future
         await sql`INSERT INTO class (author_id, code) VALUES
-                                    (TRIM(both '"' from ${users}), TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
+                                    (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
         return true;
     }
     catch (error) {
@@ -108,8 +108,8 @@ export async function getAssignments(email: string, specificClass: number) {
     try {
         const users = await getUserIDbyEmail(email);
 		if (users) {
-			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
-			if (verifyUser[0]['author_id'] === users['user_id']) {
+			const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+			if (verifyUser[0]['author_id'] === users) {
                 const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
 				return results.length ? results : null;
 			}
@@ -127,8 +127,7 @@ export async function getAssignments(email: string, specificClass: number) {
 export async function createAssignment(email: string, class_id: number, name: string, description: string) {
     try {
         const users = await getUserIDbyEmail(email);
-        await sql`INSERT INTO assignments (class_id, name, description) VALUES
-                                    ${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
+        await sql`INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
         return true;
     }
     catch (error) {
@@ -170,9 +169,9 @@ export async function getSubmissionsForAssignments(email: string, specificClass:
     try {
         const users = await getUserIDbyEmail(email);
 		if (users) {
-			const verifyUser = await sql`SELECT author_id FROM class WHERE class = ${specificClass};`;
-			if (verifyUser[0]['author_id'] === users['user_id']) {				
-				const verifyClass = await sql`SELECT class_id FROM assignments WHERE assignments = ${specificAssignment};`
+			const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+			if (verifyUser[0]['author_id'] === users) {				
+				const verifyClass = await sql`SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`
 				if (verifyClass[0]['class_id'] === verifyUser[0]['class_id']) {
 					const results = await sql`SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
 					return results.length ? results : null;
@@ -218,7 +217,7 @@ export async function getPDFFile(student_id: number, assignment_id: number) {
 export async function postAIOutputForSubmission(submission_id: number, generated_questions: string) {
     try {
         await sql`INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                VALUES (${submission_id}, 'TRIM(both '"' from ${JSON.parse(generated_questions)})', CURRENT_TIMESTAMP);`;
+                                VALUES (${submission_id}, 'TRIM(both '"' from ${JSON.parse(generated_questions)})', CURRENT_TIMESTAMP);`;//TRIM might be weird here idk 
         return true;
     }
     catch (error) {

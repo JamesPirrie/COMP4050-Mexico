@@ -128,7 +128,7 @@ async function getClasses(email) {
 async function createClass(email, code) {
     try {
         const users = await getUserIDbyEmail(email);
-        //we should probably ass some sort of class already exists protection in future
+        //we should probably add some sort of class already exists protection in future
         await sql `INSERT INTO class (author_id, code) VALUES
                                     (${users}, TRIM(both '"' from ${code}));`; //the TRIM bit is because this has "" on it because typescript/javascript
         return true;
@@ -143,8 +143,8 @@ async function getAssignments(email, specificClass) {
     try {
         const users = await getUserIDbyEmail(email);
         if (users) {
-            const verifyUser = await sql `SELECT author_id FROM class WHERE class = ${specificClass};`;
-            if (verifyUser[0]['author_id'] === users['user_id']) {
+            const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            if (verifyUser[0]['author_id'] === users) {
                 const results = await sql `SELECT * FROM assignments WHERE class_id = ${specificClass};`;
                 return results.length ? results : null;
             }
@@ -161,8 +161,7 @@ async function getAssignments(email, specificClass) {
 async function createAssignment(email, class_id, name, description) {
     try {
         const users = await getUserIDbyEmail(email);
-        await sql `INSERT INTO assignments (class_id, name, description) VALUES
-                                    (TRIM(both '"' from ${class_id}), ${name}, ${description});`;
+        await sql `INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
         return true;
     }
     catch (error) {
@@ -223,7 +222,7 @@ async function createSubmission(email, assignment_id, student_id, submission_dat
     try {
         const users = await getUserIDbyEmail(email);
         await sql `INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                    (${assignment_id}, ${student_id}, ${submission_date}, ${submission_filepath});`;
+                                    (${assignment_id}, ${student_id}, TRIM(both '"' from ${submission_date}), TRIM(both '"' from ${submission_filepath}));`;
         return true;
     }
     catch (error) {
@@ -246,7 +245,7 @@ async function getPDFFile(student_id, assignment_id) {
 async function postAIOutputForSubmission(submission_id, generated_questions) {
     try {
         await sql `INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                VALUES (${submission_id}, '${JSON.parse(generated_questions)}', CURRENT_TIMESTAMP);`;
+                                VALUES (${submission_id}, 'TRIM(both '"' from ${JSON.parse(generated_questions)})', CURRENT_TIMESTAMP);`; //TRIM might be weird here idk 
         return true;
     }
     catch (error) {
@@ -288,7 +287,7 @@ async function createExams(submission_id, student_id, email) {
 async function addStudent(student_id, first_name, last_name, email) {
     try {
         await sql `INSERT INTO students (student_id, first_name, last_name, email) VALUES
-                                    (${student_id}, ${first_name}, ${last_name}, ${email});`;
+                                    (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
         return true;
     }
     catch (error) {
