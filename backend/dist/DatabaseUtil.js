@@ -46,6 +46,10 @@ exports.getExams = getExams;
 exports.createExams = createExams;
 exports.addStudent = addStudent;
 exports.getAllStudents = getAllStudents;
+exports.deleteStudent = deleteStudent;
+exports.deleteSubmission = deleteSubmission;
+exports.deleteClass = deleteClass;
+exports.deleteAssignment = deleteAssignment;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -299,6 +303,47 @@ async function getAllStudents() {
     try {
         const students = await sql `SELECT * FROM students`;
         return students;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+//DELETE FUNCTIONS
+async function deleteStudent(student_id) {
+    try {
+        //may add a check that the student exists because currently returns true even if the thing doesnt exist
+        const success = await sql `DELETE FROM students WHERE student_id = ${student_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function deleteSubmission(submission_id) {
+    try {
+        //may add a check that the submission exists
+        const success = await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function deleteClass(class_id) {
+    try {
+        //may add a check that the class exists
+        const success = await sql `DELETE FROM class WHERE class_id = ${class_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function deleteAssignment(assignment_id) {
+    try {
+        //may add a check that the assignment exists
+        const success = await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
+        return true;
     }
     catch (error) {
         throw error;

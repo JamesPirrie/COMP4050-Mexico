@@ -280,8 +280,54 @@ export async function getAllStudents() {//placeholder for the students get endpo
         throw error;
     }
 }
+//DELETE FUNCTIONS
 
+export async function deleteStudent(student_id: number) {
+    try{
+        //may add a check that the student exists because currently returns true even if the thing doesnt exist
+        const success = await sql`DELETE FROM students WHERE student_id = ${student_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
 
+export async function deleteSubmission(submission_id: number) {
+    try{
+        //may add a check that the author is the one sending the request
+        //may add a check that the submission exists
+        const success = await sql`DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
+
+export async function deleteClass(class_id: number) {
+    try{
+        //may add a check that the author is the one sending the request
+        //may add a check that the class exists
+        const success = await sql`DELETE FROM class WHERE class_id = ${class_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
+
+export async function deleteAssignment(assignment_id: number) {
+    try{
+        //may add a check that the author is the one sending the request
+        //may add a check that the assignment exists
+        const success = await sql`DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
 
 
 

@@ -2,7 +2,7 @@
 
 import express from 'express';
 import {Response, Request} from 'express';
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass} from "./DatabaseUtil";
 import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission} from "./DatabaseUtil";
 import * as AIService from "comp4050ai";
 
@@ -129,8 +129,17 @@ app.post('/api/classes', async (req: Request, res: Response) =>{
 app.delete('/api/classes', async (req: Request, res: Response) =>{
     try{
         console.log('Received DELETE to /api/classes');
+        const success = await deleteClass(Number(req.query.class_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete class successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: class Deletion Failed', Error)
+        }
     }
-    catch (error) {
+    catch(error) {
         console.log('Error: ', error)
     }    
 });
@@ -178,8 +187,17 @@ app.post('/api/assignments', async (req: Request, res: Response) =>{
 app.delete('/api/assignments', async (req: Request, res: Response) => {
     try{
         console.log('Received DELETE to /api/assignments');
+        const success = await deleteAssignment(Number(req.query.assignment_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete assignment successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: assignment Deletion Failed', Error)
+        }
     }
-    catch (error) {
+    catch(error) {
         console.log('Error: ', error)
     }  
 });
@@ -215,8 +233,8 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
             console.log('Create submission successful')
         }
         else{
-            console.log('Error: submission Creation Failed', Error)
             res.send(JSON.stringify(false));
+            console.log('Error: submission Creation Failed', Error)
         }
     }
     catch (error) {
@@ -227,6 +245,15 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
 app.delete('/api/submissions', async (req: Request, res: Response) =>{
     try{
         console.log('Received DELETE to /api/submissions');
+        const success = await deleteSubmission(Number(req.query.submission_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete submission successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: submission Deletion Failed', Error)
+        }
     }
     catch(error){
         console.log('Error: ', error)
@@ -260,8 +287,8 @@ app.post('/api/students', async (req: Request, res: Response) =>{
             console.log('Create student successful')
         }
         else{
-            console.log('Error: student Creation Failed', Error)
             res.send(JSON.stringify(false));
+            console.log('Error: student Creation Failed', Error)
         }
     }
     catch(error){
@@ -272,6 +299,15 @@ app.post('/api/students', async (req: Request, res: Response) =>{
 app.delete('/api/students', async (req: Request, res: Response) =>{//for deleting students
     try{
         console.log('Received DELETE to /api/students');
+        const success = await deleteStudent(Number(req.query.student_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete student successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: student Deletion Failed', Error)
+        }
     }
     catch(error){
         console.log('Error: ', error)

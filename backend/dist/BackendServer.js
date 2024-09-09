@@ -113,6 +113,23 @@ app.post('/api/classes', async (req, res) => {
         console.log('Error: ', error);
     }
 });
+app.delete('/api/classes', async (req, res) => {
+    try {
+        console.log('Received DELETE to /api/classes');
+        const success = await (0, DatabaseUtil_1.deleteClass)(Number(req.query.class_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete class successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: class Deletion Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
 app.get('/api/assignments', async (req, res) => {
     //for MVP (listing classes)
     //list assignments for a specific class
@@ -151,6 +168,23 @@ app.post('/api/assignments', async (req, res) => {
         console.log('Error: ', error);
     }
 });
+app.delete('/api/assignments', async (req, res) => {
+    try {
+        console.log('Received DELETE to /api/assignments');
+        const success = await (0, DatabaseUtil_1.deleteAssignment)(Number(req.query.assignment_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete assignment successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: assignment Deletion Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
 app.get('/api/submissions', async (req, res) => {
     //for MVP (listing classes)
     //list submissions for a specific assignment
@@ -171,7 +205,7 @@ app.get('/api/submissions', async (req, res) => {
     }
 });
 app.post('/api/submissions', async (req, res) => {
-    //for MVP adding removing submissions
+    //for MVP adding submissions
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -181,8 +215,25 @@ app.post('/api/submissions', async (req, res) => {
             console.log('Create submission successful');
         }
         else {
-            console.log('Error: submission Creation Failed', Error);
             res.send(JSON.stringify(false));
+            console.log('Error: submission Creation Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
+app.delete('/api/submissions', async (req, res) => {
+    try {
+        console.log('Received DELETE to /api/submissions');
+        const success = await (0, DatabaseUtil_1.deleteSubmission)(Number(req.query.submission_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete submission successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: submission Deletion Failed', Error);
         }
     }
     catch (error) {
@@ -215,8 +266,25 @@ app.post('/api/students', async (req, res) => {
             console.log('Create student successful');
         }
         else {
-            console.log('Error: student Creation Failed', Error);
             res.send(JSON.stringify(false));
+            console.log('Error: student Creation Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
+app.delete('/api/students', async (req, res) => {
+    try {
+        console.log('Received DELETE to /api/students');
+        const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.query.student_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete student successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: student Deletion Failed', Error);
         }
     }
     catch (error) {
@@ -255,7 +323,10 @@ app.get('/api/vivas', async (req, res) => {
     //for MVP listing vivas
 });
 app.post('/api/vivas', async (req, res) => {
-    //for MVP adding and removing vivas
+    //for MVP adding and 
+});
+app.delete('/api/vivas', async (req, res) => {
+    //for MVP removing vivas
 });
 //start the server
 app.listen(port, () => {
