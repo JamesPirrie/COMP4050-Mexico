@@ -170,9 +170,9 @@ export async function getSubmissionsForAssignments(email: string, specificClass:
         const users = await getUserIDbyEmail(email);
 		if (users) {
 			const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
-			if (verifyUser[0]['author_id'] === users) {				
+			if (verifyUser[0]['author_id'] === users) {	//verifying that the user is the one that owns this class			
 				const verifyClass = await sql`SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`
-				if (verifyClass[0]['class_id'] === verifyUser[0]['class_id']) {
+				if (verifyClass[0]['class_id'] === specificClass) {//if the class we have verified the user has control over is the same as the one that corresponds to the assignments
 					const results = await sql`SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
 					return results.length ? results : null;
 				}
@@ -190,9 +190,9 @@ export async function getSubmissionsForAssignments(email: string, specificClass:
 // post submissions with document, class, placeholder student
 export async function createSubmission(email: string, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = await getUserIDbyEmail(email);//not used?
         await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                    (${assignment_id}, ${student_id}, TRIM(both '"' from ${submission_date}), TRIM(both '"' from ${submission_filepath}));`;
+                                    (${assignment_id}, ${student_id}, NOW(), TRIM(both '"' from ${submission_filepath}));`;//for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
         return true;
     }
     catch (error) {
@@ -267,6 +267,16 @@ export async function addStudent(student_id: number, first_name: string, last_na
         return true;
     }
     catch (error) {
+        throw error;
+    }
+}
+
+export async function getAllStudents() {//placeholder for the students get endpoint
+    try{
+        const students = await sql`SELECT * FROM students`;
+        return students;
+    }
+    catch(error){
         throw error;
     }
 }

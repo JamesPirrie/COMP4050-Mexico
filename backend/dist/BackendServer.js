@@ -15,6 +15,7 @@ const DatabaseUtil_7 = require("./DatabaseUtil");
 const DatabaseUtil_8 = require("./DatabaseUtil");
 const DatabaseUtil_9 = require("./DatabaseUtil");
 const DatabaseUtil_10 = require("./DatabaseUtil");
+const DatabaseUtil_11 = require("./DatabaseUtil");
 const app = (0, express_1.default)();
 const port = 3000;
 app.use(express_1.default.json()); //without this req.body is undefined
@@ -44,12 +45,12 @@ app.put('/', (req, res) => {
     res.send('PUT Request received');
 });
 //actual endpoints (my understanding of how this will work please correct this if im wrong)
-app.post('/api/login', async (req, res) => {
+app.get('/api/login', async (req, res) => {
     //for MVP (logging in)
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.query.email)) === true) {
+        if (await (0, DatabaseUtil_2.loginUserCheck)(JSON.stringify(req.query.email)) === true) {
             console.log('login with: ' + JSON.stringify(req.query.email) + 'successful');
             res.send(JSON.stringify(true));
         }
@@ -67,7 +68,7 @@ app.post('/api/signup', async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
-        if (await (0, DatabaseUtil_2.signupUser)(JSON.stringify(req.query.email)) === true) {
+        if (await (0, DatabaseUtil_3.signupUser)(JSON.stringify(req.query.email)) === true) {
             console.log('signup with: ' + req.query.email + ' successful');
             res.send(JSON.stringify(true));
         }
@@ -87,7 +88,7 @@ app.get('/api/classes', async (req, res) => {
     // get list of classes of the user (how we are doing sessions though)
     try {
         console.log('Received GET to /api/classes');
-        const userClasses = await (0, DatabaseUtil_3.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
+        const userClasses = await (0, DatabaseUtil_4.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
         if (userClasses != null) { //if something has returned
             console.log('GET classes successful');
             res.send(JSON.stringify(userClasses)); //send them
@@ -107,7 +108,7 @@ app.post('/api/classes', async (req, res) => {
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await (0, DatabaseUtil_8.createClass)(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_9.createClass)(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -126,7 +127,7 @@ app.get('/api/assignments', async (req, res) => {
     //list assignments for a specific class
     try {
         console.log('Received GET to /api/assignments');
-        const userClassAssignments = await (0, DatabaseUtil_4.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
+        const userClassAssignments = await (0, DatabaseUtil_5.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
         if (userClassAssignments != null) {
             res.send(JSON.stringify(userClassAssignments));
             console.log('GET assignments successful');
@@ -145,7 +146,7 @@ app.post('/api/assignments', async (req, res) => {
     //adding assignments to that class
     try {
         console.log('Received POST to /api/assignments');
-        const success = await (0, DatabaseUtil_9.createAssignment)(JSON.stringify(req.query.email), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_10.createAssignment)(JSON.stringify(req.query.email), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -164,7 +165,7 @@ app.get('/api/submissions', async (req, res) => {
     //list submissions for a specific assignment
     try {
         console.log('Received GET to /api/submissions');
-        const userSubmissions = await (0, DatabaseUtil_5.getSubmissionsForAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
+        const userSubmissions = await (0, DatabaseUtil_6.getSubmissionsForAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
         if (userSubmissions != null) {
             res.send(JSON.stringify(userSubmissions));
             console.log('GET submissions successful');
@@ -183,7 +184,7 @@ app.post('/api/submissions', async (req, res) => {
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
-        const success = await (0, DatabaseUtil_10.createSubmission)(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+        const success = await (0, DatabaseUtil_11.createSubmission)(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create submission successful');
@@ -197,12 +198,46 @@ app.post('/api/submissions', async (req, res) => {
         console.log('Error: ', error);
     }
 });
+app.get('/api/students', async (req, res) => {
+    try {
+        console.log('Received GET to /api/students');
+        const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
+        if (studentsList != null) {
+            res.send(JSON.stringify(studentsList));
+            console.log('GET Students successful');
+        }
+        else {
+            res.send(JSON.stringify({}));
+            console.log('GET students failed');
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
+app.post('/api/students', async (req, res) => {
+    try {
+        console.log('Received POST to /api/students');
+        const success = await (0, DatabaseUtil_1.addStudent)(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Create student successful');
+        }
+        else {
+            console.log('Error: student Creation Failed', Error);
+            res.send(JSON.stringify(false));
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
 //AI Generate Questions request (qgen = questions generate)
 app.post('/api/qgen', async (req, res) => {
     //for MVP only single item, this needs to be checked with AI team about if created files are cleared.
     //We will get Submission ID
     try {
-        const sPath = (0, DatabaseUtil_7.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
+        const sPath = (0, DatabaseUtil_8.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
         //let ai = new AIService("./ServerStorage");
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         //let doc_id = ai.generateQuestions(sPath);
@@ -210,7 +245,7 @@ app.post('/api/qgen', async (req, res) => {
         //let questions = ai.getQuestions(doc_id);
         //postAIOutputForSubmission(parseInt(req.submission_id), questions);
         //verify any questions exist for submission
-        const foundAIQs = (0, DatabaseUtil_6.getVivaForSubmission)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
+        const foundAIQs = (0, DatabaseUtil_7.getVivaForSubmission)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
         if (foundAIQs != null) {
             res.send(JSON.stringify(true));
             console.log('AI question generation successful');

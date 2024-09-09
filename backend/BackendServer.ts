@@ -2,7 +2,7 @@
 
 import express from 'express';
 import {Response, Request} from 'express';
-import {getUserIDbyEmail} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail} from "./DatabaseUtil";
 import {loginUserCheck} from "./DatabaseUtil";
 import {signupUser} from "./DatabaseUtil";
 import {getUser} from "./DatabaseUtil";
@@ -206,36 +206,54 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
-            const success = await createSubmission(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
-            if (success) {
-                res.send(JSON.stringify(true));
-                console.log('Create submission successful')
-            }
-            else{
-                console.log('Error: submission Creation Failed', Error)
-                res.send(JSON.stringify(false));
-            }
+        const success = await createSubmission(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Create submission successful')
+        }
+        else{
+            console.log('Error: submission Creation Failed', Error)
+            res.send(JSON.stringify(false));
+        }
     }
     catch (error) {
         console.log('Error: ', error)
     }  
 });
 
-app.get('/api/students', async (req: Request, res: Response) =>{
+app.get('/api/students', async (req: Request, res: Response) =>{//placeholder for now just dumps all students in database
     try{
         console.log('Received GET to /api/students');
+        const studentsList = await getAllStudents();
+        if (studentsList != null) {
+            res.send(JSON.stringify(studentsList));
+            console.log('GET Students successful');
+        }
+        else{
+            res.send(JSON.stringify({}));
+            console.log('GET students failed')
+        }
     }
     catch(error){
-
+        console.log('Error: ', error)
     }
 });
 
 app.post('/api/students', async (req: Request, res: Response) =>{
     try{
-
+        console.log('Received POST to /api/students');
+        const success = await addStudent(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Create student successful')
+        }
+        else{
+            console.log('Error: student Creation Failed', Error)
+            res.send(JSON.stringify(false));
+        }
     }
     catch(error){
-        
+        console.log('Error: ', error)
     }
 });
 

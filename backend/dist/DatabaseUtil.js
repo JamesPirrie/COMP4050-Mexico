@@ -45,6 +45,7 @@ exports.getQuestions = getQuestions;
 exports.getExams = getExams;
 exports.createExams = createExams;
 exports.addStudent = addStudent;
+exports.getAllStudents = getAllStudents;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -200,10 +201,10 @@ async function getSubmissionsForAssignments(email, specificClass, specificAssign
     try {
         const users = await getUserIDbyEmail(email);
         if (users) {
-            const verifyUser = await sql `SELECT author_id FROM class WHERE class = ${specificClass};`;
-            if (verifyUser[0]['author_id'] === users['user_id']) {
-                const verifyClass = await sql `SELECT class_id FROM assignments WHERE assignments = ${specificAssignment};`;
-                if (verifyClass[0]['class_id'] === verifyUser[0]['class_id']) {
+            const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            if (verifyUser[0]['author_id'] === users) { //verifying that the user is the one that owns this class			
+                const verifyClass = await sql `SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`;
+                if (verifyClass[0]['class_id'] === specificClass) { //if the class we have verified the user has control over is the same as the one that corresponds to the assignments
                     const results = await sql `SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
                     return results.length ? results : null;
                 }
@@ -220,9 +221,9 @@ async function getSubmissionsForAssignments(email, specificClass, specificAssign
 // post submissions with document, class, placeholder student
 async function createSubmission(email, assignment_id, student_id, submission_date, submission_filepath) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = await getUserIDbyEmail(email); //not used?
         await sql `INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                    (${assignment_id}, ${student_id}, TRIM(both '"' from ${submission_date}), TRIM(both '"' from ${submission_filepath}));`;
+                                    (${assignment_id}, ${student_id}, NOW(), TRIM(both '"' from ${submission_filepath}));`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
         return true;
     }
     catch (error) {
@@ -289,6 +290,15 @@ async function addStudent(student_id, first_name, last_name, email) {
         await sql `INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                     (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
         return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function getAllStudents() {
+    try {
+        const students = await sql `SELECT * FROM students`;
+        return students;
     }
     catch (error) {
         throw error;
