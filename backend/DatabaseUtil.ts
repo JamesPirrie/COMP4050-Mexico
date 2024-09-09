@@ -128,7 +128,7 @@ export async function createAssignment(email: string, class_id: number, name: st
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO assignments (class_id, name, description) VALUES
-                                    (TRIM(both '"' from ${class_id}), ${name}, ${description});`;
+                                    ${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
         return true;
     }
     catch (error) {
@@ -193,7 +193,7 @@ export async function createSubmission(email: string, assignment_id: number, stu
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                    (${assignment_id}, ${student_id}, ${submission_date}, ${submission_filepath});`;
+                                    (${assignment_id}, ${student_id}, TRIM(both '"' from ${submission_date}), TRIM(both '"' from ${submission_filepath}));`;
         return true;
     }
     catch (error) {
@@ -218,7 +218,7 @@ export async function getPDFFile(student_id: number, assignment_id: number) {
 export async function postAIOutputForSubmission(submission_id: number, generated_questions: string) {
     try {
         await sql`INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                VALUES (${submission_id}, '${JSON.parse(generated_questions)}', CURRENT_TIMESTAMP);`;
+                                VALUES (${submission_id}, 'TRIM(both '"' from ${JSON.parse(generated_questions)})', CURRENT_TIMESTAMP);`;
         return true;
     }
     catch (error) {
@@ -264,7 +264,7 @@ export async function createExams(submission_id: number, student_id: number, ema
 export async function addStudent(student_id: number, first_name: string, last_name: string, email: string) {
     try {
         await sql`INSERT INTO students (student_id, first_name, last_name, email) VALUES
-                                    (${student_id}, ${first_name}, ${last_name}, ${email});`;
+                                    (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
         return true;
     }
     catch (error) {
