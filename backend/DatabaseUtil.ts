@@ -347,7 +347,7 @@ export async function deleteExam(email: string, exam_id: number) {
 }
 
 //EDIT FUNCTIONS
-export async function editStudent(student_id: number, first_name: string, last_name: string, email: string) {
+export async function editStudent(email: string, student_id: number, first_name: string, last_name: string) {
     try{
         //add a check that the student exists
         await sql`UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id};`;
