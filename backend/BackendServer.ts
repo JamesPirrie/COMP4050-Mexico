@@ -344,7 +344,7 @@ app.get('/api/students', async (req: Request, res: Response) =>{//placeholder fo
 app.post('/api/students', async (req: Request, res: Response) =>{
     try{
         console.log('Received POST to /api/students');
-        const success = await addStudent(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        const success = await addStudent(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create student successful')
@@ -469,7 +469,7 @@ app.post('/api/vivas', async (req: Request, res: Response) =>{
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
-        const success = await createExams(Number(req.query.submission_id), Number(req.query.student_id), JSON.stringify(req.query.email)); // more fields added post MVP
+        const success = await createExams(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.student_id)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create Exam successful');
