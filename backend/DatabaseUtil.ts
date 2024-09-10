@@ -73,7 +73,7 @@ export async function signup(email: string) {
 export async function getClasses(email: string) {
     try {
         const users = await getUserIDbyEmail(email);
-        if (users != null) {
+        if (users) {
             const results = await sql`SELECT * FROM class WHERE author_id = ${users};`
             return results;
         }
@@ -93,9 +93,14 @@ export async function createClass(email: string, code: string) {
     try {
         const users = await getUserIDbyEmail(email);
         //we should probably add some sort of class already exists protection in future
-        await sql`INSERT INTO class (author_id, code) VALUES
-                                    (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
-        return true;
+        if (users)
+        {
+            await sql`INSERT INTO class (author_id, code) VALUES
+                                        (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
+            return true;
+        }
+        else 
+            return false;
     }
     catch (error) {
         //throw error;
@@ -228,7 +233,7 @@ export async function postAIOutputForSubmission(submission_id: number, generated
 // get AI Gen Questions based on submission id.
 export async function getQuestions(submission_id: number) {
     try {
-        const result = await sql`SELECT generated_questions, generation_date FROM ai_output WHERE submission_id = ${submission_id};`;
+        const result = await sql`SELECT * FROM ai_output WHERE submission_id = ${submission_id};`;
         return result.length ? result : null;
     }
     catch (error) {
@@ -239,7 +244,7 @@ export async function getQuestions(submission_id: number) {
 // get exams
 export async function getExams(submission_id: number) {
     try {
-        const result = await sql`SELECT * FROM exam_id WHERE submission_id = ${submission_id};`;
+        const result = await sql`SELECT * FROM exams WHERE submission_id = ${submission_id};`;
         return result.length ? result : null;
     }
     catch (error) {
