@@ -6,7 +6,7 @@ import {Response, Request} from 'express';
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
 import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
 import {AiFactory} from "comp4050ai";
-import { PDFProcessor, PromptManager } from 'comp4050ai'; 
+//import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 import * as dotenv from 'dotenv';
 
 const app = express();
@@ -401,13 +401,31 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
-        const sPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
-
-
-
+        // THIS CODE IS AN ABSOLUTE MESS Made of a mix of the current version of the AI npm and the unuploader halfbuilt newer version of that library
+        // THIS Will NOT work as intended until we have the fully uploaded version and instructions on how to interface with specific parts of it 
         // Load environment variables
         dotenv.config();
-        const apiKey = process.env.OPENAI_API_KEY || '';
+        //const apiKey = process.env.OPENAI_API_KEY || '';
+        const apiKey = '';
+
+        // Setup PDFProcessor and PromptManager 
+        /*
+        const promptManager = new PromptManager(5, "Question: [Your question]", "Answer: [Your answer]");
+        const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
+
+        const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
+        */       
+        const pdfPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
+
+        let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
+
+        //Writes questions/answers file to "./ServerStorage" specified in constructor
+        let doc_id =  await ai.generateQuestions(pdfPath);
+
+        //Accesses the storage location specified in the contructor
+        let questions = ai.getQuestions(doc_id);
+
+        postAIOutputForSubmission(Number(req.query.submission_id), questions);
             
         //verify any questions exist for submission
         const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
