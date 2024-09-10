@@ -253,7 +253,7 @@ export async function getExams(submission_id: number) {
 }
 
 // post exams
-export async function createExams(submission_id: number, student_id: number, email: string) {
+export async function createExams(email: string, submission_id: number, student_id: number) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql`INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
@@ -265,7 +265,7 @@ export async function createExams(submission_id: number, student_id: number, ema
     }
 }
 
-export async function addStudent(student_id: number, first_name: string, last_name: string, email: string) {
+export async function addStudent(email: string, student_id: number, first_name: string, last_name: string) {
     try {
         await sql`INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                     (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
