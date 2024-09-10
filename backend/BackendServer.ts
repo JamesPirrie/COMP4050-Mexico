@@ -4,8 +4,10 @@ import express from 'express';
 import {Response, Request} from 'express';
 
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
-import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission} from "./DatabaseUtil";
+import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
 import {AiFactory} from "comp4050ai";
+import { PDFProcessor, PromptManager } from 'comp4050ai'; 
+import * as dotenv from 'dotenv';
 
 const app = express();
 const port = 3000;
@@ -403,17 +405,9 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 
 
 
-        //let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
-
-        //Writes questions/answers file to "./ServerStorage" specified in constructor
-
-        //let doc_id =  await ai.generateQuestions(sPath);
-
-        //Accesses the storage location specified in the contructor
-
-        //let questions = ai.getQuestions(doc_id);
-
-        //postAIOutputForSubmission(Number(req.query.submission_id), questions);
+        // Load environment variables
+        dotenv.config();
+        const apiKey = process.env.OPENAI_API_KEY || '';
             
         //verify any questions exist for submission
         const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
@@ -434,18 +428,80 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 
 app.get('/api/vivas', async (req: Request, res: Response) =>{
     //for MVP listing vivas
+    //list viva for a specific submission
+    try {
+        console.log('Received GET to /api/vivas');
+        const foundVivas = await getExams(Number(req.query.submission_id));
+        if (foundVivas != null) {
+            res.send(JSON.stringify(foundVivas));
+            console.log('GET vivas successful');
+        }
+        else{
+            res.send(JSON.stringify({}));
+            console.log('Error: No Vivas Found', Error)
+        }
+    }
+    catch (error) {
+        console.log('Error: Viva Check Failed', error)
+    }
 });
 
 app.post('/api/vivas', async (req: Request, res: Response) =>{
     //for MVP adding and 
+    //adding viva to submission
+    try {
+        console.log('Received POST to /api/vivas');
+        const success = await createExams(Number(req.query.submission_id), Number(req.query.student_id), JSON.stringify(req.query.email)); // more fields added post MVP
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Create Exam successful');
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: Exam Creation Failed', Error)
+        }
+    }
+    catch (error) {
+        console.log('Error: Exam Creation Attempt Failed', error)
+    } 
 });
 
 app.delete('/api/vivas', async (req: Request, res: Response) => {
     //for MVP removing vivas
+    try{
+        console.log('Received DELETE to /api/vivas');
+        const success = await deleteExam(JSON.stringify(req.query.email), Number(req.query.exam_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete exam successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: exam Deletion Failed', Error)
+        }
+    }
+    catch(error) {
+        console.log('Error: exam Deletion Attempt Failed', error)
+    } 
 });
 
 app.put('/api/vivas', async (req: Request, res: Response) =>{
     //for MVP editing vivas
+    try{
+        console.log('Received PUT to /api/vivas');
+        const success = await editExam(JSON.stringify(req.query.email), Number(req.query.exam_id), Number(req.query.submission_id), Number(req.query.student_id), Number(req.query.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit exam successful');
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: exam Edit Failed', Error)
+        }
+    }
+    catch(error){
+        console.log('Error: exam Edit Attempt Failed', error)
+    }
 })
 
 //start the server
