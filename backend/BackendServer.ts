@@ -2,7 +2,8 @@
 
 import express from 'express';
 import {Response, Request} from 'express';
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass} from "./DatabaseUtil";
+
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission} from "./DatabaseUtil";
 import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission} from "./DatabaseUtil";
 import * as AIService from "comp4050ai";
 
@@ -44,7 +45,9 @@ app.put('/', (req: Request, res: Response) => {
     res.send('PUT Request received');
 });
 
-//actual endpoints (my understanding of how this will work please correct this if im wrong)
+
+//actual endpoints 
+//login/signup
 app.get('/api/login', async (req: Request, res: Response) => {
     //for MVP (logging in)
     //we will receive email and password
@@ -85,6 +88,7 @@ app.post('/api/signup', async (req: Request, res: Response) => {
     //if not used success = true
 });
 
+//class endpoints
 app.get('/api/classes', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
@@ -129,7 +133,7 @@ app.post('/api/classes', async (req: Request, res: Response) =>{
 app.delete('/api/classes', async (req: Request, res: Response) =>{
     try{
         console.log('Received DELETE to /api/classes');
-        const success = await deleteClass(Number(req.query.class_id));
+        const success = await deleteClass('', Number(req.query.class_id));//email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete class successful')
@@ -144,6 +148,16 @@ app.delete('/api/classes', async (req: Request, res: Response) =>{
     }    
 });
 
+app.put('/api/classes', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received PUT to /api/classes');
+    }
+    catch(error){
+
+    }
+});
+
+//assignment endpoints
 app.get('/api/assignments', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list assignments for a specific class
@@ -187,7 +201,7 @@ app.post('/api/assignments', async (req: Request, res: Response) =>{
 app.delete('/api/assignments', async (req: Request, res: Response) => {
     try{
         console.log('Received DELETE to /api/assignments');
-        const success = await deleteAssignment(Number(req.query.assignment_id));
+        const success = await deleteAssignment('', Number(req.query.assignment_id));//email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete assignment successful')
@@ -202,6 +216,16 @@ app.delete('/api/assignments', async (req: Request, res: Response) => {
     }  
 });
 
+app.put('/api/assignments', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received PUT to /api/assignments');
+    }
+    catch(error){
+
+    }
+});
+
+//submission endpoints
 app.get('/api/submissions', async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     //list submissions for a specific assignment
@@ -245,7 +269,7 @@ app.post('/api/submissions', async (req: Request, res: Response) =>{
 app.delete('/api/submissions', async (req: Request, res: Response) =>{
     try{
         console.log('Received DELETE to /api/submissions');
-        const success = await deleteSubmission(Number(req.query.submission_id));
+        const success = await deleteSubmission('', Number(req.query.submission_id));//email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete submission successful')
@@ -260,6 +284,25 @@ app.delete('/api/submissions', async (req: Request, res: Response) =>{
     }
 })
 
+app.put('/api/submissions', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received PUT to /api/submissions');
+        const success = await editSubmission('', Number(req.query.submission_id), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+        if(success){
+            res.send(JSON.stringify(true));
+            console.log('Edit submission successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: submission edit Failed', Error)
+        }
+    }
+    catch(error){
+        console.log('Error: ', error)
+    }
+});
+
+//student endpoints
 app.get('/api/students', async (req: Request, res: Response) =>{//placeholder for now just dumps all students in database
     try{
         console.log('Received GET to /api/students');
@@ -314,6 +357,25 @@ app.delete('/api/students', async (req: Request, res: Response) =>{//for deletin
     }
 });
 
+app.put('/api/students', async (req: Request, res: Response) =>{
+    try{
+        console.log('Received PUT to /api/students');
+        const success = await editStudent(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit student successful')
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: student edit Failed', Error)
+        }
+    }
+    catch(error){
+
+    }
+});
+
+//AI endpoints
 //AI Generate Questions request (qgen = questions generate)
 app.post('/api/qgen', async (req: Request, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
@@ -361,6 +423,10 @@ app.post('/api/vivas', async (req: Request, res: Response) =>{
 app.delete('/api/vivas', async (req: Request, res: Response) => {
     //for MVP removing vivas
 });
+
+app.put('/api/vivas', async (req: Request, res: Response) =>{
+    //for MVP editing vivas
+})
 
 //start the server
 app.listen(port, () => {

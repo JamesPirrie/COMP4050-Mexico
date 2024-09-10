@@ -50,6 +50,10 @@ exports.deleteStudent = deleteStudent;
 exports.deleteSubmission = deleteSubmission;
 exports.deleteClass = deleteClass;
 exports.deleteAssignment = deleteAssignment;
+exports.editStudent = editStudent;
+exports.editSubmission = editSubmission;
+exports.editClass = editClass;
+exports.editAssignment = editAssignment;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -312,37 +316,85 @@ async function getAllStudents() {
 async function deleteStudent(student_id) {
     try {
         //may add a check that the student exists because currently returns true even if the thing doesnt exist
-        const success = await sql `DELETE FROM students WHERE student_id = ${student_id};`;
+        await sql `DELETE FROM students WHERE student_id = ${student_id};`;
         return true;
     }
     catch (error) {
         throw error;
     }
 }
-async function deleteSubmission(submission_id) {
+async function deleteSubmission(email, submission_id) {
     try {
         //may add a check that the submission exists
-        const success = await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+        //may add a check that the author is the one sending the request
+        await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
         return true;
     }
     catch (error) {
         throw error;
     }
 }
-async function deleteClass(class_id) {
+async function deleteClass(email, class_id) {
     try {
         //may add a check that the class exists
-        const success = await sql `DELETE FROM class WHERE class_id = ${class_id};`;
+        //may add a check that the author is the one sending the request
+        await sql `DELETE FROM class WHERE class_id = ${class_id};`;
         return true;
     }
     catch (error) {
         throw error;
     }
 }
-async function deleteAssignment(assignment_id) {
+async function deleteAssignment(email, assignment_id) {
     try {
         //may add a check that the assignment exists
-        const success = await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
+        //may add a check that the author is the one sending the request
+        await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+//EDIT FUNCTIONS
+async function editStudent(student_id, first_name, last_name, email) {
+    try {
+        //add a check that the student exists
+        await sql `UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id}`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function editSubmission(email, submission_id, assignment_id, student_id, submission_date, submission_filepath) {
+    try {
+        //add a check that the submission exists
+        //add a check that the author is the one sending the request 
+        await sql `UPDATE submissions SET 
+                                    student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = TRIM(both '"' from ${submission_filepath}) WHERE submission_id = ${submission_id}`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function editClass(email, class_id, code) {
+    try {
+        //add a check that the author is the one sending the request 
+        //add a check that the class exists
+        await sql ``;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function editAssignment(email, assignment_id, class_id, name, description) {
+    try {
+        //add a check that the author is the one sending the request 
+        //add a check that the submission exists
+        await sql ``;
         return true;
     }
     catch (error) {
