@@ -338,7 +338,7 @@ export async function deleteAssignment(email: string, assignment_id: number) {
 export async function editStudent(student_id: number, first_name: string, last_name: string, email: string) {
     try{
         //add a check that the student exists
-        await sql`UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id}`;
+        await sql`UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id};`;
         return true;
     }
     catch(error){
@@ -349,19 +349,18 @@ export async function editSubmission(email: string, submission_id: number, assig
     try{
         //add a check that the submission exists
         //add a check that the author is the one sending the request 
-        await sql`UPDATE submissions SET 
-                                    student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = TRIM(both '"' from ${submission_filepath}) WHERE submission_id = ${submission_id}`;
+        await sql`UPDATE submissions SET student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = TRIM(both '"' from ${submission_filepath}) WHERE submission_id = ${submission_id};`;
         return true;
     }
     catch(error){
         throw error;
     }
 }
-export async function editClass(email: string, class_id: number, code: string) {
+export async function editClass(email: string, class_id: number, session: number, year: number, code: string, title: string) {
     try{
         //add a check that the author is the one sending the request 
         //add a check that the class exists
-        await sql``;
+        await sql`UPDATE class SET session = ${session}, year = ${year}, code = TRIM(both '"' from ${code}), title = TRIM(both '"' from ${title}) WHERE class_id = ${class_id};`;// more fields added post MVP
         return true;
     }
     catch(error){
@@ -372,7 +371,7 @@ export async function editAssignment(email: string, assignment_id: number, class
     try{
         //add a check that the author is the one sending the request 
         //add a check that the submission exists
-        await sql``;
+        await sql`UPDATE assignments SET class_id = ${class_id}, name = TRIM(both '"' from ${name}), description = TRIM(both '"' from ${description}) WHERE assignment_id = ${assignment_id};`;
         return true;
     }
     catch(error){

@@ -135,8 +135,18 @@ app.delete('/api/classes', async (req, res) => {
 app.put('/api/classes', async (req, res) => {
     try {
         console.log('Received PUT to /api/classes');
+        const success = await (0, DatabaseUtil_1.editClass)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.code), JSON.stringify(req.query.title));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit class successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: class edit Failed', Error);
+        }
     }
     catch (error) {
+        console.log('Error: ', error);
     }
 });
 //assignment endpoints
@@ -198,8 +208,18 @@ app.delete('/api/assignments', async (req, res) => {
 app.put('/api/assignments', async (req, res) => {
     try {
         console.log('Received PUT to /api/assignments');
+        const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit assignment successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: Assignment edit Failed', Error);
+        }
     }
     catch (error) {
+        console.log('Error: ', error);
     }
 });
 //submission endpoints
@@ -349,13 +369,13 @@ app.post('/api/qgen', async (req, res) => {
     //for MVP only single item, this needs to be checked with AI team about if created files are cleared.
     //We will get Submission ID
     try {
-        const sPath = (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
-        //let ai = new AIService("./ServerStorage");
+        const sPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
+        //let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
         //Writes questions/answers file to "./ServerStorage" specified in constructor
-        //let doc_id = ai.generateQuestions(sPath);
+        //let doc_id =  await ai.generateQuestions(sPath);
         //Accesses the storage location specified in the contructor
         //let questions = ai.getQuestions(doc_id);
-        //postAIOutputForSubmission(parseInt(req.submission_id), questions);
+        //postAIOutputForSubmission(Number(req.query.submission_id), questions);
         //verify any questions exist for submission
         const foundAIQs = (0, DatabaseUtil_2.getVivaForSubmission)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
         if (foundAIQs != null) {

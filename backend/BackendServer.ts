@@ -3,9 +3,9 @@
 import express from 'express';
 import {Response, Request} from 'express';
 
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
 import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission} from "./DatabaseUtil";
-import * as AIService from "comp4050ai";
+import {AiFactory} from "comp4050ai";
 
 const app = express();
 const port = 3000;
@@ -136,24 +136,33 @@ app.delete('/api/classes', async (req: Request, res: Response) =>{
         const success = await deleteClass('', Number(req.query.class_id));//email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
-            console.log('Delete class successful')
+            console.log('Delete class successful');
         }
         else{
             res.send(JSON.stringify(false));
-            console.log('Error: class Deletion Failed', Error)
+            console.log('Error: class Deletion Failed', Error);
         }
     }
     catch(error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }    
 });
 
 app.put('/api/classes', async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/classes');
+        const success = await editClass(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.code), JSON.stringify(req.query.title));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit class successful');
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: class edit Failed', Error)
+        }
     }
     catch(error){
-
+        console.log('Error: ', error);
     }
 });
 
@@ -219,9 +228,18 @@ app.delete('/api/assignments', async (req: Request, res: Response) => {
 app.put('/api/assignments', async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/assignments');
+        const success = await editAssignment(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit assignment successful');
+        }
+        else{
+            res.send(JSON.stringify(false));
+            console.log('Error: Assignment edit Failed', Error)
+        }
     }
     catch(error){
-
+        console.log('Error: ', error)
     }
 });
 
@@ -381,19 +399,21 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
-        const sPath = getSubmissionFilePathForSubID(Number(req.query.submission_id));
+        const sPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
 
-        //let ai = new AIService("./ServerStorage");
+
+
+        //let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
 
         //Writes questions/answers file to "./ServerStorage" specified in constructor
 
-        //let doc_id = ai.generateQuestions(sPath);
+        //let doc_id =  await ai.generateQuestions(sPath);
 
         //Accesses the storage location specified in the contructor
 
         //let questions = ai.getQuestions(doc_id);
 
-        //postAIOutputForSubmission(parseInt(req.submission_id), questions);
+        //postAIOutputForSubmission(Number(req.query.submission_id), questions);
             
         //verify any questions exist for submission
         const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
