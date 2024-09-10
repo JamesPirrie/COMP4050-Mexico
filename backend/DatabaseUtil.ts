@@ -334,6 +334,18 @@ export async function deleteAssignment(email: string, assignment_id: number) {
     }
 }
 
+export async function deleteExam(email: string, exam_id: number) {
+    try{
+        //may add a check that the exam exists
+        //may add a check that the author is the one sending the request
+        await sql`DELETE FROM exams WHERE exam_id = ${exam_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
+
 //EDIT FUNCTIONS
 export async function editStudent(student_id: number, first_name: string, last_name: string, email: string) {
     try{
@@ -372,6 +384,17 @@ export async function editAssignment(email: string, assignment_id: number, class
         //add a check that the author is the one sending the request 
         //add a check that the submission exists
         await sql`UPDATE assignments SET class_id = ${class_id}, name = TRIM(both '"' from ${name}), description = TRIM(both '"' from ${description}) WHERE assignment_id = ${assignment_id};`;
+        return true;
+    }
+    catch(error){
+        throw error;
+    }
+}
+export async function editExam(email: string, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string) {
+    try{
+        //add a check that the author is the one sending the request 
+        //add a check that the submission exists
+        await sql`UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = TRIM(both '"' from ${comments}, examiner_id = ${examiner_id}) WHERE exam_id = ${exam_id};`;
         return true;
     }
     catch(error){
