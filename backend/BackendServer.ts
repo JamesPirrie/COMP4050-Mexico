@@ -380,7 +380,7 @@ app.delete('/api/students', async (req: Request, res: Response) =>{//for deletin
 app.put('/api/students', async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/students');
-        const success = await editStudent(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        const success = await editStudent(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit student successful')
