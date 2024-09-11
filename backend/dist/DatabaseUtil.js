@@ -260,7 +260,7 @@ async function getPDFFile(student_id, assignment_id) {
 async function postAIOutputForSubmission(submission_id, generated_questions) {
     try {
         await sql `INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                VALUES (${submission_id}, 'TRIM(both '"' from ${JSON.parse(generated_questions)})', CURRENT_TIMESTAMP);`; //TRIM might be weird here idk 
+                                VALUES (${submission_id}, ${JSON.parse(generated_questions)}, CURRENT_TIMESTAMP);`; //TRIM might be weird here idk 
         return true;
     }
     catch (error) {
