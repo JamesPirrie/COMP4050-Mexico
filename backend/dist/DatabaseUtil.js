@@ -50,10 +50,12 @@ exports.deleteStudent = deleteStudent;
 exports.deleteSubmission = deleteSubmission;
 exports.deleteClass = deleteClass;
 exports.deleteAssignment = deleteAssignment;
+exports.deleteExam = deleteExam;
 exports.editStudent = editStudent;
 exports.editSubmission = editSubmission;
 exports.editClass = editClass;
 exports.editAssignment = editAssignment;
+exports.editExam = editExam;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -120,7 +122,7 @@ async function signup(email) {
 async function getClasses(email) {
     try {
         const users = await getUserIDbyEmail(email);
-        if (users != null) {
+        if (users) {
             const results = await sql `SELECT * FROM class WHERE author_id = ${users};`;
             return results;
         }
@@ -138,8 +140,13 @@ async function createClass(email, code) {
     try {
         const users = await getUserIDbyEmail(email);
         //we should probably add some sort of class already exists protection in future
-        await sql `INSERT INTO class (author_id, code) VALUES (${users}, TRIM(both '"' from ${code}));`; //the TRIM bit is because this has "" on it because typescript/javascript
-        return true;
+        if (users) {
+            await sql `INSERT INTO class (author_id, code) VALUES
+                                        (${users}, TRIM(both '"' from ${code}));`; //the TRIM bit is because this has "" on it because typescript/javascript
+            return true;
+        }
+        else
+            return false;
     }
     catch (error) {
         //throw error;
@@ -263,7 +270,7 @@ async function postAIOutputForSubmission(submission_id, generated_questions) {
 // get AI Gen Questions based on submission id.
 async function getQuestions(submission_id) {
     try {
-        const result = await sql `SELECT generated_questions, generation_date FROM ai_output WHERE submission_id = ${submission_id};`;
+        const result = await sql `SELECT * FROM ai_output WHERE submission_id = ${submission_id};`;
         return result.length ? result : null;
     }
     catch (error) {
@@ -273,7 +280,7 @@ async function getQuestions(submission_id) {
 // get exams
 async function getExams(submission_id) {
     try {
-        const result = await sql `SELECT * FROM exam_id WHERE submission_id = ${submission_id};`;
+        const result = await sql `SELECT * FROM exams WHERE submission_id = ${submission_id};`;
         return result.length ? result : null;
     }
     catch (error) {
@@ -281,7 +288,7 @@ async function getExams(submission_id) {
     }
 }
 // post exams
-async function createExams(submission_id, student_id, email) {
+async function createExams(email, submission_id, student_id) {
     try {
         const users = await getUserIDbyEmail(email);
         await sql `INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
@@ -292,7 +299,7 @@ async function createExams(submission_id, student_id, email) {
         throw error;
     }
 }
-async function addStudent(student_id, first_name, last_name, email) {
+async function addStudent(email, student_id, first_name, last_name) {
     try {
         await sql `INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                     (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
@@ -355,8 +362,19 @@ async function deleteAssignment(email, assignment_id) {
         throw error;
     }
 }
+async function deleteExam(email, exam_id) {
+    try {
+        //may add a check that the exam exists
+        //may add a check that the author is the one sending the request
+        await sql `DELETE FROM exams WHERE exam_id = ${exam_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
 //EDIT FUNCTIONS
-async function editStudent(student_id, first_name, last_name, email) {
+async function editStudent(email, student_id, first_name, last_name) {
     try {
         //add a check that the student exists
         await sql `UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id};`;
@@ -393,6 +411,17 @@ async function editAssignment(email, assignment_id, class_id, name, description)
         //add a check that the author is the one sending the request 
         //add a check that the submission exists
         await sql `UPDATE assignments SET class_id = ${class_id}, name = TRIM(both '"' from ${name}), description = TRIM(both '"' from ${description}) WHERE assignment_id = ${assignment_id};`;
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function editExam(email, exam_id, submission_id, student_id, examiner_id, marks, comments) {
+    try {
+        //add a check that the author is the one sending the request 
+        //add a check that the submission exists
+        await sql `UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = TRIM(both '"' from ${comments}, examiner_id = ${examiner_id}) WHERE exam_id = ${exam_id};`;
         return true;
     }
     catch (error) {

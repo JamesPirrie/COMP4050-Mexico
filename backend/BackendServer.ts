@@ -1,6 +1,7 @@
 //https://expressjs.com/en/5x/api.html    
 
 import express from 'express';
+import multer from 'multer';
 import {Response, Request} from 'express';
 
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
@@ -9,10 +10,23 @@ import {AiFactory} from "comp4050ai";
 //import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 import * as dotenv from 'dotenv';
 
-const app = express();
 const port = 3000;
 
+//express
+const app = express();
 app.use(express.json());//without this req.body is undefined
+
+//multer middleware
+const storageEngine = multer.diskStorage({
+    destination: (req, file, callBack) => {
+        callBack(null,'/ServerStorage/PDFStorage')
+    },
+    filename: (req, file, callBack) => {
+        console.log('Received file: ' + file)
+        callBack(null, JSON.stringify(req.query.submission_filepath))//notes for now: we are nulling the errors well fix that later
+    }                                                                //there is an assumption here that the submission_filepath already has                                                                
+})                                                                   //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
+const upload = multer({storage : storageEngine})
 
 //placeholders for now
 //GET requests
@@ -266,7 +280,7 @@ app.get('/api/submissions', async (req: Request, res: Response) =>{
     }
 });
 
-app.post('/api/submissions', async (req: Request, res: Response) =>{
+app.post('/api/submissions', upload.single('submission_PDF') ,async (req: Request, res: Response) =>{//upload middleware is here
     //for MVP adding submissions
     //adding submissions to an assignment
     try {
@@ -425,7 +439,7 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         //Accesses the storage location specified in the contructor
         let questions = ai.getQuestions(doc_id);
 
-        postAIOutputForSubmission(Number(req.query.submission_id), questions);
+        //postAIOutputForSubmission(Number(req.query.submission_id), questions);
             
         //verify any questions exist for submission
         const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));

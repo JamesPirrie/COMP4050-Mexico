@@ -1,15 +1,54 @@
 "use strict";
 //https://expressjs.com/en/5x/api.html    
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const multer_1 = __importDefault(require("multer"));
 const DatabaseUtil_1 = require("./DatabaseUtil");
 const DatabaseUtil_2 = require("./DatabaseUtil");
-const app = (0, express_1.default)();
+const comp4050ai_1 = require("comp4050ai");
+//import { PDFProcessor, PromptManager } from 'comp4050ai'; 
+const dotenv = __importStar(require("dotenv"));
 const port = 3000;
+//express
+const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined
+//multer middleware
+const storageEngine = multer_1.default.diskStorage({
+    destination: (req, file, callBack) => {
+        callBack(null, '/ServerStorage/PDFStorage');
+    },
+    filename: (req, file, callBack) => {
+        console.log('Received file: ' + file);
+        callBack(null, JSON.stringify(req.query.submission_filepath)); //notes for now: we are nulling the errors well fix that later
+    } //there is an assumption here that the submission_filepath already has                                                                
+}); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
+const upload = (0, multer_1.default)({ storage: storageEngine });
 //placeholders for now
 //GET requests
 app.get('/', (req, res) => {
@@ -242,7 +281,7 @@ app.get('/api/submissions', async (req, res) => {
         console.log('Error: Submission Check Failed', error);
     }
 });
-app.post('/api/submissions', async (req, res) => {
+app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     //for MVP adding submissions
     //adding submissions to an assignment
     try {
@@ -316,7 +355,7 @@ app.get('/api/students', async (req, res) => {
 app.post('/api/students', async (req, res) => {
     try {
         console.log('Received POST to /api/students');
-        const success = await (0, DatabaseUtil_1.addStudent)(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create student successful');
@@ -350,7 +389,7 @@ app.delete('/api/students', async (req, res) => {
 app.put('/api/students', async (req, res) => {
     try {
         console.log('Received PUT to /api/students');
-        const success = await (0, DatabaseUtil_1.editStudent)(Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name), JSON.stringify(req.query.email));
+        const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit student successful');
@@ -369,12 +408,25 @@ app.post('/api/qgen', async (req, res) => {
     //for MVP only single item, this needs to be checked with AI team about if created files are cleared.
     //We will get Submission ID
     try {
-        const sPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
-        //let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
+        // THIS CODE IS AN ABSOLUTE MESS Made of a mix of the current version of the AI npm and the unuploader halfbuilt newer version of that library
+        // THIS Will NOT work as intended until we have the fully uploaded version and instructions on how to interface with specific parts of it 
+        // Load environment variables
+        dotenv.config();
+        //const apiKey = process.env.OPENAI_API_KEY || '';
+        const apiKey = '';
+        // Setup PDFProcessor and PromptManager 
+        /*
+        const promptManager = new PromptManager(5, "Question: [Your question]", "Answer: [Your answer]");
+        const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
+
+        const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
+        */
+        const pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
+        let ai = comp4050ai_1.AiFactory.makeAi('/ServerStorage/PDF_Storage', 'ServerStorage/qGEN', '');
         //Writes questions/answers file to "./ServerStorage" specified in constructor
-        //let doc_id =  await ai.generateQuestions(sPath);
+        let doc_id = await ai.generateQuestions(pdfPath);
         //Accesses the storage location specified in the contructor
-        //let questions = ai.getQuestions(doc_id);
+        let questions = ai.getQuestions(doc_id);
         //postAIOutputForSubmission(Number(req.query.submission_id), questions);
         //verify any questions exist for submission
         const foundAIQs = (0, DatabaseUtil_2.getVivaForSubmission)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
@@ -394,15 +446,77 @@ app.post('/api/qgen', async (req, res) => {
 });
 app.get('/api/vivas', async (req, res) => {
     //for MVP listing vivas
+    //list viva for a specific submission
+    try {
+        console.log('Received GET to /api/vivas');
+        const foundVivas = await (0, DatabaseUtil_2.getExams)(Number(req.query.submission_id));
+        if (foundVivas != null) {
+            res.send(JSON.stringify(foundVivas));
+            console.log('GET vivas successful');
+        }
+        else {
+            res.send(JSON.stringify({}));
+            console.log('Error: No Vivas Found', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: Viva Check Failed', error);
+    }
 });
 app.post('/api/vivas', async (req, res) => {
     //for MVP adding and 
+    //adding viva to submission
+    try {
+        console.log('Received POST to /api/vivas');
+        const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.student_id)); // more fields added post MVP
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Create Exam successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: Exam Creation Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: Exam Creation Attempt Failed', error);
+    }
 });
 app.delete('/api/vivas', async (req, res) => {
     //for MVP removing vivas
+    try {
+        console.log('Received DELETE to /api/vivas');
+        const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.query.email), Number(req.query.exam_id));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Delete exam successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: exam Deletion Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: exam Deletion Attempt Failed', error);
+    }
 });
 app.put('/api/vivas', async (req, res) => {
     //for MVP editing vivas
+    try {
+        console.log('Received PUT to /api/vivas');
+        const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.query.email), Number(req.query.exam_id), Number(req.query.submission_id), Number(req.query.student_id), Number(req.query.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
+        if (success) {
+            res.send(JSON.stringify(true));
+            console.log('Edit exam successful');
+        }
+        else {
+            res.send(JSON.stringify(false));
+            console.log('Error: exam Edit Failed', Error);
+        }
+    }
+    catch (error) {
+        console.log('Error: exam Edit Attempt Failed', error);
+    }
 });
 //start the server
 app.listen(port, () => {
