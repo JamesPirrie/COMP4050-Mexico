@@ -442,15 +442,22 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         let doc_id;
         try {            
             const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //
-	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, "name_of_your_file.json"); //
+	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json"); //
         }
         catch (error) {
             console.log('Error: AI Generation Failed', error)
         }
 
+        if(doc_id){
+
+        } else {            
+            res.send(JSON.stringify(false));
+            console.log('Error: AI Generation Failed', Error)
+        }
+
         //Accesses the storage location specified in the contructor
         let questions;
-        try {            
+        try {
             questions = await ai.getQuestions(doc_id);
         }
         catch (error) {
@@ -458,7 +465,12 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         }        
 
         //Insert generated AI Questions into results table for submission_id
-        postAIOutputForSubmission(Number(req.query.submission_id), questions);
+        if (questions){
+            postAIOutputForSubmission(Number(req.query.submission_id), JSON.stringify(questions));
+        } else {
+            res.send(JSON.stringify(false));
+            console.log('Error: Assigning questions to location failed', Error)
+        }
             
         //verify any questions exist for submission
         // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
