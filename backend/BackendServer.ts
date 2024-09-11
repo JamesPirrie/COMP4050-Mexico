@@ -19,26 +19,26 @@ app.use(express.json());//without this req.body is undefined
 //multer middleware
 const storageEngine = multer.diskStorage({
     destination: (req, file, callBack) => {
-        callBack(null,'/ServerStorage/PDFStorage')
+        callBack(null,'./ServerStorage/PDF_Storage')
     },
     filename: (req, file, callBack) => {
-        console.log('Received file: ' + file)
-        callBack(null, JSON.stringify(req.query.submission_filepath))//notes for now: we are nulling the errors well fix that later
-    }                                                                //there is an assumption here that the submission_filepath already has                                                                
-})                                                                   //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
-const upload = multer({storage : storageEngine})
+        console.log('Received file: ' + JSON.stringify(file))
+        callBack(null, JSON.stringify(req.query.submission_filepath).replace(/"/g, ''))//notes for now: we are nulling the errors well fix that later
+    }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
+})                                                                                      //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
+const upload = multer({storage : storageEngine})                                        //-later note looks like it does we good
 
 //placeholders for now
 //GET requests
 app.get('/', (req: Request, res: Response) => {
     console.log('GET request received');
-    res.send('GET request received');
+    res.status(200).send('GET request received').status(200);//this is how to do codes
 });
 
 //POST requests
 app.post('/', (req: Request, res: Response) => {
     console.log('POST request received');
-    res.send('POST Request received');
+    res.status(200).send('POST Request received');
 
     console.log('headers:');
     console.log(req.headers);
