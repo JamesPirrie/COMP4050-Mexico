@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VivaMQ Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="shared-styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="login-container">
         <div class="login-box">
-            <img src="MqLogo.png" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
+            <img src="{{ url_for('static', filename='icons/MqLogo.png') }}" alt="MQ Logo" class="logo">
             <h1 style="color: #A6192E;">VivaMQ Login</h1>
             <p>Choose an option to continue:</p>
             <button onclick="redirectToOkta()" class="login-button">Login with MQ</button>
-            <button onclick="userLogin()" class="admin-button"> Login Normally</button>
+            <a href="{{ url_for('authenticate') }}" class="admin-button">Login Normally</a>
         </div>
     </div>
 
@@ -25,7 +25,6 @@
         }
 
 function userLogin() {
-    // Redirect to dashboard for admin access
     window.location.href = "loginDirect.html";
 }
 </script>

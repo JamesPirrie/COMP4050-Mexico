@@ -3,25 +3,27 @@
 {% block title %}Assignments - {{ request.args.get('class', '') }} - VivaMQ{% endblock %}
 
 {% block content %}
-<div class="assignments-section">
-    <h2></h2>
-    <div id="assignments-list" class="assignments-list">
-        <div class="placeholder-text">There are no assignments for this class.</div>
+<div class="classMgmtcontent">
+    <div class="assignments-section">
+        <h2></h2>
+        <div id="assignments-list" class="assignments-list">
+            <div class="placeholder-text">There are no assignments for this class.</div>
+        </div>
+        <div class="new-item-bar">
+            <button id="add-assignment-button" onclick="showPopup('assignment')">Add Assignment</button>
+            <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
+        </div>
     </div>
-    <div class="new-item-bar">
-        <button id="add-assignment-button" onclick="showPopup('assignment')">Add Assignment</button>
-        <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
-    </div>
-</div>
 
-<div class="students-section">
-    <h2></h2>
-    <div id="students-list" class="students-list">
-        <div class="placeholder-text">There are no students for this class.</div>
-    </div>
-    <div class="new-item-bar">
-        <button id="add-student-button" onclick="showPopup('student')">Add Student</button>
-        <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
+    <div class="students-section">
+        <h2></h2>
+        <div id="students-list" class="students-list">
+            <div class="placeholder-text">There are no students for this class.</div>
+        </div>
+        <div class="new-item-bar">
+            <button id="add-student-button" onclick="showPopup('student')">Add Student</button>
+            <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
+        </div>
     </div>
 </div>
 

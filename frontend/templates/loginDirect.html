@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <img src="{{ url_for('static', filename='MqLogo.png') }}" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
+        
+        <h1 id="vivamq-login" style="color: #A6192E;">VivaMQ Login</h1>
+        
+        <form action="{{ url_for('login') }}" method="get">
+            <!-- Add form fields here -->
+            <button type="submit">Sign In</button>
+        </form>
+        
+        <div class="signup-link">
+            <hr>
+            <p>New to VivaMQ? <a href="{{ url_for('signup') }}">Sign up here!</a></p>
+        </div>
+    </div>
+</div>
+
+<div id="popup" class="popup">
+    <!-- Add popup content here -->
+</div>
+{% endblock %}
