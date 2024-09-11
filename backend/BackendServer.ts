@@ -436,7 +436,7 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         }
         
         //Construct Mock AI
-        let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
+        let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage','./ServerStorage/qGEN','');
 
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
