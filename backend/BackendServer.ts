@@ -5,7 +5,7 @@ import multer from 'multer';
 import {Response, Request} from 'express';
 
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
-import {getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
+import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
 import {AiFactory} from "comp4050ai";
 //import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 import * as dotenv from 'dotenv';
@@ -412,15 +412,13 @@ app.put('/api/students', async (req: Request, res: Response) =>{
 //AI endpoints
 //AI Generate Questions request (qgen = questions generate)
 app.post('/api/qgen', async (req: Request, res: Response) => {
-	//for MVP only single item, this needs to be checked with AI team about if created files are cleared.
 	//We will get Submission ID
 	try {
-        // THIS CODE IS AN ABSOLUTE MESS Made of a mix of the current version of the AI npm and the unuploader halfbuilt newer version of that library
-        // THIS Will NOT work as intended until we have the fully uploaded version and instructions on how to interface with specific parts of it 
+        // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
+        // NOTE Commented out code is for future use with post MVP Implementation of AI
         // Load environment variables
         dotenv.config();
         //const apiKey = process.env.OPENAI_API_KEY || '';
-        const apiKey = '';
 
         // Setup PDFProcessor and PromptManager 
         /*
@@ -428,21 +426,43 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
         const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
 
         const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
-        */       
-        const pdfPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
-
+        */ 
+        let pdfPath; //Refers to file name not full path.
+        try {            
+            pdfPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
+        }
+        catch (error) {
+            console.log('Error: Get Submission Path from Sub ID Failed', error)
+        }
+        
+        //Construct Mock AI
         let ai = AiFactory.makeAi('/ServerStorage/PDF_Storage','ServerStorage/qGEN','');
 
         //Writes questions/answers file to "./ServerStorage" specified in constructor
-        let doc_id =  await ai.generateQuestions(pdfPath);
+        let doc_id;
+        try {            
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //
+	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, "name_of_your_file.json"); //
+        }
+        catch (error) {
+            console.log('Error: AI Generation Failed', error)
+        }
 
         //Accesses the storage location specified in the contructor
-        let questions = ai.getQuestions(doc_id);
+        let questions;
+        try {            
+            questions = await ai.getQuestions(doc_id);
+        }
+        catch (error) {
+            console.log('Error: Assigning questions to location failed', error)
+        }        
 
-        //postAIOutputForSubmission(Number(req.query.submission_id), questions);
+        //Insert generated AI Questions into results table for submission_id
+        postAIOutputForSubmission(Number(req.query.submission_id), questions);
             
         //verify any questions exist for submission
-        const foundAIQs = getVivaForSubmission(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.result_id));
+        // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
+        const foundAIQs = getQuestions(Number(req.query.submission_id)); 
         if (foundAIQs != null){
             res.send(JSON.stringify(true));
             console.log('AI question generation successful');
