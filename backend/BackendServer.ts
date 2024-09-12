@@ -280,7 +280,7 @@ app.get('/api/submissions', async (req: Request, res: Response) =>{
     }
 });
 
-app.post('/api/submissions', upload.single('submission_PDF') ,async (req: Request, res: Response) =>{//upload middleware is here
+app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
     //for MVP adding submissions
     //adding submissions to an assignment
     try {
@@ -318,7 +318,7 @@ app.delete('/api/submissions', async (req: Request, res: Response) =>{
     }
 })
 
-app.put('/api/submissions', async (req: Request, res: Response) =>{
+app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/submissions');
         const success = await editSubmission('', Number(req.query.submission_id), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));

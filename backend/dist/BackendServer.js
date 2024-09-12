@@ -317,7 +317,7 @@ app.delete('/api/submissions', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/submissions', async (req, res) => {
+app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     try {
         console.log('Received PUT to /api/submissions');
         const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.query.submission_id), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
