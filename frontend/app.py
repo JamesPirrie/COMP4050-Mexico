@@ -1,14 +1,23 @@
 from flask import Flask, request, render_template, url_for, redirect
 import requests
-import _json
+import json
 
 backend = "http://localhost:3000/api/"
 
+testClassList = '''
+[{"class_id":14,"session":null,"year":null,"code":"JOHN1234","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":15,"session":null,"year":null,"code":"JOHN1234","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":16,"session":null,"year":null,"code":"COMP5823","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":17,"session":null,"year":null,"code":"COMP5824","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":18,"session":null,"year":null,"code":"COMP5826","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":21,"session":null,"year":null,"code":"COMR92CP","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null}]
+'''
+
 app = Flask(__name__)
 
-userAuthenticated = False
+class User:
+    userAuthenticated = False
+    email = ""
+
+user = User()
+
 def isAuthenticated():
-    return userAuthenticated
+    return user.userAuthenticated
 
 @app.route('/')
 def default():
@@ -22,12 +31,27 @@ def signup():
         return render_template('signup.html')
     
     if request.method == 'POST':
-        data=request.form
-        return redirect(url_for('login'))
+        email=request.form['email']
+        #auth = requests.post(backend+'signup', email)
+        auth = True
+        if auth:
+            return redirect(url_for('login'))
+        return redirect(url_for('signup'))
 
 @app.route('/login')
 def login():
     return render_template('login.html')
+
+@app.route('/loginDirect', methods = ['GET', 'POST'])
+def loginDirect():
+    if request.method == 'POST':
+        user.email=request.form['email']
+        #auth = requests.get(backend+'login', user.email)
+        auth = True
+        if auth:
+            user.userAuthenticated = True
+            return redirect(url_for('dashboard'))
+    return render_template('loginDirect.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -35,12 +59,16 @@ def dashboard():
 
 @app.route('/classes')
 def classes():
-    # classList = requests.get(backend+'classes')
-    return render_template('classes.html')
+    # classList = requests.get(backend+'classes')\
+    classList = testClassList
+    classes = json.loads(classList)
+    for item in classes:
+        print(item)
+    return render_template('classes.html', classes = classes)
 
-@app.route('/assignments')
-def assignments():
-    return render_template('assignments.html')
+@app.route('/unit')
+def unit():
+    return render_template('unit.html')
 
 @app.route('/vivas')
 def vivas():
@@ -51,21 +79,18 @@ def vivas():
 def settings():
     return render_template('settings.html')
 
-@app.route('/new_project')
+@app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
-    return render_template('newProj.html')
+    if request.method == 'POST':
+        pdf = request.files['pdf_file']
+        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
+        print(pdf)
+    return render_template('newProject.html')
 
 @app.route('/logout')
 def logout():
-    global userAuthenticated
-    userAuthenticated = False
+    user.userAuthenticated = False
     return redirect(url_for('login'))
-
-@app.route('/authenticate')
-def authenticate():
-    global userAuthenticated
-    userAuthenticated = True
-    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -19,13 +19,13 @@
         <div class="column">
             <h3>Use our AI Tool</h3>
             <p>Upload a document and generate some questions below.</p>
-            <div class="upload-generate-container">
+            <form method="post" enctype="multipart/form-data" class="upload-generate-container">
                 <label class="upload-button">
-                    <img src="upload.png" alt="Upload">
-                    <input type="file" name="pdf_file" id="pdf_file" style="display: none;" accept=".pdf">
+                    <img src="{{ url_for('static', filename='icons/upload.png') }}" alt="Upload">
+                    <input type="file" name="pdf_file" id="pdf_file" accept=".pdf">
                 </label>
-                <button type="button" class="generate-button" onclick="uploadPDF()">Generate/Regenerate</button>
-            </div>
+                <button type="submit" class="generate-button">Generate/Regenerate</button>
+            </form>
             <div class="generated-questions" id="generated-questions">
                 <!-- Generated questions will be displayed here -->
             </div>
