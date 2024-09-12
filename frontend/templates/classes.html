@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}VivaMQ Classes{% endblock %}
+
+{% block content %}
+<h2>Classes</h2>
+<p>This is where we display a list of classes, based on user email and backend DB results.</p>
+{% for class in classes %}
+    <a class="test-assignment-button" href="{{ url_for('unit', class=class['code']) }}">{{ class['code'] }}</a>
+{% endfor %}
+<button class="add-class-button">Add New Class</button>
+{% endblock %}

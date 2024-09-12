@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - VivaMQ{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <img src="{{ url_for('static', filename='MqLogo.png') }}" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
+        
+        <h1 id="vivamq-sign-up" style="color: #A6192E;">VivaMQ Sign-up</h1>
+        
+        <form action="{{ url_for('signup') }}" method="post">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <button type="submit" class="signup-button">Sign Up</button>
+        </form>
+        
+        <a href="{{ url_for('login') }}" class="go-back-link">Go Back</a>
+    </div>
+</div>
+
+<div id="popup" class="popup">
+    <!-- Popup content goes here -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Add any JavaScript for form validation or popup functionality here
+    function showPopup(message) {
+        const popup = document.getElementById('popup');
+        popup.textContent = message;
+        popup.style.display = 'block';
+        setTimeout(() => {
+            popup.style.display = 'none';
+        }, 3000);
+    }
+
+    // Example form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            showPopup('Passwords do not match!');
+        }
+    });
+</script>
+{% endblock %}
