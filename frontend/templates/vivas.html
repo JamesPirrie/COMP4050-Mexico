@@ -3,20 +3,11 @@
 {% block title %}VivaMQ Vivas{% endblock %}
 
 {% block content %}
-<div class="main-container">
-    <div class="toolbar">
-        <div>
-            <a href="classes.html" class="toolbar-button">Classes</a>
-        </div>
-        <div>
-            <a href="settings.html" class="toolbar-button">Settings</a>
-        </div>
-    </div>
     <div class="content">
         <h2></h2>
-        <p>This is where we display a list of existing Vivas, based on user email, unit, assignment and backend DB results. {% a %}</p>
+        <p>This is where we display a list of existing Vivas, based on user email, unit, assignment and backend DB results.</p>
 
-        <button class="test-assignment-button" onclick="window.location.href='newProj.html'">New Proj</button>
+        <a class="test-assignment-button" href="{{ url_for('new_project') }}">New Proj</a>
 
         
         <!-- Add more class-related content here -->

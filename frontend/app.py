@@ -79,9 +79,13 @@ def vivas():
 def settings():
     return render_template('settings.html')
 
-@app.route('/new_project')
+@app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
-    return render_template('newProj.html')
+    if request.method == 'POST':
+        pdf = request.files['pdf_file']
+        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
+        print(pdf)
+    return render_template('newProject.html')
 
 @app.route('/logout')
 def logout():
