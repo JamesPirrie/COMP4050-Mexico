@@ -14,7 +14,8 @@ const port = 3000;
 
 //express
 const app = express();
-app.use(express.json());//without this req.body is undefined
+//app.use(express.json());//without this req.body is undefined
+app.use(express.urlencoded( {extended: true }))
 
 //multer middleware
 const storageEngine = multer.diskStorage({
@@ -69,8 +70,8 @@ app.get('/api/login', async (req: Request, res: Response) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await loginUserCheck(JSON.stringify(req.query.email)) === true) {
-            console.log('login with: ' + JSON.stringify(req.query.email) + 'successful');
+        if (await loginUserCheck(JSON.stringify(/*req.body.email*/req.query.email)) === true) {
+            console.log('login with: ' + JSON.stringify(req.query.email) + ' successful');
             res.send(JSON.stringify(true));
         }
         else{
@@ -358,6 +359,7 @@ app.get('/api/students', async (req: Request, res: Response) =>{//placeholder fo
 app.post('/api/students', async (req: Request, res: Response) =>{
     try{
         console.log('Received POST to /api/students');
+        console.log(JSON.stringify(req.body.Test));
         const success = await addStudent(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
