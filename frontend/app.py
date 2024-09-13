@@ -32,8 +32,8 @@ def signup():
     
     if request.method == 'POST':
         email=request.form['email']
-        #auth = requests.post(backend+'signup', email)
-        auth = True
+        auth = requests.post(f'{backend}signup?={user.email}')
+        #auth = True
         if auth:
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
@@ -46,8 +46,8 @@ def login():
 def loginDirect():
     if request.method == 'POST':
         user.email=request.form['email']
-        #auth = requests.get(backend+'login', user.email)
-        auth = True
+        auth = requests.get(f'{backend}login?={user.email}')
+        #auth = True
         if auth:
             user.userAuthenticated = True
             return redirect(url_for('dashboard'))
@@ -59,8 +59,8 @@ def dashboard():
 
 @app.route('/classes')
 def classes():
-    # classList = requests.get(backend+'classes')\
-    classList = testClassList
+    classList = requests.get(backend+'classes')
+    #classList = testClassList
     classes = json.loads(classList)
     for item in classes:
         print(item)
@@ -72,7 +72,7 @@ def unit():
 
 @app.route('/vivas')
 def vivas():
-    # a = requests.get(backend+"classes").content
+    #a = requests.get(backend+"classes").content
     return render_template('vivas.html')
 
 @app.route('/settings')
@@ -83,7 +83,8 @@ def settings():
 def new_project():
     if request.method == 'POST':
         pdf = request.files['pdf_file']
-        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
+        requests.post(f'{backend}qgen?email={user.email},submission_id=1, result_id=1')
+        #requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
         print(pdf)
     return render_template('newProject.html')
 
