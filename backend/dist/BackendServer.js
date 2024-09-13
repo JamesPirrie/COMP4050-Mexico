@@ -37,7 +37,8 @@ const dotenv = __importStar(require("dotenv"));
 const port = 3000;
 //express
 const app = (0, express_1.default)();
-app.use(express_1.default.json()); //without this req.body is undefined
+//app.use(express.json());//without this req.body is undefined
+app.use(express_1.default.urlencoded({ extended: true }));
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -81,8 +82,8 @@ app.get('/api/login', async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.query.email)) === true) {
-            console.log('login with: ' + JSON.stringify(req.query.email) + 'successful');
+        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(/*req.body.email*/ req.query.email)) === true) {
+            console.log('login with: ' + JSON.stringify(req.query.email) + ' successful');
             res.send(JSON.stringify(true));
         }
         else {
@@ -355,6 +356,7 @@ app.get('/api/students', async (req, res) => {
 app.post('/api/students', async (req, res) => {
     try {
         console.log('Received POST to /api/students');
+        console.log(JSON.stringify(req.body.Test));
         const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
         if (success) {
             res.send(JSON.stringify(true));
