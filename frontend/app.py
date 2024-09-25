@@ -32,8 +32,7 @@ def signup():
     
     if request.method == 'POST':
         email=request.form['email']
-        auth = requests.post(f'{backend}signup?={user.email}')
-        #auth = True
+        auth = requests.post(f'{backend}signup?email={email}')
         if auth:
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
@@ -45,10 +44,10 @@ def login():
 @app.route('/loginDirect', methods = ['GET', 'POST'])
 def loginDirect():
     if request.method == 'POST':
-        user.email=request.form['email']
-        auth = requests.get(f'{backend}login?={user.email}')
-        #auth = True
+        email=request.form['email']
+        auth = requests.get(f'{backend}login?email={email}')
         if auth:
+            user.email = email
             user.userAuthenticated = True
             return redirect(url_for('dashboard'))
     return render_template('loginDirect.html')
@@ -57,22 +56,40 @@ def loginDirect():
 def dashboard():
     return render_template('dashboard.html')
 
-@app.route('/classes')
+@app.route('/classes', methods = ['GET', 'POST'])
 def classes():
-    classList = requests.get(backend+'classes')
-    #classList = testClassList
+    if request.method == 'POST':
+        print('a')
+    classList = requests.get(f'{backend}classes?email={user.email}').content
     classes = json.loads(classList)
     for item in classes:
         print(item)
     return render_template('classes.html', classes = classes)
 
+@app.route('/new_class', methods = ['GET', 'POST'])
+def new_class():
+    if request.method == 'POST':
+        name = request.form['name']
+        code = request.form['code']
+        requests.post(f'{backend}classes?email={user.email}&code={code}')
+        return redirect(url_for('classes'))
+    return render_template('newclass.html')
+
 @app.route('/unit')
 def unit():
     return render_template('unit.html')
 
+@app.route('/newAssignment')
+def newAssignment():
+    return render_template('newAssignment.html')
+
+@app.route('/newStudent')
+def newStudent():
+    return render_template('newStudent.html')
+
 @app.route('/vivas')
 def vivas():
-    #a = requests.get(backend+"classes").content
+    a = requests.get(f'{backend}classes?email={user.email}').content
     return render_template('vivas.html')
 
 @app.route('/settings')
@@ -84,7 +101,7 @@ def new_project():
     if request.method == 'POST':
         pdf = request.files['pdf_file']
         requests.post(f'{backend}qgen?email={user.email},submission_id=1, result_id=1')
-        #requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
+        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
         print(pdf)
     return render_template('newProject.html')
 

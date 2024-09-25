@@ -1,11 +1,16 @@
-{% extends "base.html" %}
-
-{% block title %}Sign Up - VivaMQ{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VivaMQ Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
 <div class="login-container">
     <div class="login-box">
-        <img src="{{ url_for('static', filename='MqLogo.png') }}" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
+        <img src="{{ url_for('static', filename='icons/MqLogo.png') }}" alt="MQ Logo" class="logo" style="margin-bottom: 20px;">
         
         <h1 id="vivamq-sign-up" style="color: #A6192E;">VivaMQ Sign-up</h1>
         
@@ -36,30 +41,5 @@
 <div id="popup" class="popup">
     <!-- Popup content goes here -->
 </div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-    // Add any JavaScript for form validation or popup functionality here
-    function showPopup(message) {
-        const popup = document.getElementById('popup');
-        popup.textContent = message;
-        popup.style.display = 'block';
-        setTimeout(() => {
-            popup.style.display = 'none';
-        }, 3000);
-    }
-
-    // Example form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        
-        if (password !== confirmPassword) {
-            e.preventDefault();
-            showPopup('Passwords do not match!');
-        }
-    });
-</script>
-{% endblock %}
+</body>
+</html>

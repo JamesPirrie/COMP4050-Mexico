@@ -8,5 +8,5 @@
 {% for class in classes %}
     <a class="test-assignment-button" href="{{ url_for('unit', class=class['code']) }}">{{ class['code'] }}</a>
 {% endfor %}
-<button class="add-class-button">Add New Class</button>
+<a class="add-class-button" href="{{ url_for('new_class')}}">Add New Class</a>
 {% endblock %}

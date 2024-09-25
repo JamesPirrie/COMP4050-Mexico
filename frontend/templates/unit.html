@@ -11,7 +11,7 @@
             <div class="placeholder-text">There are no assignments for this class.</div>
         </div>
         <div class="new-item-bar">
-            <button id="add-assignment-button" onclick="showPopup('assignment')">Add Assignment</button>
+            <a id="add-assignment-button" onclick="showPopup('assignment')" href="{{ url_for('newAssignment')}}">Add Assignment</a>
             <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
         </div>
     </div>
@@ -22,7 +22,7 @@
             <div class="placeholder-text">There are no students for this class.</div>
         </div>
         <div class="new-item-bar">
-            <button id="add-student-button" onclick="showPopup('student')">Add Student</button>
+            <a id="add-student-button" onclick="showPopup('student')" href="{{ url_for('newStudent')}}">Add Student</a>
             <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
         </div>
     </div>

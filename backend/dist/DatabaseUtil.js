@@ -59,7 +59,7 @@ exports.editExam = editExam;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
-const sql = (0, postgres_1.default)(`postgres://${process.env.USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(process.env.PORT, 10)}/${process.env.DB}`);
+const sql = (0, postgres_1.default)(`postgres://postgres:default@localhost:5432/postgres`);
 /* --------------------------------------------------------------------------- */
 // Convert email to user_id. Returns integer if found, null otherwise.
 async function getUserIDbyEmail(email) {
