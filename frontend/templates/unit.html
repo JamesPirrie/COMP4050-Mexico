@@ -9,10 +9,12 @@
         <h2></h2>
         <div id="assignments-list" class="assignments-list">
             <div class="placeholder-text">There are no assignments for this class.</div>
+        {% for assignment in assignments %}
+            <a>{{ assignment['name'] }}</a>
+        {% endfor %}
         </div>
         <div class="new-item-bar">
-            <a id="add-assignment-button" onclick="showPopup('assignment')" href="{{ url_for('newAssignment')}}">Add Assignment</a>
-            <button id="edit-assignments-button" class="edit-button" onclick="toggleEdit('assignment')">Edit</button>
+            <a id="add-assignment-button" href="{{ url_for('newAssignment', class_id=request.args.get('class', ''))}}">Add Assignment</a>
         </div>
     </div>
 
@@ -20,156 +22,13 @@
         <h2></h2>
         <div id="students-list" class="students-list">
             <div class="placeholder-text">There are no students for this class.</div>
+        {% for student in students %}
+            <a>{{ student['first_name'] }} {{ student['last_name'] }}</a>
+        {% endfor %}
         </div>
         <div class="new-item-bar">
-            <a id="add-student-button" onclick="showPopup('student')" href="{{ url_for('newStudent')}}">Add Student</a>
-            <button id="edit-students-button" class="edit-button" onclick="toggleEdit('student')">Edit</button>
+            <a id="add-student-button" href="{{ url_for('newStudent')}}">Add Student</a>
         </div>
     </div>
 </div>
-
-<div id="overlay" class="overlay"></div>
-<div id="popup" class="popup">
-    <input type="text" id="popup-input" placeholder="">
-    <div class="popup-buttons">
-        <button onclick="hidePopup()">Cancel</button>
-        <button onclick="addItem()">Add</button>
-    </div>
-</div>
-
-<script>
-    function getQueryParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-    
-        window.onload = function() {
-            const className = getQueryParameter('class');
-            if (className) {
-                document.title = `Assignments - ${className} - VivaMQ`;
-                const heading = document.querySelector('.assignments-section h2');
-                if (heading) {
-                    heading.textContent = `Assignments - ${className}`;
-                }
-                const heading2 = document.querySelector('.students-section h2');
-                if (heading2) {
-                    heading2.textContent = `Students - ${className}`;
-                }
-            }
-        };
-
-
-        let currentType = '';
-
-        function showPopup(type) {
-            currentType = type;
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('popup').style.display = 'block';
-            document.getElementById('popup-input').placeholder = `Enter ${type} name`;
-            document.getElementById('popup-input').focus();
-        }
-
-        function hidePopup() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('popup').style.display = 'none';
-            document.getElementById('popup-input').value = '';
-        }
-
-        function addItem() {
-            const input = document.getElementById('popup-input');
-            const list = document.getElementById(`${currentType}s-list`);
-            const editButton = document.getElementById(`edit-${currentType}s-button`);
-            const addButton = document.getElementById(`add-${currentType}-button`);
-            
-            if (input.value.trim() !== '') {
-                const placeholder = list.querySelector('.placeholder-text');
-                if (placeholder) {
-                    list.removeChild(placeholder);
-                }
-
-                const item = document.createElement('div');
-                item.className = `item ${currentType}-item`;
-                
-                const textSpan = document.createElement('span');
-                textSpan.textContent = input.value;
-                item.appendChild(textSpan);
-
-                const removeButton = document.createElement('button');
-                removeButton.textContent = 'X';
-                removeButton.className = 'remove-button';
-                removeButton.onclick = function(e) {
-                    e.stopPropagation();
-                    list.removeChild(item);
-                    if (list.children.length === 0) {
-                        editButton.style.display = 'none';
-                        editButton.textContent = 'Edit';
-                        addButton.style.display = 'inline-block';
-                        const newPlaceholder = document.createElement('div');
-                        newPlaceholder.className = 'placeholder-text';
-                        newPlaceholder.textContent = `There are no ${currentType}s for this class.`;
-                        list.appendChild(newPlaceholder);
-                    }
-                };
-                item.appendChild(removeButton);
-
-                if (currentType === 'assignment') {
-                    item.onclick = function() {
-                        if (!this.isContentEditable) {
-                            redirectToVivas(item.textContent.substring(0,item.textContent.length-1))
-                        }
-                    };
-                    
-                }
-
-                list.appendChild(item);
-                
-                if (list.children.length === 1) {
-                    editButton.style.display = 'inline-block';
-                }
-
-                hidePopup();
-            }
-        }
-
-        function toggleEdit(type) {
-            const list = document.getElementById(`${type}s-list`);
-            const items = list.getElementsByClassName('item');
-            const editButton = document.getElementById(`edit-${type}s-button`);
-            const addButton = document.getElementById(`add-${type}-button`);
-            const removeButtons = list.getElementsByClassName('remove-button');
-            
-            if (editButton.textContent === 'Edit') {
-                editButton.textContent = 'Done';
-                addButton.style.display = 'none';
-                for (let item of items) {
-                    item.contentEditable = true;
-                    item.style.backgroundColor = '#f0f0f0';
-                    if (type === 'assignment') {
-                        item.style.color = '#A6192E';
-                    }
-                }
-                for (let button of removeButtons) {
-                    button.style.display = 'inline-block';
-                }
-            } else {
-                editButton.textContent = 'Edit';
-                addButton.style.display = 'inline-block'; 
-                for (let item of items) {
-                    item.contentEditable = false;
-                    item.style.backgroundColor = type === 'assignment' ? '#A6192E' : 'white';
-                    if (type === 'assignment') {
-                        item.style.color = 'white';
-                    }
-                }
-                for (let button of removeButtons) {
-                    button.style.display = 'none';
-                }
-            }
-        }
-
-        function redirectToVivas(assignmentName) {
-            const className = getQueryParameter('class');
-            window.location.href = `vivas.html?class=${className}&assignment=${encodeURIComponent(assignmentName)}`;
-        }
-</script>
 {% endblock %}

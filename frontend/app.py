@@ -77,14 +77,42 @@ def new_class():
 
 @app.route('/unit')
 def unit():
-    return render_template('unit.html')
+    classes = json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+    print(classes)
+    for item in classes:
+        if item['code'] == request.args.get('class', ''):
+            class_id = item['class_id']
+        else:
+            print('no class id found')
+    assignments = json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={class_id}').content)
+    students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
+    return render_template('unit.html', assignments = assignments, students = students)
 
-@app.route('/newAssignment')
+@app.route('/newAssignment', methods = ['GET', 'POST'])
 def newAssignment():
+    if request.method == 'POST':
+        classes = json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+        print(classes)
+        for item in classes:
+            if item['code'] == request.args.get('class_id', ''):
+                class_id = item['class_id']
+            else:
+                print('no class id found')
+        name = request.form['name']
+        desc = request.form['desc']
+        requests.post(f'{backend}assignments?email={user.email}&class_id={class_id}&name={name}&description={desc}')
+        return redirect(url_for('classes'))
     return render_template('newAssignment.html')
 
-@app.route('/newStudent')
+@app.route('/newStudent', methods = ['GET', 'POST'])
 def newStudent():
+    if request.method == 'POST':
+        email = user.email
+        fname = request.form['fname']
+        lname = request.form['lname']
+        id = request.form['id']
+        requests.post(f'{backend}tudents?email={user.email}&student_id={id}&first_name={fname}&last_name={lname}')
+        return redirect(url_for('classes'))
     return render_template('newStudent.html')
 
 @app.route('/vivas')
