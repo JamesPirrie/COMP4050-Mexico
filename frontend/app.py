@@ -33,7 +33,7 @@ def signup():
     if request.method == 'POST':
         email=request.form['email']
         auth = requests.post(f'{backend}signup?email={email}')
-        if auth:
+        if auth.text == 'true':
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
 
@@ -46,7 +46,7 @@ def loginDirect():
     if request.method == 'POST':
         email=request.form['email']
         auth = requests.get(f'{backend}login?email={email}')
-        if auth:
+        if auth.text == 'true':
             user.email = email
             user.userAuthenticated = True
             return redirect(url_for('dashboard'))

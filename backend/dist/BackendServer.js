@@ -141,7 +141,6 @@ app.post('/api/classes', async (req, res) => {
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        console.log('email: ' + req.query.email + ' code: ' + req.query.code);
         const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
