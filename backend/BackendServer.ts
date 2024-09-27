@@ -14,8 +14,7 @@ const port = 3000;
 
 //express
 const app = express();
-//app.use(express.json());//without this req.body is undefined
-app.use(express.urlencoded( {extended: true }))
+app.use(express.json());//without this req.body is undefined and works if and only if the content-type header is application/json
 
 //multer middleware
 const storageEngine = multer.diskStorage({
@@ -24,16 +23,16 @@ const storageEngine = multer.diskStorage({
     },
     filename: (req, file, callBack) => {
         console.log('Received file: ' + JSON.stringify(file))
-        callBack(null, JSON.stringify(req.query.submission_filepath).replace(/"/g, ''))//notes for now: we are nulling the errors well fix that later
+        callBack(null, JSON.stringify(req.query.submission_filepath).replace(/"/g, '')) //notes for now: we are nulling the errors well fix that later
     }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
 })                                                                                      //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = multer({storage : storageEngine})                                        //-later note looks like it does we good
 
-//placeholders for now
+
 //GET requests
 app.get('/', (req: Request, res: Response) => {
     console.log('GET request received');
-    res.status(200).send('GET request received').status(200);//this is how to do codes
+    res.status(200).send('GET request received');//this is how to do codes
 });
 
 //POST requests
@@ -66,11 +65,10 @@ app.put('/', (req: Request, res: Response) => {
 //actual endpoints 
 //login/signup
 app.get('/api/login', async (req: Request, res: Response) => {
-    //for MVP (logging in)
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await loginUserCheck(JSON.stringify(/*req.body.email*/req.query.email)) === true) {
+        if (await loginUserCheck(JSON.stringify(req.query.email)) === true) {
             console.log('login with: ' + JSON.stringify(req.query.email) + ' successful');
             res.send(JSON.stringify(true));
         }
@@ -85,7 +83,6 @@ app.get('/api/login', async (req: Request, res: Response) => {
 });
 
 app.post('/api/signup', async (req: Request, res: Response) => {
-    //for MVP (signing up)
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
@@ -101,8 +98,6 @@ app.post('/api/signup', async (req: Request, res: Response) => {
     catch (error) {
         console.log('Error: ', error)
     }
-    //if so send success = false
-    //if not used success = true
 });
 
 //class endpoints
@@ -114,11 +109,11 @@ app.get('/api/classes', async (req: Request, res: Response) =>{
         const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
         if (userClasses != null) {//if something has returned
             console.log('GET classes successful');
-            res.send(JSON.stringify(userClasses));//send them
+            res.json(userClasses);//send them
         }
         else{
             console.log('Error: No Classes Found', Error);
-            res.send(JSON.stringify({}));
+            res.json({});
         }
     }
     catch (error) {
@@ -138,8 +133,8 @@ app.post('/api/classes', async (req: Request, res: Response) =>{
             console.log('Create class successful');
         }
         else{
-            console.log('Error: Classes Creation Failed', Error);
             res.send(JSON.stringify(false));
+            console.log('Error: Classes Creation Failed', Error);
         }
     }
     catch (error) {
@@ -185,17 +180,16 @@ app.put('/api/classes', async (req: Request, res: Response) =>{
 
 //assignment endpoints
 app.get('/api/assignments', async (req: Request, res: Response) =>{
-    //for MVP (listing classes)
     //list assignments for a specific class
     try {
         console.log('Received GET to /api/assignments');
         const userClassAssignments = await getAssignments(JSON.stringify(req.query.email), Number(req.query.class_id));
         if (userClassAssignments != null) {
-            res.send(JSON.stringify(userClassAssignments));
+            res.json(userClassAssignments);
             console.log('GET assignments successful');
         }
         else{
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Assignments Found', Error)
         }
     }
@@ -205,7 +199,6 @@ app.get('/api/assignments', async (req: Request, res: Response) =>{
 });
 
 app.post('/api/assignments', async (req: Request, res: Response) =>{
-    //for MVP adding assignments, add removal in later (should be simple)
     //adding assignments to that class
     try {
         console.log('Received POST to /api/assignments');
@@ -262,17 +255,16 @@ app.put('/api/assignments', async (req: Request, res: Response) =>{
 
 //submission endpoints
 app.get('/api/submissions', async (req: Request, res: Response) =>{
-    //for MVP (listing classes)
     //list submissions for a specific assignment
     try {
         console.log('Received GET to /api/submissions');
         const userSubmissions = await getSubmissionsForAssignments(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
         if (userSubmissions != null) {
-            res.send(JSON.stringify(userSubmissions));
+            res.json(userSubmissions);
             console.log('GET submissions successful');
         }
         else{
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Submissions Found', Error);
         }
     }
@@ -282,7 +274,6 @@ app.get('/api/submissions', async (req: Request, res: Response) =>{
 });
 
 app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
-    //for MVP adding submissions
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -343,11 +334,11 @@ app.get('/api/students', async (req: Request, res: Response) =>{//placeholder fo
         console.log('Received GET to /api/students');
         const studentsList = await getAllStudents();
         if (studentsList != null) {
-            res.send(JSON.stringify(studentsList));
+            res.json(studentsList);
             console.log('GET Students successful');
         }
         else{
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('GET students failed')
         }
     }
@@ -490,17 +481,16 @@ app.post('/api/qgen', async (req: Request, res: Response) => {
 });
 
 app.get('/api/vivas', async (req: Request, res: Response) =>{
-    //for MVP listing vivas
     //list viva for a specific submission
     try {
         console.log('Received GET to /api/vivas');
         const foundVivas = await getExams(Number(req.query.submission_id));
         if (foundVivas != null) {
-            res.send(JSON.stringify(foundVivas));
+            res.json(foundVivas);
             console.log('GET vivas successful');
         }
         else{
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Vivas Found', Error)
         }
     }
@@ -509,8 +499,7 @@ app.get('/api/vivas', async (req: Request, res: Response) =>{
     }
 });
 
-app.post('/api/vivas', async (req: Request, res: Response) =>{
-    //for MVP adding and 
+app.post('/api/vivas', async (req: Request, res: Response) =>{ 
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
@@ -530,7 +519,6 @@ app.post('/api/vivas', async (req: Request, res: Response) =>{
 });
 
 app.delete('/api/vivas', async (req: Request, res: Response) => {
-    //for MVP removing vivas
     try{
         console.log('Received DELETE to /api/vivas');
         const success = await deleteExam(JSON.stringify(req.query.email), Number(req.query.exam_id));
@@ -549,7 +537,6 @@ app.delete('/api/vivas', async (req: Request, res: Response) => {
 });
 
 app.put('/api/vivas', async (req: Request, res: Response) =>{
-    //for MVP editing vivas
     try{
         console.log('Received PUT to /api/vivas');
         const success = await editExam(JSON.stringify(req.query.email), Number(req.query.exam_id), Number(req.query.submission_id), Number(req.query.student_id), Number(req.query.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));

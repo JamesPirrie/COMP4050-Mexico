@@ -37,8 +37,7 @@ const dotenv = __importStar(require("dotenv"));
 const port = 3000;
 //express
 const app = (0, express_1.default)();
-//app.use(express.json());//without this req.body is undefined
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -54,7 +53,7 @@ const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note 
 //GET requests
 app.get('/', (req, res) => {
     console.log('GET request received');
-    res.status(200).send('GET request received').status(200); //this is how to do codes
+    res.status(200).send('GET request received'); //this is how to do codes
 });
 //POST requests
 app.post('/', (req, res) => {
@@ -82,7 +81,7 @@ app.get('/api/login', async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(/*req.body.email*/ req.query.email)) === true) {
+        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.query.email)) === true) {
             console.log('login with: ' + JSON.stringify(req.query.email) + ' successful');
             res.send(JSON.stringify(true));
         }
@@ -124,11 +123,11 @@ app.get('/api/classes', async (req, res) => {
         const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
         if (userClasses != null) { //if something has returned
             console.log('GET classes successful');
-            res.send(JSON.stringify(userClasses)); //send them
+            res.json(userClasses); //send them
         }
         else {
             console.log('Error: No Classes Found', Error);
-            res.send(JSON.stringify({}));
+            res.json({});
         }
     }
     catch (error) {
@@ -147,8 +146,8 @@ app.post('/api/classes', async (req, res) => {
             console.log('Create class successful');
         }
         else {
-            console.log('Error: Classes Creation Failed', Error);
             res.send(JSON.stringify(false));
+            console.log('Error: Classes Creation Failed', Error);
         }
     }
     catch (error) {
@@ -197,11 +196,11 @@ app.get('/api/assignments', async (req, res) => {
         console.log('Received GET to /api/assignments');
         const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
         if (userClassAssignments != null) {
-            res.send(JSON.stringify(userClassAssignments));
+            res.json(userClassAssignments);
             console.log('GET assignments successful');
         }
         else {
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Assignments Found', Error);
         }
     }
@@ -270,11 +269,11 @@ app.get('/api/submissions', async (req, res) => {
         console.log('Received GET to /api/submissions');
         const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
         if (userSubmissions != null) {
-            res.send(JSON.stringify(userSubmissions));
+            res.json(userSubmissions);
             console.log('GET submissions successful');
         }
         else {
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Submissions Found', Error);
         }
     }
@@ -341,11 +340,11 @@ app.get('/api/students', async (req, res) => {
         console.log('Received GET to /api/students');
         const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
         if (studentsList != null) {
-            res.send(JSON.stringify(studentsList));
+            res.json(studentsList);
             console.log('GET Students successful');
         }
         else {
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('GET students failed');
         }
     }
@@ -485,11 +484,11 @@ app.get('/api/vivas', async (req, res) => {
         console.log('Received GET to /api/vivas');
         const foundVivas = await (0, DatabaseUtil_2.getExams)(Number(req.query.submission_id));
         if (foundVivas != null) {
-            res.send(JSON.stringify(foundVivas));
+            res.json(foundVivas);
             console.log('GET vivas successful');
         }
         else {
-            res.send(JSON.stringify({}));
+            res.json({});
             console.log('Error: No Vivas Found', Error);
         }
     }
