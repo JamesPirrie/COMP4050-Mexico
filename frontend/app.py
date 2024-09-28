@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, url_for, redirect
+import os
+from flask import Flask, request, render_template, url_for, redirect, jsonify
 import requests
 import json
 
@@ -111,7 +112,7 @@ def newStudent():
         fname = request.form['fname']
         lname = request.form['lname']
         id = request.form['id']
-        requests.post(f'{backend}tudents?email={user.email}&student_id={id}&first_name={fname}&last_name={lname}')
+        requests.post(f'{backend}students?email={user.email}&student_id={id}&first_name={fname}&last_name={lname}')
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
 
@@ -127,11 +128,52 @@ def settings():
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
     if request.method == 'POST':
+        if 'pdf_file' not in request.files:
+            return jsonify({"error": "No file part"}), 400 
+      
         pdf = request.files['pdf_file']
-        requests.post(f'{backend}qgen?email={user.email},submission_id=1, result_id=1')
-        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
-        print(pdf)
+
+        if pdf.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+        
+        if pdf:
+            temp_path = os.path.join('temp', pdf.filename)
+            pdf.save(temp_path)
+            
+            with open(temp_path, 'rb') as file:
+                files = {'pdf': file}
+                response = requests.post(f'{backend}qgen?email={user.email}&submission_id=1&result_id=1', files=files)
+            os.remove(temp_path)
+            
+            if response.status_code == 200:
+                questions = response.json()
+                return jsonify(questions)
+            else:
+                return jsonify({"error": "Failed to generate questions"}), 500
+    
     return render_template('newProject.html')
+
+@app.route('/saveProject', methods=['POST'])
+def saveProject():
+    data = request.json
+    
+    project_title = data.get('title')
+    custom_questions = data.get('customQuestions')
+    generated_questions = data.get('generatedQuestions')
+    
+    project_data = {
+        'email': user.email,
+        'title': project_title,
+        'custom_questions': custom_questions,
+        'generated_questions': generated_questions
+    }
+    
+    response = requests.post(f'{backend}saveProject', json=project_data)
+    
+    if response.status_code == 200:
+        return jsonify({"success": True, "message": "Project saved successfully"})
+    else:
+        return jsonify({"success": False, "message": "Failed to save project"}), 500
 
 @app.route('/logout')
 def logout():
