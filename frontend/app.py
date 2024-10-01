@@ -19,6 +19,24 @@ user = User()
 def isAuthenticated():
     return user.userAuthenticated
 
+# How to use this code
+# url requests from the user are detected using @app.route()
+# this calls the defined method directly below it
+# sending the html back to the user is done with render_template()
+# changing the url for the user is done with url_for('name_of_method')
+# to run the method as well use redirect()
+# example: redirect(url_for('name_of_method'))
+
+# recieving data from the user is done with a POST request from the website back the flask
+# first allow the page to recieve POST using methods = ['POST'] (dont forget to also allow 'GET' if needed)
+# then use logic to check if recieving a POST request (if request.method == 'POST')
+# grab the data using request.form['key'] (the key is defined in the HTML)
+# look at loginDirect.html to see more explanation of how this works
+
+# accessing the backend API is using requests.get() or requests.post() (and will also use requests.put() or requests.delete())
+# look through the code to see examples of how this is done
+# this will change in the future for requests.post() because it was implemented wrong for MVP
+
 @app.route('/')
 def default():
     if isAuthenticated():
