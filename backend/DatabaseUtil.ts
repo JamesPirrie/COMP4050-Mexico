@@ -89,14 +89,14 @@ export async function getClasses(email: string) {
 }
 
 // post classes by user from email. Input: email, class code
-export async function createClass(email: string, code: string) {
+export async function createClass(email: string, session: number, year: number, title: string, code: string) {
     try {
         const users = await getUserIDbyEmail(email);
         //we should probably add some sort of class already exists protection in future
         if (users)
         {
-            await sql`INSERT INTO class (author_id, code) VALUES
-                                        (${users}, TRIM(both '"' from ${code}));`;//the TRIM bit is because this has "" on it because typescript/javascript
+            await sql`INSERT INTO class (author_id, session, year, title, code, creation_date) VALUES
+                                        (${users}, ${session}, ${year}, TRIM(both '"' from ${title}), TRIM(both '"' from ${code}), NOW());`;//the TRIM bit is because this has "" on it because typescript/javascript
             return true;
         }
         else 

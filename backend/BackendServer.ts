@@ -1,4 +1,4 @@
-//https://expressjs.com/en/5x/api.html    
+//https://expressjs.com/en/5x/api.html  
 
 import express from 'express';
 import multer from 'multer';
@@ -127,7 +127,7 @@ app.post('/api/classes', async (req: Request, res: Response) =>{
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await createClass(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
+        const success = await createClass(JSON.stringify(req.query.email), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.title) ,JSON.stringify(req.query.code)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');

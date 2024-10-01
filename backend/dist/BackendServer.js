@@ -1,5 +1,5 @@
 "use strict";
-//https://expressjs.com/en/5x/api.html    
+//https://expressjs.com/en/5x/api.html  
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -49,7 +49,6 @@ const storageEngine = multer_1.default.diskStorage({
     } //there is an assumption here that the submission_filepath already has                                                                
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
-//placeholders for now
 //GET requests
 app.get('/', (req, res) => {
     console.log('GET request received');
@@ -77,7 +76,6 @@ app.put('/', (req, res) => {
 //actual endpoints 
 //login/signup
 app.get('/api/login', async (req, res) => {
-    //for MVP (logging in)
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
@@ -95,7 +93,6 @@ app.get('/api/login', async (req, res) => {
     }
 });
 app.post('/api/signup', async (req, res) => {
-    //for MVP (signing up)
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
@@ -111,8 +108,6 @@ app.post('/api/signup', async (req, res) => {
     catch (error) {
         console.log('Error: ', error);
     }
-    //if so send success = false
-    //if not used success = true
 });
 //class endpoints
 app.get('/api/classes', async (req, res) => {
@@ -140,7 +135,7 @@ app.post('/api/classes', async (req, res) => {
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.query.email), JSON.stringify(req.query.code)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.query.email), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.title), JSON.stringify(req.query.code)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -190,7 +185,6 @@ app.put('/api/classes', async (req, res) => {
 });
 //assignment endpoints
 app.get('/api/assignments', async (req, res) => {
-    //for MVP (listing classes)
     //list assignments for a specific class
     try {
         console.log('Received GET to /api/assignments');
@@ -209,7 +203,6 @@ app.get('/api/assignments', async (req, res) => {
     }
 });
 app.post('/api/assignments', async (req, res) => {
-    //for MVP adding assignments, add removal in later (should be simple)
     //adding assignments to that class
     try {
         console.log('Received POST to /api/assignments');
@@ -263,7 +256,6 @@ app.put('/api/assignments', async (req, res) => {
 });
 //submission endpoints
 app.get('/api/submissions', async (req, res) => {
-    //for MVP (listing classes)
     //list submissions for a specific assignment
     try {
         console.log('Received GET to /api/submissions');
@@ -282,7 +274,6 @@ app.get('/api/submissions', async (req, res) => {
     }
 });
 app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
-    //for MVP adding submissions
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -478,7 +469,6 @@ app.post('/api/qgen', async (req, res) => {
     //if AI function succeeds return true else return false
 });
 app.get('/api/vivas', async (req, res) => {
-    //for MVP listing vivas
     //list viva for a specific submission
     try {
         console.log('Received GET to /api/vivas');
@@ -497,7 +487,6 @@ app.get('/api/vivas', async (req, res) => {
     }
 });
 app.post('/api/vivas', async (req, res) => {
-    //for MVP adding and 
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
@@ -516,7 +505,6 @@ app.post('/api/vivas', async (req, res) => {
     }
 });
 app.delete('/api/vivas', async (req, res) => {
-    //for MVP removing vivas
     try {
         console.log('Received DELETE to /api/vivas');
         const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.query.email), Number(req.query.exam_id));
@@ -534,7 +522,6 @@ app.delete('/api/vivas', async (req, res) => {
     }
 });
 app.put('/api/vivas', async (req, res) => {
-    //for MVP editing vivas
     try {
         console.log('Received PUT to /api/vivas');
         const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.query.email), Number(req.query.exam_id), Number(req.query.submission_id), Number(req.query.student_id), Number(req.query.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
