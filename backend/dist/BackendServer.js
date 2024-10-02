@@ -38,6 +38,7 @@ const port = 3000;
 //express
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
+//app.use(express.urlencoded({extended : true}));
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -55,9 +56,9 @@ app.get('/', (req, res) => {
     res.status(200).send('GET request received'); //this is how to do codes
 });
 //POST requests
-app.post('/', (req, res) => {
-    console.log('POST request received');
-    res.status(200).send('POST Request received');
+app.post('/', upload.none(), (req, res) => {
+    console.log('POST request received'); //upload.none works for text only (no file submission) 
+    res.status(200).send('POST Request received'); //with the way this is now implemented we can parse application/json AND multipart/formdata
     console.log('headers:');
     console.log(req.headers);
     console.log('body: ');
@@ -75,12 +76,12 @@ app.put('/', (req, res) => {
 });
 //actual endpoints 
 //login/signup
-app.get('/api/login', async (req, res) => {
+app.post('/api/login', upload.none(), async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.query.email)) === true) {
-            console.log('login with: ' + JSON.stringify(req.query.email) + ' successful');
+        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.body.email)) === true) {
+            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful');
             res.send(JSON.stringify(true));
         }
         else {
@@ -92,16 +93,16 @@ app.get('/api/login', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.post('/api/signup', async (req, res) => {
+app.post('/api/signup', upload.none(), async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
-        if (await (0, DatabaseUtil_1.signupUser)(JSON.stringify(req.query.email)) === true) {
-            console.log('signup with: ' + req.query.email + ' successful');
+        if (await (0, DatabaseUtil_1.signupUser)(JSON.stringify(req.body.email)) === true) {
+            console.log('signup with: ' + req.body.email + ' successful');
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Sign Up with ' + req.query.email + 'Failed', Error);
+            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error);
             res.send(JSON.stringify(false));
         }
     }
@@ -110,7 +111,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 //class endpoints
-app.get('/api/classes', async (req, res) => {
+app.get('/api/classes', upload.none(), async (req, res) => {
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
@@ -130,12 +131,12 @@ app.get('/api/classes', async (req, res) => {
     }
 });
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
-app.post('/api/classes', async (req, res) => {
+app.post('/api/classes', upload.none(), async (req, res) => {
     //for MVP adding classes, add removal in later (should be simple)
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.query.email), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.title), JSON.stringify(req.query.code)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title), JSON.stringify(req.body.code)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -149,10 +150,10 @@ app.post('/api/classes', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.delete('/api/classes', async (req, res) => {
+app.delete('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/classes');
-        const success = await (0, DatabaseUtil_1.deleteClass)('', Number(req.query.class_id)); //email is placeholder for now
+        const success = await (0, DatabaseUtil_1.deleteClass)('', Number(req.body.class_id)); //email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete class successful');
@@ -166,10 +167,10 @@ app.delete('/api/classes', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/classes', async (req, res) => {
+app.put('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/classes');
-        const success = await (0, DatabaseUtil_1.editClass)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.session), Number(req.query.year), JSON.stringify(req.query.code), JSON.stringify(req.query.title));
+        const success = await (0, DatabaseUtil_1.editClass)(JSON.stringify(req.body.email), Number(req.body.class_id), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.code), JSON.stringify(req.body.title));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit class successful');
@@ -184,7 +185,7 @@ app.put('/api/classes', async (req, res) => {
     }
 });
 //assignment endpoints
-app.get('/api/assignments', async (req, res) => {
+app.get('/api/assignments', upload.none(), async (req, res) => {
     //list assignments for a specific class
     try {
         console.log('Received GET to /api/assignments');
@@ -202,11 +203,11 @@ app.get('/api/assignments', async (req, res) => {
         console.log('Error: Assignment Check Failed', error);
     }
 });
-app.post('/api/assignments', async (req, res) => {
+app.post('/api/assignments', upload.none(), async (req, res) => {
     //adding assignments to that class
     try {
         console.log('Received POST to /api/assignments');
-        const success = await (0, DatabaseUtil_2.createAssignment)(JSON.stringify(req.query.email), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createAssignment)(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create class successful');
@@ -220,10 +221,10 @@ app.post('/api/assignments', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.delete('/api/assignments', async (req, res) => {
+app.delete('/api/assignments', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/assignments');
-        const success = await (0, DatabaseUtil_1.deleteAssignment)('', Number(req.query.assignment_id)); //email is placeholder for now
+        const success = await (0, DatabaseUtil_1.deleteAssignment)('', Number(req.body.assignment_id)); //email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete assignment successful');
@@ -237,10 +238,10 @@ app.delete('/api/assignments', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/assignments', async (req, res) => {
+app.put('/api/assignments', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/assignments');
-        const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.class_id), JSON.stringify(req.query.name), JSON.stringify(req.query.description));
+        const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit assignment successful');
@@ -255,7 +256,7 @@ app.put('/api/assignments', async (req, res) => {
     }
 });
 //submission endpoints
-app.get('/api/submissions', async (req, res) => {
+app.get('/api/submissions', upload.none(), async (req, res) => {
     //list submissions for a specific assignment
     try {
         console.log('Received GET to /api/submissions');
@@ -273,11 +274,11 @@ app.get('/api/submissions', async (req, res) => {
         console.log('Error: Submission Check Failed', error);
     }
 });
-app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
+app.post('/api/submissions', upload.none(), upload.single('submission_PDF'), async (req, res) => {
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
-        const success = await (0, DatabaseUtil_2.createSubmission)(JSON.stringify(req.query.email), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+        const success = await (0, DatabaseUtil_2.createSubmission)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create submission successful');
@@ -291,10 +292,11 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
         console.log('Error: ', error);
     }
 });
-app.delete('/api/submissions', async (req, res) => {
+//TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
+app.delete('/api/submissions', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/submissions');
-        const success = await (0, DatabaseUtil_1.deleteSubmission)('', Number(req.query.submission_id)); //email is placeholder for now
+        const success = await (0, DatabaseUtil_1.deleteSubmission)('', Number(req.body.submission_id)); //email is placeholder for now
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete submission successful');
@@ -308,10 +310,10 @@ app.delete('/api/submissions', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
+app.put('/api/submissions', upload.none(), upload.single('submission_PDF'), async (req, res) => {
     try {
         console.log('Received PUT to /api/submissions');
-        const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.query.submission_id), Number(req.query.assignment_id), Number(req.query.student_id), JSON.stringify(req.query.submission_date), JSON.stringify(req.query.submission_filepath));
+        const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit submission successful');
@@ -326,7 +328,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     }
 });
 //student endpoints
-app.get('/api/students', async (req, res) => {
+app.get('/api/students', upload.none(), async (req, res) => {
     try {
         console.log('Received GET to /api/students');
         const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
@@ -343,11 +345,10 @@ app.get('/api/students', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.post('/api/students', async (req, res) => {
+app.post('/api/students', upload.none(), async (req, res) => {
     try {
         console.log('Received POST to /api/students');
-        console.log(JSON.stringify(req.body.Test));
-        const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
+        const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create student successful');
@@ -361,10 +362,10 @@ app.post('/api/students', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.delete('/api/students', async (req, res) => {
+app.delete('/api/students', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/students');
-        const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.query.student_id));
+        const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.body.student_id));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete student successful');
@@ -378,10 +379,10 @@ app.delete('/api/students', async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/students', async (req, res) => {
+app.put('/api/students', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/students');
-        const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.query.email), Number(req.query.student_id), JSON.stringify(req.query.first_name), JSON.stringify(req.query.last_name));
+        const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit student successful');
@@ -396,7 +397,7 @@ app.put('/api/students', async (req, res) => {
 });
 //AI endpoints
 //AI Generate Questions request (qgen = questions generate)
-app.post('/api/qgen', async (req, res) => {
+app.post('/api/qgen', upload.none(), async (req, res) => {
     //We will get Submission ID
     try {
         // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
@@ -468,7 +469,7 @@ app.post('/api/qgen', async (req, res) => {
     }
     //if AI function succeeds return true else return false
 });
-app.get('/api/vivas', async (req, res) => {
+app.get('/api/vivas', upload.none(), async (req, res) => {
     //list viva for a specific submission
     try {
         console.log('Received GET to /api/vivas');
@@ -486,11 +487,11 @@ app.get('/api/vivas', async (req, res) => {
         console.log('Error: Viva Check Failed', error);
     }
 });
-app.post('/api/vivas', async (req, res) => {
+app.post('/api/vivas', upload.none(), async (req, res) => {
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
-        const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.query.email), Number(req.query.submission_id), Number(req.query.student_id)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Create Exam successful');
@@ -504,10 +505,10 @@ app.post('/api/vivas', async (req, res) => {
         console.log('Error: Exam Creation Attempt Failed', error);
     }
 });
-app.delete('/api/vivas', async (req, res) => {
+app.delete('/api/vivas', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/vivas');
-        const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.query.email), Number(req.query.exam_id));
+        const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.body.email), Number(req.body.exam_id));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Delete exam successful');
@@ -521,10 +522,10 @@ app.delete('/api/vivas', async (req, res) => {
         console.log('Error: exam Deletion Attempt Failed', error);
     }
 });
-app.put('/api/vivas', async (req, res) => {
+app.put('/api/vivas', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/vivas');
-        const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.query.email), Number(req.query.exam_id), Number(req.query.submission_id), Number(req.query.student_id), Number(req.query.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
+        const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
         if (success) {
             res.send(JSON.stringify(true));
             console.log('Edit exam successful');
