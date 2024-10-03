@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const sql = postgres(`postgres://postgres:default@localhost:5432/postgres`);
+const sql = postgres(`postgres://${process.env.USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(<string>process.env.PORT, 10)}/${process.env.DB}`);
 
 /* --------------------------------------------------------------------------- */
 
