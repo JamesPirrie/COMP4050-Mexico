@@ -11,6 +11,7 @@ import {AiFactory} from "comp4050ai";
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
+dotenv.config();
 const port = 3000;
 
 // Defining the interface for the JWT payload
@@ -74,7 +75,6 @@ app.put('/', (req: Request, res: Response) => {
         const secretKey = process.env.SECRET_KEY;
         if (!secretKey) {
             throw new Error('Missing SECRET_KEY in environment variables');
-            return false;
         }
         // Decode the JWT
         const decodedToken = jwt.verify(token, process.env.SECRET_KEY as string) as JwtPayload;
@@ -83,17 +83,14 @@ app.put('/', (req: Request, res: Response) => {
         const email = decodedToken.email;
         if (!email) {
             throw new Error('Email not found in token');
-            return false;
         }
         // Validating that the email is in the correct format using regex
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
-            return false;
         }
         if (email != claimedEmail){
             throw new Error('Token not matched to claimed email');
-            return false;
         }
         return true;
     } catch (error) {
@@ -460,8 +457,6 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	try {
         // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
         // NOTE Commented out code is for future use with post MVP Implementation of AI
-        // Load environment variables
-        dotenv.config();
         //const apiKey = process.env.OPENAI_API_KEY || '';
 
         // Setup PDFProcessor and PromptManager 
