@@ -9,8 +9,14 @@ import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, creat
 import {AiFactory} from "comp4050ai";
 //import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 import * as dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 const port = 3000;
+
+// Defining the interface for the JWT payload
+interface JwtPayload {
+    email: string;
+}
 
 //express
 const app = express();
@@ -61,6 +67,42 @@ app.put('/', (req: Request, res: Response) => {
     res.send('PUT Request received');
 });
 
+// JWT Token Verification Authenticaiton
+  function verifyJWT(token: string, claimedEmail: string): boolean {
+    try {
+        // Retrieve the secret key from the environment variables
+        const secretKey = process.env.SECRET_KEY;
+        if (!secretKey) {
+            throw new Error('Missing SECRET_KEY in environment variables');
+            return false;
+        }
+        // Decode the JWT
+        const decodedToken = jwt.verify(token, process.env.SECRET_KEY as string) as JwtPayload;
+
+        // Extracting the email from the decoded token
+        const email = decodedToken.email;
+        if (!email) {
+            throw new Error('Email not found in token');
+            return false;
+        }
+        // Validating that the email is in the correct format using regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error('Invalid email format in token');
+            return false;
+        }
+        if (email != claimedEmail){
+            throw new Error('Token not matched to claimed email');
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error decoding token or interacting with database:', error);
+        return false;
+    }
+}
+
+
 //actual endpoints 
 //login/signup
 app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
@@ -104,15 +146,25 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        console.log('Received GET to /api/classes');
-        const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
-        if (userClasses != null) {//if something has returned
-            console.log('GET classes successful');
-            res.json(userClasses);//send them
-        }
-        else{
-            console.log('Error: No Classes Found', Error);
-            res.json({});
+        if(req.headers.authorization){
+            let token;
+            if (req.headers.authorization.startsWith('Bearer ')){
+                token = req.headers.authorization.split(" ")[1]
+            } else {
+                token = req.headers.authorization;
+            }
+            if (verifyJWT(token, JSON.stringify(req.query.email)) == true){
+                console.log('Received GET to /api/classes');
+                const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
+                if (userClasses != null) {//if something has returned
+                    console.log('GET classes successful');
+                    res.json(userClasses);//send them
+                }
+                else{
+                    console.log('Error: No Classes Found', Error);
+                    res.json({});
+                }
+            }            
         }
     }
     catch (error) {
