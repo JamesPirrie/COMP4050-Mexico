@@ -29,7 +29,7 @@ const storageEngine = multer.diskStorage({
     },
     filename: (req, file, callBack) => {
         console.log('Received file: ' + JSON.stringify(file))
-        callBack(null, JSON.stringify(req.query.submission_filepath).replace(/"/g, '')) //notes for now: we are nulling the errors well fix that later
+        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')) //notes for now: we are nulling the errors well fix that later
     }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
 })                                                                                      //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = multer({storage : storageEngine})                                        //-later note looks like it does we good
