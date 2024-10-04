@@ -21,7 +21,7 @@ interface JwtPayload {
 //express
 const app = express();
 app.use(express.json());//without this req.body is undefined and works if and only if the content-type header is application/json
-//app.use(express.urlencoded({extended : true}));
+
 //multer middleware
 const storageEngine = multer.diskStorage({
     destination: (req, file, callBack) => {
@@ -324,7 +324,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
     }
 });
 
-app.post('/api/submissions', upload.none(), upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
+app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -362,7 +362,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     }
 })
 
-app.put('/api/submissions', upload.none(), upload.single('submission_PDF'), async (req: Request, res: Response) =>{
+app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/submissions');
         const success = await editSubmission('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
