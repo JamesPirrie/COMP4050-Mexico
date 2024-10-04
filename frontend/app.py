@@ -50,7 +50,7 @@ def signup():
     
     if request.method == 'POST':
         email=request.form['email']
-        auth = requests.post(f'{backend}signup?email={email}')
+        auth = requests.post(f'{backend}signup', json = {'email': email})
         if auth.text == 'true':
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
@@ -63,7 +63,7 @@ def login():
 def loginDirect():
     if request.method == 'POST':
         email=request.form['email']
-        auth = requests.get(f'{backend}login?email={email}')
+        auth = requests.post(f'{backend}login', json = {'email': email})
         if auth.text == 'true':
             user.email = email
             user.userAuthenticated = True
@@ -74,10 +74,8 @@ def loginDirect():
 def dashboard():
     return render_template('dashboard.html')
 
-@app.route('/classes', methods = ['GET', 'POST'])
+@app.route('/classes', methods = ['GET'])
 def classes():
-    if request.method == 'POST':
-        print('a')
     classList = requests.get(f'{backend}classes?email={user.email}').content
     classes = json.loads(classList)
     for item in classes:
@@ -89,7 +87,7 @@ def new_class():
     if request.method == 'POST':
         name = request.form['name']
         code = request.form['code']
-        requests.post(f'{backend}classes?email={user.email}&code={code}')
+        requests.post(f'{backend}classes', json = {'email': user.email, 'code': code})
         return redirect(url_for('classes'))
     return render_template('newclass.html')
 
@@ -118,7 +116,7 @@ def newAssignment():
                 print('no class id found')
         name = request.form['name']
         desc = request.form['desc']
-        requests.post(f'{backend}assignments?email={user.email}&class_id={class_id}&name={name}&description={desc}')
+        requests.post(f'{backend}assignments', json = {'email': user.email, 'class_id': class_id, 'name': name, 'description': desc})
         return redirect(url_for('classes'))
     return render_template('newAssignment.html')
 
@@ -129,7 +127,7 @@ def newStudent():
         fname = request.form['fname']
         lname = request.form['lname']
         id = request.form['id']
-        requests.post(f'{backend}tudents?email={user.email}&student_id={id}&first_name={fname}&last_name={lname}')
+        requests.post(f'{backend}students', json = {'email': user.email, 'student_id': id, 'first_name': fname, 'last_name': lname})
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
 

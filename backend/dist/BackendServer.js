@@ -34,6 +34,7 @@ const DatabaseUtil_2 = require("./DatabaseUtil");
 const comp4050ai_1 = require("comp4050ai");
 //import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 const dotenv = __importStar(require("dotenv"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const port = 3000;
 //express
 const app = (0, express_1.default)();
@@ -46,7 +47,7 @@ const storageEngine = multer_1.default.diskStorage({
     },
     filename: (req, file, callBack) => {
         console.log('Received file: ' + JSON.stringify(file));
-        callBack(null, JSON.stringify(req.query.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
+        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
     } //there is an assumption here that the submission_filepath already has                                                                
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
@@ -74,6 +75,40 @@ app.put('/', (req, res) => {
     console.log('PUT request received');
     res.send('PUT Request received');
 });
+// JWT Token Verification Authenticaiton
+function verifyJWT(token, claimedEmail) {
+    try {
+        // Retrieve the secret key from the environment variables
+        const secretKey = process.env.SECRET_KEY;
+        if (!secretKey) {
+            throw new Error('Missing SECRET_KEY in environment variables');
+            return false;
+        }
+        // Decode the JWT
+        const decodedToken = jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY);
+        // Extracting the email from the decoded token
+        const email = decodedToken.email;
+        if (!email) {
+            throw new Error('Email not found in token');
+            return false;
+        }
+        // Validating that the email is in the correct format using regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error('Invalid email format in token');
+            return false;
+        }
+        if (email != claimedEmail) {
+            throw new Error('Token not matched to claimed email');
+            return false;
+        }
+        return true;
+    }
+    catch (error) {
+        console.error('Error decoding token or interacting with database:', error);
+        return false;
+    }
+}
 //actual endpoints 
 //login/signup
 app.post('/api/login', upload.none(), async (req, res) => {
@@ -115,15 +150,26 @@ app.get('/api/classes', upload.none(), async (req, res) => {
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        console.log('Received GET to /api/classes');
-        const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
-        if (userClasses != null) { //if something has returned
-            console.log('GET classes successful');
-            res.json(userClasses); //send them
-        }
-        else {
-            console.log('Error: No Classes Found', Error);
-            res.json({});
+        if (req.headers.authorization) {
+            let token;
+            if (req.headers.authorization.startsWith('Bearer ')) {
+                token = req.headers.authorization.split(" ")[1];
+            }
+            else {
+                token = req.headers.authorization;
+            }
+            if (verifyJWT(token, JSON.stringify(req.query.email)) == true) {
+                console.log('Received GET to /api/classes');
+                const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
+                if (userClasses != null) { //if something has returned
+                    console.log('GET classes successful');
+                    res.json(userClasses); //send them
+                }
+                else {
+                    console.log('Error: No Classes Found', Error);
+                    res.json({});
+                }
+            }
         }
     }
     catch (error) {
