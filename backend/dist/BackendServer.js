@@ -40,7 +40,6 @@ const port = 3000;
 //express
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
-//app.use(express.urlencoded({extended : true}));
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -181,12 +180,12 @@ app.post('/api/classes', upload.none(), async (req, res) => {
         console.log('Received POST to /api/classes');
         const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title), JSON.stringify(req.body.code)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create class successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: Classes Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -198,12 +197,12 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/classes');
         const success = await (0, DatabaseUtil_1.deleteClass)('', Number(req.body.class_id)); //email is placeholder for now
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete class successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: class Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -215,12 +214,12 @@ app.put('/api/classes', upload.none(), async (req, res) => {
         console.log('Received PUT to /api/classes');
         const success = await (0, DatabaseUtil_1.editClass)(JSON.stringify(req.body.email), Number(req.body.class_id), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.code), JSON.stringify(req.body.title));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit class successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: class edit Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -234,12 +233,12 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
         console.log('Received GET to /api/assignments');
         const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
         if (userClassAssignments != null) {
-            res.json(userClassAssignments);
             console.log('GET assignments successful');
+            res.json(userClassAssignments);
         }
         else {
-            res.json({});
             console.log('Error: No Assignments Found', Error);
+            res.json({});
         }
     }
     catch (error) {
@@ -252,12 +251,12 @@ app.post('/api/assignments', upload.none(), async (req, res) => {
         console.log('Received POST to /api/assignments');
         const success = await (0, DatabaseUtil_2.createAssignment)(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create class successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: Assignment Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -269,12 +268,12 @@ app.delete('/api/assignments', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/assignments');
         const success = await (0, DatabaseUtil_1.deleteAssignment)('', Number(req.body.assignment_id)); //email is placeholder for now
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete assignment successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: assignment Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -286,12 +285,12 @@ app.put('/api/assignments', upload.none(), async (req, res) => {
         console.log('Received PUT to /api/assignments');
         const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit assignment successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: Assignment edit Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -305,12 +304,12 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
         console.log('Received GET to /api/submissions');
         const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
         if (userSubmissions != null) {
-            res.json(userSubmissions);
             console.log('GET submissions successful');
+            res.json(userSubmissions);
         }
         else {
-            res.json({});
             console.log('Error: No Submissions Found', Error);
+            res.json({});
         }
     }
     catch (error) {
@@ -323,12 +322,12 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
         console.log('Received POST to /api/submissions');
         const success = await (0, DatabaseUtil_2.createSubmission)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create submission successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: submission Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -341,12 +340,12 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/submissions');
         const success = await (0, DatabaseUtil_1.deleteSubmission)('', Number(req.body.submission_id)); //email is placeholder for now
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete submission successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: submission Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -358,12 +357,12 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
         console.log('Received PUT to /api/submissions');
         const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit submission successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: submission edit Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -376,12 +375,12 @@ app.get('/api/students', upload.none(), async (req, res) => {
         console.log('Received GET to /api/students');
         const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
         if (studentsList != null) {
-            res.json(studentsList);
             console.log('GET Students successful');
+            res.json(studentsList);
         }
         else {
-            res.json({});
             console.log('GET students failed');
+            res.json({});
         }
     }
     catch (error) {
@@ -393,12 +392,12 @@ app.post('/api/students', upload.none(), async (req, res) => {
         console.log('Received POST to /api/students');
         const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create student successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: student Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -410,12 +409,12 @@ app.delete('/api/students', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/students');
         const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.body.student_id));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete student successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: student Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -427,15 +426,16 @@ app.put('/api/students', upload.none(), async (req, res) => {
         console.log('Received PUT to /api/students');
         const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit student successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: student edit Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
+        console.log('Error: ', error);
     }
 });
 //AI endpoints
@@ -455,7 +455,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
         */
         let pdfPath; //Refers to file name not full path.
         try {
-            pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.query.submission_id));
+            pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.body.submission_id));
         }
         catch (error) {
             console.log('Error: Get Submission Path from Sub ID Failed', error);
@@ -482,7 +482,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             }
             //Insert generated AI Questions into results table for submission_id
             if (questions) {
-                (0, DatabaseUtil_2.postAIOutputForSubmission)(Number(req.query.submission_id), JSON.stringify((questions)));
+                (0, DatabaseUtil_2.postAIOutputForSubmission)(Number(req.body.submission_id), JSON.stringify((questions)));
             }
             else {
                 res.send(JSON.stringify(false));
@@ -495,7 +495,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
         }
         //verify any questions exist for submission
         // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
-        const foundAIQs = (0, DatabaseUtil_2.getQuestions)(Number(req.query.submission_id));
+        const foundAIQs = (0, DatabaseUtil_2.getQuestions)(Number(req.body.submission_id));
         if (foundAIQs != null) {
             res.send(JSON.stringify(true));
             console.log('AI question generation successful');
@@ -510,18 +510,19 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
     }
     //if AI function succeeds return true else return false
 });
+//viva endpoints
 app.get('/api/vivas', upload.none(), async (req, res) => {
     //list viva for a specific submission
     try {
         console.log('Received GET to /api/vivas');
         const foundVivas = await (0, DatabaseUtil_2.getExams)(Number(req.query.submission_id));
         if (foundVivas != null) {
-            res.json(foundVivas);
             console.log('GET vivas successful');
+            res.json(foundVivas);
         }
         else {
-            res.json({});
             console.log('Error: No Vivas Found', Error);
+            res.json({});
         }
     }
     catch (error) {
@@ -534,12 +535,12 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
         console.log('Received POST to /api/vivas');
         const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create Exam successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: Exam Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -551,12 +552,12 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/vivas');
         const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.body.email), Number(req.body.exam_id));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete exam successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: exam Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
@@ -568,12 +569,12 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
         console.log('Received PUT to /api/vivas');
         const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit exam successful');
+            res.send(JSON.stringify(true));
         }
         else {
-            res.send(JSON.stringify(false));
             console.log('Error: exam Edit Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {

@@ -19,4 +19,5 @@ In order to run the backend
 3. The backend server
     - install the dependencies in package.json using `npm install "package"@"version"`
     - this includes the AI library `npm install git+https://github.com/stroogle/COMP4050AI.git`
+    - ensure a .env file is present with variables from .env-template
     - run `npm run server`
