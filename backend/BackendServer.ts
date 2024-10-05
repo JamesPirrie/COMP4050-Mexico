@@ -22,18 +22,18 @@ interface JwtPayload {
 //express
 const app = express();
 app.use(express.json());//without this req.body is undefined and works if and only if the content-type header is application/json
-//app.use(express.urlencoded({extended : true}));
+
 //multer middleware
 const storageEngine = multer.diskStorage({
     destination: (req, file, callBack) => {
-        callBack(null,'./ServerStorage/PDF_Storage')
+        callBack(null,'./ServerStorage/PDF_Storage');
     },
     filename: (req, file, callBack) => {
-        console.log('Received file: ' + JSON.stringify(file))
-        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')) //notes for now: we are nulling the errors well fix that later
+        console.log('Received file: ' + JSON.stringify(file));
+        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
     }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
-})                                                                                      //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
-const upload = multer({storage : storageEngine})                                        //-later note looks like it does we good
+});                                                                                     //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
+const upload = multer({storage : storageEngine});                                       //-later note looks like it does we good
 
 
 //GET requests
@@ -99,7 +99,6 @@ app.put('/', (req: Request, res: Response) => {
     }
 }
 
-
 //actual endpoints 
 //login/signup
 app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
@@ -111,12 +110,12 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Login Failed', Error)
+            console.log('Error: Login Failed', Error);
             res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -129,12 +128,12 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error)
+            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error);
             res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -146,7 +145,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         if(req.headers.authorization){
             let token;
             if (req.headers.authorization.startsWith('Bearer ')){
-                token = req.headers.authorization.split(" ")[1]
+                token = req.headers.authorization.split(" ")[1];
             } else {
                 token = req.headers.authorization;
             }
@@ -165,7 +164,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         }
     }
     catch (error) {
-        console.log('Error: Classes Check Failed', error)
+        console.log('Error: Classes Check Failed', error);
     }    
 });
 
@@ -177,16 +176,16 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received POST to /api/classes');
         const success = await createClass(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title) ,JSON.stringify(req.body.code)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create class successful');
+            res.send(JSON.stringify(true));
         }
         else{
-            res.send(JSON.stringify(false));
             console.log('Error: Classes Creation Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }    
 });
 
@@ -195,12 +194,12 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
         console.log('Received DELETE to /api/classes');
         const success = await deleteClass('', Number(req.body.class_id));//email is placeholder for now
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Delete class successful');
+            res.send(JSON.stringify(true));
         }
         else{
-            res.send(JSON.stringify(false));
             console.log('Error: class Deletion Failed', Error);
+            res.send(JSON.stringify(false));
         }
     }
     catch(error) {
@@ -213,12 +212,12 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received PUT to /api/classes');
         const success = await editClass(JSON.stringify(req.body.email), Number(req.body.class_id), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.code), JSON.stringify(req.body.title));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit class successful');
+            res.send(JSON.stringify(true));
         }
         else{
+            console.log('Error: class edit Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: class edit Failed', Error)
         }
     }
     catch(error){
@@ -233,16 +232,16 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
         console.log('Received GET to /api/assignments');
         const userClassAssignments = await getAssignments(JSON.stringify(req.query.email), Number(req.query.class_id));
         if (userClassAssignments != null) {
-            res.json(userClassAssignments);
             console.log('GET assignments successful');
+            res.json(userClassAssignments);
         }
         else{
+            console.log('Error: No Assignments Found', Error);
             res.json({});
-            console.log('Error: No Assignments Found', Error)
         }
     }
     catch (error) {
-        console.log('Error: Assignment Check Failed', error)
+        console.log('Error: Assignment Check Failed', error);
     }
 });
 
@@ -252,16 +251,16 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
         console.log('Received POST to /api/assignments');
         const success = await createAssignment(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create class successful');
+            res.send(JSON.stringify(true));
         }
         else{
+            console.log('Error: Assignment Creation Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: Assignment Creation Failed', Error)
         }
     }
     catch (error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }  
 });
 
@@ -270,16 +269,16 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
         console.log('Received DELETE to /api/assignments');
         const success = await deleteAssignment('', Number(req.body.assignment_id));//email is placeholder for now
         if (success) {
+            console.log('Delete assignment successful');
             res.send(JSON.stringify(true));
-            console.log('Delete assignment successful')
         }
         else{
+            console.log('Error: assignment Deletion Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: assignment Deletion Failed', Error)
         }
     }
     catch(error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }  
 });
 
@@ -288,12 +287,12 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
         console.log('Received PUT to /api/assignments');
         const success = await editAssignment(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit assignment successful');
+            res.send(JSON.stringify(true));
         }
         else{
+            console.log('Error: Assignment edit Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: Assignment edit Failed', Error)
         }
     }
     catch(error){
@@ -308,16 +307,16 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
         console.log('Received GET to /api/submissions');
         const userSubmissions = await getSubmissionsForAssignments(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
         if (userSubmissions != null) {
-            res.json(userSubmissions);
             console.log('GET submissions successful');
+            res.json(userSubmissions);
         }
         else{
-            res.json({});
             console.log('Error: No Submissions Found', Error);
+            res.json({});
         }
     }
     catch (error) {
-        console.log('Error: Submission Check Failed', error)
+        console.log('Error: Submission Check Failed', error);
     }
 });
 
@@ -327,16 +326,16 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
         console.log('Received POST to /api/submissions');
         const success = await createSubmission(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if (success) {
+            console.log('Create submission successful');
             res.send(JSON.stringify(true));
-            console.log('Create submission successful')
         }
         else{
+            console.log('Error: submission Creation Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: submission Creation Failed', Error)
         }
     }
     catch (error) {
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }  
 });
 
@@ -346,34 +345,34 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
         console.log('Received DELETE to /api/submissions');
         const success = await deleteSubmission('', Number(req.body.submission_id));//email is placeholder for now
         if (success) {
+            console.log('Delete submission successful');
             res.send(JSON.stringify(true));
-            console.log('Delete submission successful')
         }
         else{
+            console.log('Error: submission Deletion Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: submission Deletion Failed', Error)
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
-})
+});
 
 app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/submissions');
         const success = await editSubmission('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
         if(success){
+            console.log('Edit submission successful');
             res.send(JSON.stringify(true));
-            console.log('Edit submission successful')
         }
         else{
+            console.log('Error: submission edit Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: submission edit Failed', Error)
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -383,16 +382,16 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
         console.log('Received GET to /api/students');
         const studentsList = await getAllStudents();
         if (studentsList != null) {
-            res.json(studentsList);
             console.log('GET Students successful');
+            res.json(studentsList);
         }
         else{
+            console.log('GET students failed');
             res.json({});
-            console.log('GET students failed')
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -401,16 +400,16 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received POST to /api/students');
         const success = await addStudent(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
+            console.log('Create student successful');
             res.send(JSON.stringify(true));
-            console.log('Create student successful')
         }
         else{
+            console.log('Error: student Creation Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: student Creation Failed', Error)
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -419,16 +418,16 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
         console.log('Received DELETE to /api/students');
         const success = await deleteStudent(Number(req.body.student_id));
         if (success) {
+            console.log('Delete student successful');
             res.send(JSON.stringify(true));
-            console.log('Delete student successful')
         }
         else{
+            console.log('Error: student Deletion Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: student Deletion Failed', Error)
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
     }
 });
 
@@ -437,16 +436,16 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received PUT to /api/students');
         const success = await editStudent(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
+            console.log('Edit student successful');
             res.send(JSON.stringify(true));
-            console.log('Edit student successful')
         }
         else{
+            console.log('Error: student edit Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: student edit Failed', Error)
         }
     }
     catch(error){
-
+        console.log('Error: ', error);
     }
 });
 
@@ -471,7 +470,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
             pdfPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
         }
         catch (error) {
-            console.log('Error: Get Submission Path from Sub ID Failed', error)
+            console.log('Error: Get Submission Path from Sub ID Failed', error);
         }
         
         //Construct Mock AI
@@ -484,7 +483,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json"); //
         }
         catch (error) {
-            console.log('Error: AI Generation Failed', error)
+            console.log('Error: AI Generation Failed', error);
         }
 
         if(doc_id){
@@ -494,18 +493,18 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 questions = await ai.getQuestions(doc_id);
             }
             catch (error) {
-                console.log('Error: Assigning questions to location failed', error)
+                console.log('Error: Assigning questions to location failed', error);
             }
             //Insert generated AI Questions into results table for submission_id
             if (questions){
                 postAIOutputForSubmission(Number(req.query.submission_id), JSON.stringify((questions)));
             } else {
                 res.send(JSON.stringify(false));
-                console.log('Error: Assigning questions to location failed', Error)
+                console.log('Error: Assigning questions to location failed', Error);
             }
         } else {            
             res.send(JSON.stringify(false));
-            console.log('Error: AI Generation Failed', Error)
+            console.log('Error: AI Generation Failed', Error);
         }        
             
         //verify any questions exist for submission
@@ -517,31 +516,32 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         }
         else{
             res.send(JSON.stringify(false));
-            console.log('Error: AI Question Generation Failed', Error)
+            console.log('Error: AI Question Generation Failed', Error);
         }
 	}
 	catch (error) {
-	    console.log('Error: ', error)
+	    console.log('Error: ', error);
 	}	
 	//if AI function succeeds return true else return false
 });
 
+//viva endpoints
 app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     //list viva for a specific submission
     try {
         console.log('Received GET to /api/vivas');
         const foundVivas = await getExams(Number(req.query.submission_id));
         if (foundVivas != null) {
-            res.json(foundVivas);
             console.log('GET vivas successful');
+            res.json(foundVivas);
         }
         else{
+            console.log('Error: No Vivas Found', Error);
             res.json({});
-            console.log('Error: No Vivas Found', Error)
         }
     }
     catch (error) {
-        console.log('Error: Viva Check Failed', error)
+        console.log('Error: Viva Check Failed', error);
     }
 });
 
@@ -551,16 +551,16 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received POST to /api/vivas');
         const success = await createExams(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Create Exam successful');
+            res.send(JSON.stringify(true));
         }
         else{
+            console.log('Error: Exam Creation Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: Exam Creation Failed', Error)
         }
     }
     catch (error) {
-        console.log('Error: Exam Creation Attempt Failed', error)
+        console.log('Error: Exam Creation Attempt Failed', error);
     } 
 });
 
@@ -569,16 +569,16 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
         console.log('Received DELETE to /api/vivas');
         const success = await deleteExam(JSON.stringify(req.body.email), Number(req.body.exam_id));
         if (success) {
+            console.log('Delete exam successful');
             res.send(JSON.stringify(true));
-            console.log('Delete exam successful')
         }
         else{
+            console.log('Error: exam Deletion Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: exam Deletion Failed', Error)
         }
     }
     catch(error) {
-        console.log('Error: exam Deletion Attempt Failed', error)
+        console.log('Error: exam Deletion Attempt Failed', error);
     } 
 });
 
@@ -587,18 +587,18 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received PUT to /api/vivas');
         const success = await editExam(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
         if (success) {
-            res.send(JSON.stringify(true));
             console.log('Edit exam successful');
+            res.send(JSON.stringify(true));
         }
         else{
+            console.log('Error: exam Edit Failed', Error);
             res.send(JSON.stringify(false));
-            console.log('Error: exam Edit Failed', Error)
         }
     }
     catch(error){
-        console.log('Error: exam Edit Attempt Failed', error)
+        console.log('Error: exam Edit Attempt Failed', error);
     }
-})
+});
 
 //start the server
 app.listen(port, () => {
