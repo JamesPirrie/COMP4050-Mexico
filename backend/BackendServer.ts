@@ -146,14 +146,14 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        if(req.headers.authorization){
+/*        if(req.headers.authorization){
             let token;
             if (req.headers.authorization.startsWith('Bearer ')){
                 token = req.headers.authorization.split(" ")[1]
             } else {
                 token = req.headers.authorization;
             }
-            if (verifyJWT(token, JSON.stringify(req.query.email)) == true){
+            if (verifyJWT(token, JSON.stringify(req.query.email)) == true){*/
                 console.log('Received GET to /api/classes');
                 const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
                 if (userClasses != null) {//if something has returned
@@ -164,8 +164,8 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
                     console.log('Error: No Classes Found', Error);
                     res.json({});
                 }
-            }            
-        }
+            /*}            
+        }*/
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error)
