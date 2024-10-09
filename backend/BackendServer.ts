@@ -105,17 +105,31 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/login');
-        if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {
-            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful');
+        if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
+            //for authentication
+            //req.cookies.token will be the token that we give them on later requests
+            const tokenbody = req.body.email;//contain more later
+            
+            //create the cookie
+            const token = jwt.sign({tokenbody}, process.env.SECRET_KEY as string, {expiresIn : "1h"});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
+            
+            //send the cookie with the response
+            res.cookie("token",token,{
+                httpOnly : true,
+                //other properties can go here later
+            });
+
+            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
+            console.log('Generated Token: '+ token)
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Login Failed', Error);
+            console.log('Error: Login with ' + req.body.email + 'Failed');
             res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log(error);
     }
 });
 
@@ -128,12 +142,12 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error);
+            console.log('Error: Sign Up with ' + req.body.email + 'Failed');
             res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log(error);
     }
 });
 
