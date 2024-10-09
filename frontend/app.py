@@ -72,6 +72,7 @@ def loginDirect():
 
 @app.route('/dashboard')
 def dashboard():
+    # add request.get assignments to display
     return render_template('dashboard.html')
 
 @app.route('/classes', methods = ['GET'])
@@ -104,6 +105,10 @@ def unit():
     students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
     return render_template('unit.html', assignments = assignments, students = students)
 
+@app.route('/assignment')
+def assignment():
+    render_template('assignment.html')
+
 @app.route('/newAssignment', methods = ['GET', 'POST'])
 def newAssignment():
     if request.method == 'POST':
@@ -120,6 +125,10 @@ def newAssignment():
         return redirect(url_for('classes'))
     return render_template('newAssignment.html')
 
+@app.route('/student')
+def student():
+    render_template('student.html')
+
 @app.route('/newStudent', methods = ['GET', 'POST'])
 def newStudent():
     if request.method == 'POST':
@@ -131,9 +140,11 @@ def newStudent():
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
 
+#fix to recieve viva submission_id as query
 @app.route('/vivas')
 def vivas():
-    a = requests.get(f'{backend}classes?email={user.email}').content
+    a = requests.get(f'{backend}vivas?email={user.email}').content
+    # jam in request.post viva
     return render_template('vivas.html')
 
 @app.route('/settings')
@@ -144,8 +155,8 @@ def settings():
 def new_project():
     if request.method == 'POST':
         pdf = request.files['pdf_file']
-        requests.post(f'{backend}qgen?email={user.email},submission_id=1, result_id=1')
-        requests.post(backend+'submissions', user.email, 1, 1, 0, "", pdf)
+        #requests.post(f'{backend}qgen?email={user.email},submission_id=1, result_id=1')
+        requests.post(backend+'submissions', data = {'submission_PDF' : pdf}, json = {'email': user.email, 'assignment_id': 69420, 'student_id': 69420, 'submission_date': '69420', 'submission_filepath': 'this_unit_will_end_me'})
         print(pdf)
     return render_template('newProject.html')
 

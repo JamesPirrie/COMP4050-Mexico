@@ -10,7 +10,7 @@
         <div id="assignments-list" class="assignments-list">
             <div class="placeholder-text">There are no assignments for this class.</div>
         {% for assignment in assignments %}
-            <a>{{ assignment['name'] }}</a>
+            <a href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
         {% endfor %}
         </div>
         <div class="new-item-bar">
@@ -23,7 +23,7 @@
         <div id="students-list" class="students-list">
             <div class="placeholder-text">There are no students for this class.</div>
         {% for student in students %}
-            <a>{{ student['first_name'] }} {{ student['last_name'] }}</a>
+            <a href="{{ url_for('student', id=student['student_id']) }}">{{ student['first_name'] }} {{ student['last_name'] }}</a>
         {% endfor %}
         </div>
         <div class="new-item-bar">
