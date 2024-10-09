@@ -108,10 +108,10 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
         if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
             //for authentication
             //req.cookies.token will be the token that we give them on later requests
-            const tokenbody = req.body.email;//contain more later
+            const tokenbody = {email : req.body.email};//contain more later
             
             //create the cookie
-            const token = jwt.sign({tokenbody}, process.env.SECRET_KEY as string, {expiresIn : "1h"});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
+            const token = jwt.sign(tokenbody, process.env.SECRET_KEY as string, {expiresIn : "1h"});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
             
             //send the cookie with the response
             res.cookie("token",token,{
@@ -138,7 +138,8 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     try {
         console.log('Received POST to /api/signup');
         if (await signupUser(JSON.stringify(req.body.email)) === true) {
-            console.log('signup with: ' + req.body.email + ' successful');
+            console.log('signup with: ' + req.body
+                .email + ' successful');
             res.send(JSON.stringify(true));
         }
         else{
@@ -171,7 +172,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
                     res.json(userClasses);//send them
                 }
                 else{
-                    console.log('Error: No Classes Found', Error);
+                    console.log('Error: No Classes Found');
                     res.json({});
                 }
             }            
@@ -194,7 +195,7 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Classes Creation Failed', Error);
+            console.log('Error: Classes Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -212,7 +213,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: class Deletion Failed', Error);
+            console.log('Error: class Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -230,7 +231,7 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: class edit Failed', Error);
+            console.log('Error: class edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -250,7 +251,7 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
             res.json(userClassAssignments);
         }
         else{
-            console.log('Error: No Assignments Found', Error);
+            console.log('Error: No Assignments Found');
             res.json({});
         }
     }
@@ -287,7 +288,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: assignment Deletion Failed', Error);
+            console.log('Error: assignment Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -305,7 +306,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Assignment edit Failed', Error);
+            console.log('Error: Assignment edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -325,7 +326,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
             res.json(userSubmissions);
         }
         else{
-            console.log('Error: No Submissions Found', Error);
+            console.log('Error: No Submissions Found');
             res.json({});
         }
     }
@@ -344,7 +345,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: submission Creation Failed', Error);
+            console.log('Error: submission Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -363,7 +364,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: submission Deletion Failed', Error);
+            console.log('Error: submission Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -381,7 +382,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: submission edit Failed', Error);
+            console.log('Error: submission edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -418,7 +419,7 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: student Creation Failed', Error);
+            console.log('Error: student Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -436,7 +437,7 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: student Deletion Failed', Error);
+            console.log('Error: student Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -454,7 +455,7 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: student edit Failed', Error);
+            console.log('Error: student edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -514,11 +515,11 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 postAIOutputForSubmission(Number(req.body.submission_id), JSON.stringify((questions)));
             } else {
                 res.send(JSON.stringify(false));
-                console.log('Error: Assigning questions to location failed', Error);
+                console.log('Error: Assigning questions to location failed');
             }
         } else {            
             res.send(JSON.stringify(false));
-            console.log('Error: AI Generation Failed', Error);
+            console.log('Error: AI Generation Failed');
         }        
             
         //verify any questions exist for submission
@@ -530,7 +531,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         }
         else{
             res.send(JSON.stringify(false));
-            console.log('Error: AI Question Generation Failed', Error);
+            console.log('Error: AI Question Generation Failed');
         }
 	}
 	catch (error) {
@@ -550,7 +551,7 @@ app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
             res.json(foundVivas);
         }
         else{
-            console.log('Error: No Vivas Found', Error);
+            console.log('Error: No Vivas Found');
             res.json({});
         }
     }
@@ -569,7 +570,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Exam Creation Failed', Error);
+            console.log('Error: Exam Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -587,7 +588,7 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: exam Deletion Failed', Error);
+            console.log('Error: exam Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -605,7 +606,7 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
             res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: exam Edit Failed', Error);
+            console.log('Error: exam Edit Failed');
             res.send(JSON.stringify(false));
         }
     }

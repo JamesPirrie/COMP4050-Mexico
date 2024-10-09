@@ -114,9 +114,9 @@ app.post('/api/login', upload.none(), async (req, res) => {
         if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.body.email)) === true) { //if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
             //for authentication
             //req.cookies.token will be the token that we give them on later requests
-            const tokenbody = req.body.email; //contain more later
+            const tokenbody = { email: req.body.email }; //contain more later
             //create the cookie
-            const token = jsonwebtoken_1.default.sign({ tokenbody }, process.env.SECRET_KEY, { expiresIn: "1h" }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
+            const token = jsonwebtoken_1.default.sign(tokenbody, process.env.SECRET_KEY, { expiresIn: "1h" }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
             //send the cookie with the response
             res.cookie("token", token, {
                 httpOnly: true,
@@ -127,8 +127,8 @@ app.post('/api/login', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
+            console.log('Error: Login with ' + req.body.email + 'Failed');
             res.send(JSON.stringify(false));
-            throw new Error('Login Failed');
         }
     }
     catch (error) {
@@ -140,16 +140,17 @@ app.post('/api/signup', upload.none(), async (req, res) => {
     try {
         console.log('Received POST to /api/signup');
         if (await (0, DatabaseUtil_1.signupUser)(JSON.stringify(req.body.email)) === true) {
-            console.log('signup with: ' + req.body.email + ' successful');
+            console.log('signup with: ' + req.body
+                .email + ' successful');
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error);
+            console.log('Error: Sign Up with ' + req.body.email + 'Failed');
             res.send(JSON.stringify(false));
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log(error);
     }
 });
 //class endpoints
