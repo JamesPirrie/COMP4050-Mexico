@@ -39,7 +39,6 @@ const port = 3000;
 //express
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
-//app.use(express.urlencoded({extended : true}));
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -150,27 +149,26 @@ app.get('/api/classes', upload.none(), async (req, res) => {
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     try {
-        if (req.headers.authorization) {
-            let token;
-            if (req.headers.authorization.startsWith('Bearer ')) {
-                token = req.headers.authorization.split(" ")[1];
-            }
-            else {
-                token = req.headers.authorization;
-            }
-            if (verifyJWT(token, JSON.stringify(req.query.email)) == true) {
-                console.log('Received GET to /api/classes');
-                const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
-                if (userClasses != null) { //if something has returned
-                    console.log('GET classes successful');
-                    res.json(userClasses); //send them
-                }
-                else {
-                    console.log('Error: No Classes Found', Error);
-                    res.json({});
-                }
-            }
+        /*        if(req.headers.authorization){
+                    let token;
+                    if (req.headers.authorization.startsWith('Bearer ')){
+                        token = req.headers.authorization.split(" ")[1]
+                    } else {
+                        token = req.headers.authorization;
+                    }
+                    if (verifyJWT(token, JSON.stringify(req.query.email)) == true){*/
+        console.log('Received GET to /api/classes');
+        const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
+        if (userClasses != null) { //if something has returned
+            console.log('GET classes successful');
+            res.json(userClasses); //send them
         }
+        else {
+            console.log('Error: No Classes Found', Error);
+            res.json({});
+        }
+        /*}
+    }*/
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error);
@@ -320,7 +318,7 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
         console.log('Error: Submission Check Failed', error);
     }
 });
-app.post('/api/submissions', upload.none(), upload.single('submission_PDF'), async (req, res) => {
+app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     //adding submissions to an assignment
     try {
         console.log('Received POST to /api/submissions');
@@ -356,7 +354,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
         console.log('Error: ', error);
     }
 });
-app.put('/api/submissions', upload.none(), upload.single('submission_PDF'), async (req, res) => {
+app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     try {
         console.log('Received PUT to /api/submissions');
         const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
