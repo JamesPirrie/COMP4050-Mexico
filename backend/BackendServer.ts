@@ -112,8 +112,8 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
             
             //create the cookie
             const token = jwt.sign(tokenbody, process.env.SECRET_KEY as string, {expiresIn : "1h"});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
-            
-            //send the cookie with the response
+
+            //send the cookie with the response NOTE we can make this in the res body if we want
             res.cookie("token",token,{
                 httpOnly : true,
                 //other properties can go here later
@@ -121,6 +121,12 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
 
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
             console.log('Generated Token: '+ token)
+            /*alternate non cookie way but we will need to tell frontend that we have changed the response somewhat
+            res.send({
+                success: true,
+                token : token
+            });
+            */
             res.send(JSON.stringify(true));
         }
         else{

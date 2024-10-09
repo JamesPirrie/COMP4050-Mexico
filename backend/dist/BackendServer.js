@@ -117,14 +117,19 @@ app.post('/api/login', upload.none(), async (req, res) => {
             const tokenbody = { email: req.body.email }; //contain more later
             //create the cookie
             const token = jsonwebtoken_1.default.sign(tokenbody, process.env.SECRET_KEY, { expiresIn: "1h" }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
-            //send the cookie with the response
+            //send the cookie with the response NOTE we can make this in the res body if we want
             res.cookie("token", token, {
                 httpOnly: true,
                 //other properties can go here later
             });
+            //alternate non cookie way
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
             console.log('Generated Token: ' + token);
-            res.send(JSON.stringify(true));
+            res.send({
+                success: true,
+                token: token
+            });
+            //res.send(JSON.stringify(true));
         }
         else {
             console.log('Error: Login with ' + req.body.email + 'Failed');
@@ -174,7 +179,7 @@ app.get('/api/classes', upload.none(), async (req, res) => {
                     res.json(userClasses); //send them
                 }
                 else {
-                    console.log('Error: No Classes Found', Error);
+                    console.log('Error: No Classes Found');
                     res.json({});
                 }
             }
@@ -196,7 +201,7 @@ app.post('/api/classes', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Classes Creation Failed', Error);
+            console.log('Error: Classes Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -213,7 +218,7 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: class Deletion Failed', Error);
+            console.log('Error: class Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -230,7 +235,7 @@ app.put('/api/classes', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: class edit Failed', Error);
+            console.log('Error: class edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -249,7 +254,7 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
             res.json(userClassAssignments);
         }
         else {
-            console.log('Error: No Assignments Found', Error);
+            console.log('Error: No Assignments Found');
             res.json({});
         }
     }
@@ -284,7 +289,7 @@ app.delete('/api/assignments', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: assignment Deletion Failed', Error);
+            console.log('Error: assignment Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -301,7 +306,7 @@ app.put('/api/assignments', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Assignment edit Failed', Error);
+            console.log('Error: Assignment edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -320,7 +325,7 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
             res.json(userSubmissions);
         }
         else {
-            console.log('Error: No Submissions Found', Error);
+            console.log('Error: No Submissions Found');
             res.json({});
         }
     }
@@ -338,7 +343,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: submission Creation Failed', Error);
+            console.log('Error: submission Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -356,7 +361,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: submission Deletion Failed', Error);
+            console.log('Error: submission Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -373,7 +378,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: submission edit Failed', Error);
+            console.log('Error: submission edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -408,7 +413,7 @@ app.post('/api/students', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: student Creation Failed', Error);
+            console.log('Error: student Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -425,7 +430,7 @@ app.delete('/api/students', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: student Deletion Failed', Error);
+            console.log('Error: student Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -442,7 +447,7 @@ app.put('/api/students', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: student edit Failed', Error);
+            console.log('Error: student edit Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -498,12 +503,12 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             }
             else {
                 res.send(JSON.stringify(false));
-                console.log('Error: Assigning questions to location failed', Error);
+                console.log('Error: Assigning questions to location failed');
             }
         }
         else {
             res.send(JSON.stringify(false));
-            console.log('Error: AI Generation Failed', Error);
+            console.log('Error: AI Generation Failed');
         }
         //verify any questions exist for submission
         // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
@@ -514,7 +519,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
         }
         else {
             res.send(JSON.stringify(false));
-            console.log('Error: AI Question Generation Failed', Error);
+            console.log('Error: AI Question Generation Failed');
         }
     }
     catch (error) {
@@ -533,7 +538,7 @@ app.get('/api/vivas', upload.none(), async (req, res) => {
             res.json(foundVivas);
         }
         else {
-            console.log('Error: No Vivas Found', Error);
+            console.log('Error: No Vivas Found');
             res.json({});
         }
     }
@@ -551,7 +556,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Exam Creation Failed', Error);
+            console.log('Error: Exam Creation Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -568,7 +573,7 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: exam Deletion Failed', Error);
+            console.log('Error: exam Deletion Failed');
             res.send(JSON.stringify(false));
         }
     }
@@ -585,7 +590,7 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
             res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: exam Edit Failed', Error);
+            console.log('Error: exam Edit Failed');
             res.send(JSON.stringify(false));
         }
     }
