@@ -3,11 +3,9 @@
 {% block title %}Assignment{% endblock %}
 
 {% block content %}
-<h2>Assignment {{ name }}</h2>
-<p>This is where we create a new assignment</p>
-<form method="post" id="login" class="login-form">
-    <input type="text" id="name" name="name" placeholder="Assignment Name" required>
-    <input type="text" id="desc" name="desc" placeholder="Assignment Description" required>
-    <button type="submit">Create</button>
-</form>
+<h2>Assignment {{ request.args.get('name', '') }}</h2>
+<p>This is where we view assignment details</p>
+{% for submission in submissions %}
+    <li>{{ submission }}</li>
+{% endfor %}
 {% endblock %}

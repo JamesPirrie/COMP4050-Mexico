@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Submission{% endblock %}
+
+{% block content %}
+<h2>Submission {{ request.args.get('name', '') }}</h2>
+<p>This is where we view a Submissions details and generated Questions</p>
+<ul>
+    {% if questions %}
+        {% for question in questions %}
+            <li>{{ question }}</li>
+        {% endfor %}
+    {% else %}
+        <li>No questions generated.</li>
+    {% endif %}
+</ul>
+<a href="{{ url_for('generate', submission_id=request.args.get('name', ''))}}">GENERATE THE QUESTIONS!!!</a>
+{% endblock %}
