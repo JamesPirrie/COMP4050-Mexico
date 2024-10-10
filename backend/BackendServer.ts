@@ -473,7 +473,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         */ 
         let pdfPath; //Refers to file name not full path.
         try {            
-            pdfPath = await getSubmissionFilePathForSubID(Number(req.query.submission_id));
+            pdfPath = await getSubmissionFilePathForSubID(Number(req.body.submission_id));
         }
         catch (error) {
             console.log('Error: Get Submission Path from Sub ID Failed', error)
@@ -503,7 +503,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
             }
             //Insert generated AI Questions into results table for submission_id
             if (questions){
-                postAIOutputForSubmission(Number(req.query.submission_id), JSON.stringify((questions)));
+                postAIOutputForSubmission(Number(req.body.submission_id), JSON.stringify((questions)));
             } else {
                 res.send(JSON.stringify(false));
                 console.log('Error: Assigning questions to location failed', Error)
@@ -515,7 +515,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
             
         //verify any questions exist for submission
         // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
-        const foundAIQs = getQuestions(Number(req.query.submission_id)); 
+        const foundAIQs = getQuestions(Number(req.body.submission_id)); 
         if (foundAIQs != null){
             res.send(JSON.stringify(true));
             console.log('AI question generation successful');
