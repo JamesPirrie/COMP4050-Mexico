@@ -1,6 +1,8 @@
-from flask import Flask, request, render_template, url_for, redirect
+from flask import Flask, request, render_template, url_for, redirect, session
+from datetime import date
 import requests
 import json
+import uuid
 
 backend = "http://localhost:3000/api/"
 
@@ -9,6 +11,7 @@ testClassList = '''
 '''
 
 app = Flask(__name__)
+app.secret_key = 'SUPERSECRETKEY'
 
 class User:
     userAuthenticated = False
@@ -99,15 +102,25 @@ def unit():
     for item in classes:
         if item['code'] == request.args.get('class', ''):
             class_id = item['class_id']
+            session['last_class_id'] = class_id
         else:
-            print('no class id found')
+            print('a')
+            class_id = session['last_class_id']
     assignments = json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={class_id}').content)
     students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
     return render_template('unit.html', assignments = assignments, students = students)
 
 @app.route('/assignment')
 def assignment():
-    render_template('assignment.html')
+    assignments = json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={session["last_class_id"]}').content)
+    for a in assignments:
+        if a['name'] == request.args.get('name', ''):
+            assignment_id = a['assignment_id']
+            session['last_assignment_id'] = assignment_id
+            print(assignment_id)
+    submissions = json.loads(requests.get(f'{backend}submissions?email={user.email}&assignment_id={assignment_id}&class_id={session["last_class_id"]}').content)
+    print(submissions)
+    return render_template('assignment.html', submissions = submissions)
 
 @app.route('/newAssignment', methods = ['GET', 'POST'])
 def newAssignment():
@@ -127,7 +140,7 @@ def newAssignment():
 
 @app.route('/student')
 def student():
-    render_template('student.html')
+    return render_template('student.html')
 
 @app.route('/newStudent', methods = ['GET', 'POST'])
 def newStudent():
@@ -153,17 +166,32 @@ def settings():
 
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
+    class_id = session['last_class_id']
+    students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
     if request.method == 'POST':
         pdf = request.files['pdf_file']
-        size = request.content_length
-        requests.post(backend+'submissions', data = {'submission_PDF' : pdf}, json = {'email': user.email, 'assignment_id': 69420, 'student_id': 69420, 'submission_date': '69420', 'submission_filepath': 'this_unit_will_end_me'}, headers = {'Content-Type': 'multipart/form-data', 'Content-Length': size})
-        print(pdf)
-    return render_template('newProject.html')
+        files = {'submission_PDF': pdf}
+        student_id = request.form['student']
+        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': 'this_unit_will_end_me.pdf'}
+        response = requests.post(backend+'submissions', files=files, data=jsons)
+        return redirect(url_for('unit'))
+    return render_template('newProject.html', students=students)
 
 @app.route('/logout')
 def logout():
     user.userAuthenticated = False
     return redirect(url_for('login'))
+
+@app.route('/submission')
+def submission():
+    return render_template('submission.html')
+
+@app.route('/generate')
+def generate():
+    submission_id = request.args.get('submission_id', '')
+    print(submission_id)
+    requests.post(f'{backend}qgen', json = {'email': user.email, 'submission_id': 13, 'result_id': 0})
+    return redirect(url_for('submission'))
 
 if __name__ == '__main__':
     app.run(debug=True)
