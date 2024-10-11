@@ -91,7 +91,7 @@ def new_class():
     if request.method == 'POST':
         name = request.form['name']
         code = request.form['code']
-        requests.post(f'{backend}classes', json = {'email': user.email, 'code': code})
+        requests.post(f'{backend}classes', json = {'email': user.email, 'session': 1, 'year': 2024, 'title': name, 'code': code})
         return redirect(url_for('classes'))
     return render_template('newclass.html')
 
@@ -184,13 +184,14 @@ def logout():
 
 @app.route('/submission')
 def submission():
-    return render_template('submission.html')
+    questions = requests.get(f'{backend}qgen?submission_id={request.args.get("submission_id", "")}').content
+    return render_template('submission.html', questions = questions)
 
 @app.route('/generate')
 def generate():
     submission_id = request.args.get('submission_id', '')
     print(submission_id)
-    requests.post(f'{backend}qgen', json = {'email': user.email, 'submission_id': 13, 'result_id': 0})
+    requests.post(f'{backend}qgen', json = {'email': user.email, 'submission_id': submission_id, 'result_id': 0})
     return redirect(url_for('submission'))
 
 if __name__ == '__main__':
