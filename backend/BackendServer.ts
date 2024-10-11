@@ -475,17 +475,8 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
 app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	//We will get Submission ID
 	try {
-        // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
-        // NOTE Commented out code is for future use with post MVP Implementation of AI
-        //const apiKey = process.env.OPENAI_API_KEY || '';
+        const apiKey = process.env.OPENAI_API_KEY || '';
 
-        // Setup PDFProcessor and PromptManager 
-        /*
-        const promptManager = new PromptManager(5, "Question: [Your question]", "Answer: [Your answer]");
-        const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
-
-        const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
-        */ 
         let pdfPath; //Refers to file name not full path.
         try {            
             pdfPath = await getSubmissionFilePathForSubID(Number(req.body.submission_id));
@@ -495,7 +486,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         }
         
         //Construct Mock AI
-        let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage','./ServerStorage/qGEN','');
+        let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage','./ServerStorage/qGEN', apiKey);
 
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
