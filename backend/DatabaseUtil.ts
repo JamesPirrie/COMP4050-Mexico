@@ -161,7 +161,7 @@ export async function getVivaForSubmission(email: string, specificSubmission: nu
 export async function getSubmissionFilePathForSubID(specificSubmission: number){
     try {
         const submission = await sql`SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
-		const sPath = submission[0].submission_filepath;
+		const sPath = submission[0]['submission_filepath'];
         return sPath;
     }
     catch (error) {
