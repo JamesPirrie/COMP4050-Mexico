@@ -27,23 +27,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//Package Imports
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
+const dotenv = __importStar(require("dotenv"));
+//AI Imports
+const comp4050ai_1 = require("comp4050ai");
+//Local Imports
 const DatabaseUtil_1 = require("./DatabaseUtil");
 const DatabaseUtil_2 = require("./DatabaseUtil");
-const comp4050ai_1 = require("comp4050ai");
-//import { PDFProcessor, PromptManager } from 'comp4050ai'; 
-const dotenv = __importStar(require("dotenv"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-dotenv.config();
+const AuthenticationUtil_1 = require("./AuthenticationUtil");
+//Globals
 const port = 3000;
-//express
+//Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
+dotenv.config();
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
-        callBack(null, './ServerStorage/PDF_Storage');
+        callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
     filename: (req, file, callBack) => {
         console.log('Received file: ' + JSON.stringify(file));
@@ -75,36 +78,6 @@ app.put('/', (req, res) => {
     console.log('PUT request received');
     res.send('PUT Request received');
 });
-// JWT Token Verification Authenticaiton
-function verifyJWT(token, claimedEmail) {
-    try {
-        // Retrieve the secret key from the environment variables
-        const secretKey = process.env.SECRET_KEY;
-        if (!secretKey) {
-            throw new Error('Missing SECRET_KEY in environment variables');
-        }
-        // Decode the JWT
-        const decodedToken = jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY);
-        // Extracting the email from the decoded token
-        const email = decodedToken.email;
-        if (!email) {
-            throw new Error('Email not found in token');
-        }
-        // Validating that the email is in the correct format using regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format in token');
-        }
-        if (email != claimedEmail) {
-            throw new Error('Token not matched to claimed email');
-        }
-        return true;
-    }
-    catch (error) {
-        console.error('Error decoding token or interacting with database:', error);
-        return false;
-    }
-}
 //actual endpoints 
 //login/signup
 app.post('/api/login', upload.none(), async (req, res) => {
@@ -112,29 +85,16 @@ app.post('/api/login', upload.none(), async (req, res) => {
     try {
         console.log('Received POST to /api/login');
         if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.body.email)) === true) { //if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            //for authentication
-            //req.cookies.token will be the token that we give them on later requests
-            const tokenbody = { email: req.body.email }; //contain more later
-            //create the cookie
-            const token = jsonwebtoken_1.default.sign(tokenbody, process.env.SECRET_KEY, { expiresIn: "1h" }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
-            //send the cookie with the response NOTE we can make this in the res body if we want
-            res.cookie("token", token, {
-                httpOnly: true,
-                //other properties can go here later
-            });
+            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(JSON.stringify(req.body.email)); //then generate a token
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
-            console.log('Generated Token: ' + token);
-            /*alternate non cookie way but we will need to tell frontend that we have changed the response somewhat
             res.send({
                 success: true,
-                token : token
+                token: token
             });
-            */
-            res.send(JSON.stringify(true));
         }
         else {
-            console.log('Error: Login with ' + req.body.email + 'Failed');
-            res.send(JSON.stringify(false));
+            console.log('Error: Login with ' + req.body.email + 'Failed'); //otherwise retun success: false
+            res.send(JSON.stringify({ success: false }));
         }
     }
     catch (error) {
@@ -172,7 +132,7 @@ app.get('/api/classes', upload.none(), async (req, res) => {
             else {
                 token = req.headers.authorization;
             }
-            if (verifyJWT(token, JSON.stringify(req.query.email)) == true) {
+            if ((0, AuthenticationUtil_1.verifyJWT)(token, JSON.stringify(req.query.email)) == true) {
                 console.log('Received GET to /api/classes');
                 const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
                 if (userClasses != null) { //if something has returned
@@ -490,8 +450,8 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
         try {
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //
-            doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json"); //
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
+            doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
         }
         catch (error) {
             console.log('Error: AI Generation Failed', error);
@@ -533,7 +493,6 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
     catch (error) {
         console.log('Error: ', error);
     }
-    //if AI function succeeds return true else return false
 });
 //viva endpoints
 app.get('/api/vivas', upload.none(), async (req, res) => {

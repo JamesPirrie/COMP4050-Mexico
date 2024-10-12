@@ -1,32 +1,32 @@
 //https://expressjs.com/en/5x/api.html  
 
+//Package Imports
 import express from 'express';
-import multer from 'multer';
 import {Response, Request} from 'express';
-
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
-import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
-import {AiFactory} from "comp4050ai";
-//import { PDFProcessor, PromptManager } from 'comp4050ai'; 
+import multer from 'multer';
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-dotenv.config();
+//AI Imports
+import {AiFactory} from "comp4050ai";
+
+//Local Imports
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
+import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
+import {generateTokenForLogin, verifyJWT} from './AuthenticationUtil';
+
+//Globals
 const port = 3000;
 
-// Defining the interface for the JWT payload
-interface JwtPayload {
-    email: string;
-}
-
-//express
+//Initialisaion
 const app = express();
 app.use(express.json());//without this req.body is undefined and works if and only if the content-type header is application/json
+dotenv.config();
 
 //multer middleware
 const storageEngine = multer.diskStorage({
     destination: (req, file, callBack) => {
-        callBack(null,'./ServerStorage/PDF_Storage');
+        callBack(null,'./ServerStorage/PDF_Storage');//where the file is saved
     },
     filename: (req, file, callBack) => {
         console.log('Received file: ' + JSON.stringify(file));
@@ -68,37 +68,6 @@ app.put('/', (req: Request, res: Response) => {
     res.send('PUT Request received');
 });
 
-// JWT Token Verification Authenticaiton
-  function verifyJWT(token: string, claimedEmail: string): boolean {
-    try {
-        // Retrieve the secret key from the environment variables
-        const secretKey = process.env.SECRET_KEY;
-        if (!secretKey) {
-            throw new Error('Missing SECRET_KEY in environment variables');
-        }
-        // Decode the JWT
-        const decodedToken = jwt.verify(token, process.env.SECRET_KEY as string) as JwtPayload;
-
-        // Extracting the email from the decoded token
-        const email = decodedToken.email;
-        if (!email) {
-            throw new Error('Email not found in token');
-        }
-        // Validating that the email is in the correct format using regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format in token');
-        }
-        if (email != claimedEmail){
-            throw new Error('Token not matched to claimed email');
-        }
-        return true;
-    } catch (error) {
-        console.error('Error decoding token or interacting with database:', error);
-        return false;
-    }
-}
-
 //actual endpoints 
 //login/signup
 app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
@@ -106,32 +75,18 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     try {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            //for authentication
-            //req.cookies.token will be the token that we give them on later requests
-            const tokenbody = {email : req.body.email};//contain more later
             
-            //create the cookie
-            const token = jwt.sign(tokenbody, process.env.SECRET_KEY as string, {expiresIn : "1h"});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
-
-            //send the cookie with the response NOTE we can make this in the res body if we want
-            res.cookie("token",token,{
-                httpOnly : true,
-                //other properties can go here later
-            });
-
+            const token: string = generateTokenForLogin(JSON.stringify(req.body.email));//then generate a token
+            
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
-            console.log('Generated Token: '+ token)
-            /*alternate non cookie way but we will need to tell frontend that we have changed the response somewhat
-            res.send({
+            res.send({//and send it
                 success: true,
-                token : token
+                token: token
             });
-            */
-            res.send(JSON.stringify(true));
         }
         else{
-            console.log('Error: Login with ' + req.body.email + 'Failed');
-            res.send(JSON.stringify(false));
+            console.log('Error: Login with ' + req.body.email + 'Failed');//otherwise retun success: false
+            res.send(JSON.stringify({success: false}));
         }
     }
     catch (error) {
@@ -508,8 +463,8 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
         try {            
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //
-	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json"); //
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
+	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json");
         }
         catch (error) {
             console.log('Error: AI Generation Failed', error);
@@ -551,7 +506,6 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	catch (error) {
 	    console.log('Error: ', error);
 	}	
-	//if AI function succeeds return true else return false
 });
 
 //viva endpoints
