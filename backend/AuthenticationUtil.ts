@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 
 //global variables
-const tokenLifetime: string = "1h"; 
+const tokenLifetime: string = "1h";//how long a created token will stay valid for
+
 // Defining the interface for the JWT payload
 interface JwtPayload {
     email: string;

@@ -31,7 +31,7 @@ exports.generateTokenForLogin = generateTokenForLogin;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv = __importStar(require("dotenv"));
 //global variables
-const tokenLifetime = "1h";
+const tokenLifetime = "1h"; //how long a created token will stay valid for
 //initialisation
 dotenv.config();
 // JWT Token Verification Authenticaiton

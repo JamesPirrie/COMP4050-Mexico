@@ -75,18 +75,22 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     try {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            
             const token: string = generateTokenForLogin(JSON.stringify(req.body.email));//then generate a token
             
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
             res.send({//and send it
                 success: true,
-                token: token
+                token: token,
+                details: "Login Successful"
             });
         }
         else{
-            console.log('Error: Login with ' + req.body.email + 'Failed');//otherwise retun success: false
-            res.send(JSON.stringify({success: false}));
+            console.log('Error: Login with ' + req.body.email + 'Failed');//otherwise return success: false with no token
+            res.json({
+                success: false,
+                token: "",
+                details: "Login Failed"
+            });
         }
     }
     catch (error) {

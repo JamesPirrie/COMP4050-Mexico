@@ -89,12 +89,17 @@ app.post('/api/login', upload.none(), async (req, res) => {
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
             res.send({
                 success: true,
-                token: token
+                token: token,
+                details: "Login Successful"
             });
         }
         else {
-            console.log('Error: Login with ' + req.body.email + 'Failed'); //otherwise retun success: false
-            res.send(JSON.stringify({ success: false }));
+            console.log('Error: Login with ' + req.body.email + 'Failed'); //otherwise return success: false with no token
+            res.json({
+                success: false,
+                token: "",
+                details: "Login Failed"
+            });
         }
     }
     catch (error) {
