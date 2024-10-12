@@ -203,7 +203,7 @@ async function getVivaForSubmission(email, specificSubmission, specificGenQ) {
 async function getSubmissionFilePathForSubID(specificSubmission) {
     try {
         const submission = await sql `SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
-        const sPath = submission[0].submission_filepath;
+        const sPath = submission[0]['submission_filepath'];
         return sPath;
     }
     catch (error) {

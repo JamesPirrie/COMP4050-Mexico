@@ -471,7 +471,24 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
 });
 
 //AI endpoints
-//AI Generate Questions request (qgen = questions generate)
+app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
+    try{
+        console.log('Received GET to /api/qgen');
+        const questions = await getQuestions(Number(req.query.submission_id));
+        if(questions != null){
+            console.log('GET questions successful');
+            res.json(questions);
+        }
+        else{
+            console.log('Error: No questions Found');
+            res.json({});
+        }
+    }
+    catch(error){
+        console.log('Error: ', error);
+    }
+});
+
 app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	//We will get Submission ID
 	try {

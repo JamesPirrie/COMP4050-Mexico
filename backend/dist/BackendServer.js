@@ -122,14 +122,15 @@ app.post('/api/login', upload.none(), async (req, res) => {
                 httpOnly: true,
                 //other properties can go here later
             });
-            //alternate non cookie way
             console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
             console.log('Generated Token: ' + token);
+            /*alternate non cookie way but we will need to tell frontend that we have changed the response somewhat
             res.send({
                 success: true,
-                token: token
+                token : token
             });
-            //res.send(JSON.stringify(true));
+            */
+            res.send(JSON.stringify(true));
         }
         else {
             console.log('Error: Login with ' + req.body.email + 'Failed');
@@ -456,20 +457,27 @@ app.put('/api/students', upload.none(), async (req, res) => {
     }
 });
 //AI endpoints
-//AI Generate Questions request (qgen = questions generate)
+app.get('/api/qgen', upload.none(), async (req, res) => {
+    try {
+        console.log('Received GET to /api/qgen');
+        const questions = await (0, DatabaseUtil_2.getQuestions)(Number(req.query.submission_id));
+        if (questions != null) {
+            console.log('GET questions successful');
+            res.json(questions);
+        }
+        else {
+            console.log('Error: No questions Found');
+            res.json({});
+        }
+    }
+    catch (error) {
+        console.log('Error: ', error);
+    }
+});
 app.post('/api/qgen', upload.none(), async (req, res) => {
     //We will get Submission ID
     try {
-        // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
-        // NOTE Commented out code is for future use with post MVP Implementation of AI
-        //const apiKey = process.env.OPENAI_API_KEY || '';
-        // Setup PDFProcessor and PromptManager 
-        /*
-        const promptManager = new PromptManager(5, "Question: [Your question]", "Answer: [Your answer]");
-        const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
-
-        const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
-        */
+        const apiKey = process.env.OPENAI_API_KEY || '';
         let pdfPath; //Refers to file name not full path.
         try {
             pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.body.submission_id));
@@ -478,7 +486,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             console.log('Error: Get Submission Path from Sub ID Failed', error);
         }
         //Construct Mock AI
-        let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', '');
+        let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
         try {
