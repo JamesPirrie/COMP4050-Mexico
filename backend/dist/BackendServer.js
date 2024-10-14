@@ -49,8 +49,8 @@ const storageEngine = multer_1.default.diskStorage({
         callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
     filename: (req, file, callBack) => {
-        console.log('Received file: ' + JSON.stringify(file));
-        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
+        console.log('Received file: ' + file);
+        callBack(null, req.body.submission_filepath.replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
     } //there is an assumption here that the submission_filepath already has                                                                
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
@@ -81,12 +81,14 @@ app.put('/', (req, res) => {
 //actual endpoints 
 //login/signup
 app.post('/api/login', upload.none(), async (req, res) => {
-    //we will receive email and password
+    //What we receive
+    const Email = req.body.email;
+    const Password = req.body.password;
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.body.email)) === true) { //if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(JSON.stringify(req.body.email)); //then generate a token
-            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
+        if (await (0, DatabaseUtil_1.loginUserCheck)(Email) === true) { //if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
+            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email); //then generate a token
+            console.log('login with: ' + Email + ' successful.');
             res.send({
                 success: true,
                 token: token,
@@ -94,30 +96,36 @@ app.post('/api/login', upload.none(), async (req, res) => {
             });
         }
         else {
-            console.log('Error: Login with ' + req.body.email + 'Failed'); //otherwise return success: false with no token
+            console.log('Error: Login with ' + Email + 'Failed'); //otherwise return success: false with no token
             res.json({
                 success: false,
                 token: "",
-                details: "Login Failed"
+                details: "Login Failed: Credentials do not match user in system"
             });
         }
     }
     catch (error) {
         console.log(error);
-    }
+        res.send('Server encountered error: ' + error); //this method of sending back the error object could be a security concern so we should look into this later
+    } //but for now it will give them some information about the problem
 });
 app.post('/api/signup', upload.none(), async (req, res) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
-        if (await (0, DatabaseUtil_1.signupUser)(JSON.stringify(req.body.email)) === true) {
-            console.log('signup with: ' + req.body
-                .email + ' successful');
-            res.send(JSON.stringify(true));
+        if (await (0, DatabaseUtil_1.signupUser)(req.body.email) === true) {
+            console.log('signup with: ' + req.body.email + ' successful');
+            res.json({
+                success: true,
+                details: `Login for ${req.body.email} successful`
+            });
         }
-        else {
+        else { //only taken is signupuser returns false which is only is email is taken
             console.log('Error: Sign Up with ' + req.body.email + 'Failed');
-            res.send(JSON.stringify(false));
+            res.json({
+                success: false,
+                details: `Login for ${req.body.email} failed: email is already taken`
+            });
         }
     }
     catch (error) {
@@ -154,6 +162,7 @@ app.get('/api/classes', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
@@ -162,7 +171,7 @@ app.post('/api/classes', upload.none(), async (req, res) => {
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title), JSON.stringify(req.body.code)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createClass)(req.body.email, Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title), JSON.stringify(req.body.code)); // more fields added post MVP
         if (success) {
             console.log('Create class successful');
             res.send(JSON.stringify(true));
@@ -174,6 +183,7 @@ app.post('/api/classes', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.delete('/api/classes', upload.none(), async (req, res) => {
@@ -191,6 +201,7 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.put('/api/classes', upload.none(), async (req, res) => {
@@ -208,6 +219,7 @@ app.put('/api/classes', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //assignment endpoints
@@ -227,6 +239,7 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Assignment Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.post('/api/assignments', upload.none(), async (req, res) => {
@@ -245,6 +258,7 @@ app.post('/api/assignments', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.delete('/api/assignments', upload.none(), async (req, res) => {
@@ -262,6 +276,7 @@ app.delete('/api/assignments', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.put('/api/assignments', upload.none(), async (req, res) => {
@@ -279,6 +294,7 @@ app.put('/api/assignments', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //submission endpoints
@@ -298,6 +314,7 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Submission Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
@@ -316,6 +333,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
@@ -334,6 +352,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
@@ -351,6 +370,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //student endpoints
@@ -369,6 +389,7 @@ app.get('/api/students', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.post('/api/students', upload.none(), async (req, res) => {
@@ -386,6 +407,7 @@ app.post('/api/students', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.delete('/api/students', upload.none(), async (req, res) => {
@@ -403,6 +425,7 @@ app.delete('/api/students', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.put('/api/students', upload.none(), async (req, res) => {
@@ -420,6 +443,7 @@ app.put('/api/students', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //AI endpoints
@@ -438,6 +462,7 @@ app.get('/api/qgen', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.post('/api/qgen', upload.none(), async (req, res) => {
@@ -501,6 +526,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //viva endpoints
@@ -520,6 +546,7 @@ app.get('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Viva Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.post('/api/vivas', upload.none(), async (req, res) => {
@@ -538,6 +565,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Exam Creation Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.delete('/api/vivas', upload.none(), async (req, res) => {
@@ -555,6 +583,7 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: exam Deletion Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 app.put('/api/vivas', upload.none(), async (req, res) => {
@@ -572,6 +601,7 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: exam Edit Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //start the server

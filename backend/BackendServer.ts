@@ -29,8 +29,8 @@ const storageEngine = multer.diskStorage({
         callBack(null,'./ServerStorage/PDF_Storage');//where the file is saved
     },
     filename: (req, file, callBack) => {
-        console.log('Received file: ' + JSON.stringify(file));
-        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
+        console.log('Received file: ' + file);
+        callBack(null, req.body.submission_filepath.replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
     }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
 });                                                                                     //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = multer({storage : storageEngine});                                       //-later note looks like it does we good
@@ -71,13 +71,15 @@ app.put('/', (req: Request, res: Response) => {
 //actual endpoints 
 //login/signup
 app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
-    //we will receive email and password
+    //What we receive
+    const Email : string = req.body.email;
+    const Password : string = req.body.password;
     try {
         console.log('Received POST to /api/login');
-        if (await loginUserCheck(JSON.stringify(req.body.email)) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            const token: string = generateTokenForLogin(JSON.stringify(req.body.email));//then generate a token
+        if (await loginUserCheck(Email) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
+            const token: string = generateTokenForLogin(Email);//then generate a token
             
-            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful.');
+            console.log('login with: ' + Email + ' successful.');
             res.send({//and send it
                 success: true,
                 token: token,
@@ -85,11 +87,11 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
             });
         }
         else{
-            console.log('Error: Login with ' + req.body.email + 'Failed');//otherwise return success: false with no token
+            console.log('Error: Login with ' + Email + 'Failed');//otherwise return success: false with no token
             res.json({
                 success: false,
                 token: "",
-                details: "Login Failed"
+                details: "Login Failed: Credentials do not match user in system"
             });
         }
     }
@@ -103,14 +105,19 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     //we will receive email and password
     try {
         console.log('Received POST to /api/signup');
-        if (await signupUser(JSON.stringify(req.body.email)) === true) {
-            console.log('signup with: ' + req.body
-                .email + ' successful');
-            res.send(JSON.stringify(true));
+        if (await signupUser(req.body.email) === true) {
+            console.log('signup with: ' + req.body.email + ' successful');
+            res.json({
+                success: true,
+                details: `Login for ${req.body.email} successful`
+            });
         }
-        else{
+        else{//only taken is signupuser returns false which is only is email is taken
             console.log('Error: Sign Up with ' + req.body.email + 'Failed');
-            res.send(JSON.stringify(false));
+            res.json({
+                success: false,
+                details: `Login for ${req.body.email} failed: email is already taken`
+            });
         }
     }
     catch (error) {
@@ -157,7 +164,7 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //adding classes for that user
     try {
         console.log('Received POST to /api/classes');
-        const success = await createClass(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title) ,JSON.stringify(req.body.code)); // more fields added post MVP
+        const success = await createClass(req.body.email, Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title) ,JSON.stringify(req.body.code)); // more fields added post MVP
         if (success) {
             console.log('Create class successful');
             res.send(JSON.stringify(true));
