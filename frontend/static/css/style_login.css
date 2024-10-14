@@ -1,0 +1,118 @@
+/* Login Styles */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
+
+body {
+    font-family: 'Work Sans', sans-serif;
+    background-color: #f2f2f2;
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-box {
+    text-align: center;
+}
+
+.login-box img {
+    width: auto;
+    height: 100px;
+    margin: 20px auto;
+}
+
+.login-box h1 {
+    color: #A6192E;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.login-form {
+    margin-top: 20px;
+}
+
+.login-form input {
+    width: 95%;
+    height: 40px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.login-form button[type="submit"] {
+    width: 100%;
+    height: 40px;
+    background-color: #A6192E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login-form button[type="submit"]:hover {
+    background-color: #8b0a1a;
+}
+
+.signup-link {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.signup-link a {
+    color: #A6192E;
+    text-decoration: none;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
+.login-button {
+    width: 100%;
+    height: 40px;
+    background-color: #A6192E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.login-button:hover {
+    background-color: #8b0a1a;
+}
+
+.login-button a {
+    text-decoration: none;
+    color: #fff;
+}
+
+.admin-button {
+    width: 100%;
+    height: 40px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.admin-button:hover {
+    background-color: #3e8e41;
+}
+
+.goback-button {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.goback-button a {
+    text-decoration: none;
+    color: #A6192E;
+}

@@ -32,9 +32,8 @@ def isAuthenticated():
 # grab the data using request.form['key'] (the key is defined in the HTML)
 # look at loginDirect.html to see more explanation of how this works
 
-# accessing the backend API is using requests.get() or requests.post() (and will also use requests.put() or requests.delete())
+# accessing the backend API is handled with the helper functions at the bottom of this code
 # look through the code to see examples of how this is done
-# this will change in the future for requests.post() because it was implemented wrong for MVP
 
 @app.route('/')
 def default():
@@ -267,7 +266,7 @@ def updateClass(json):
     return requests.put(f'{backend}classes', json = json)
 
 #Assignment functions
-def getAssignments(classid = session["last_class_id"]):
+def getAssignments(classid):
     """
     Gets a list of assignments for the given class or for the current user's last class if classid is not provided.
     Args:
@@ -308,7 +307,7 @@ def updateAssignment(json):
     return requests.put(f'{backend}assignments', json = json)
 
 #Student functions
-def getStudents(classid = session["last_class_id"]):
+def getStudents(classid):
     """
     Gets a list of students for the given class or for the current user's last class if classid is not provided.
     Args:
@@ -350,7 +349,7 @@ def updateStudent(json):
 
 
 #Submission functions
-def getSubmissions(assignmentid, classid = session["last_class_id"]):
+def getSubmissions(assignmentid, classid):
     """
     Gets a list of submissions for the given assignment and class.
     Args:
@@ -393,7 +392,7 @@ def updateSubmission(json):
     return requests.put(f'{backend}submissions', json = json)
 
 #Viva functions
-def getVivas(classid = session["last_class_id"]):
+def getVivas(classid):
     """
     Gets a list of vivas for the given class or for the current user's last class if classid is not provided.
     Args:

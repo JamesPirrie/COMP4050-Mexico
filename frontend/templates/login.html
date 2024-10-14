@@ -1,3 +1,5 @@
+<!-- frontend/templates/login.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VivaMQ Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">
 </head>
 <body>
     <div class="login-container">
@@ -14,19 +16,15 @@
             <h1 style="color: #A6192E;">VivaMQ Login</h1>
             <p>Choose an option to continue:</p>
             <button onclick="redirectToOkta()" class="login-button">Login with MQ</button>
-            <a href="{{ url_for('loginDirect') }}" class="admin-button">Login Normally</a>
+            <div class = "login-button">
+                <a href="{{ url_for('loginDirect') }}">Login Normally</a>
+            </div>
         </div>
     </div>
-
     <script>
         function redirectToOkta() {
-            // Replace this URL with your actual Okta login URL
-            window.location.href = "https://mq.okta.com/app/mq_estudentnew_1/exkijv9d06f840gdl2p7/sso/saml";
+            window.location.href = "https://your-okta-domain.com";
         }
-
-function userLogin() {
-    window.location.href = "loginDirect.html";
-}
-</script>
+    </script>
 </body>
 </html>
