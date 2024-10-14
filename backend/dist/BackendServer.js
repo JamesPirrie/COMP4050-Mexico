@@ -122,6 +122,7 @@ app.post('/api/signup', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log(error);
+        res.send('Server encountered error: ' + error);
     }
 });
 //class endpoints
@@ -443,6 +444,9 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
     //We will get Submission ID
     try {
         const apiKey = process.env.OPENAI_API_KEY || '';
+        if (!apiKey) {
+            console.log('Error: API_KEY could not be read inside .env');
+        }
         let pdfPath; //Refers to file name not full path.
         try {
             pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.body.submission_id));
@@ -455,7 +459,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
         try {
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
             doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
         }
         catch (error) {

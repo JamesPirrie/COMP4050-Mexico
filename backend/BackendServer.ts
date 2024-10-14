@@ -95,7 +95,8 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     }
     catch (error) {
         console.log(error);
-    }
+        res.send('Server encountered error: ' + error);//this method of sending back the error object could be a security concern so we should look into this later
+    }                                                  //but for now it will give them some information about the problem
 });
 
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
@@ -114,6 +115,7 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     }
     catch (error) {
         console.log(error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -145,6 +147,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }    
 });
 
@@ -166,6 +169,7 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }    
 });
 
@@ -184,6 +188,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
     }
     catch(error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }    
 });
 
@@ -202,6 +207,7 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -222,6 +228,7 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
     }
     catch (error) {
         console.log('Error: Assignment Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -241,6 +248,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }  
 });
 
@@ -259,6 +267,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
     }
     catch(error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }  
 });
 
@@ -276,7 +285,8 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
         }
     }
     catch(error){
-        console.log('Error: ', error)
+        console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -297,6 +307,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
     }
     catch (error) {
         console.log('Error: Submission Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -316,6 +327,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
     }
     catch (error) {
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }  
 });
 
@@ -335,6 +347,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -353,6 +366,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -372,6 +386,7 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -390,6 +405,7 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -408,6 +424,7 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -426,6 +443,7 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -445,6 +463,7 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
     }
     catch(error){
         console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -452,6 +471,10 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	//We will get Submission ID
 	try {
         const apiKey = process.env.OPENAI_API_KEY || '';
+        
+        if(!apiKey){
+            console.log('Error: API_KEY could not be read inside .env')
+        }
 
         let pdfPath; //Refers to file name not full path.
         try {            
@@ -467,7 +490,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         //Writes questions/answers file to "./ServerStorage" specified in constructor
         let doc_id;
         try {            
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);//currently generating 6 questions
 	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json");
         }
         catch (error) {
@@ -509,6 +532,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
 	}
 	catch (error) {
 	    console.log('Error: ', error);
+        res.send('Server encountered error: ' + error);
 	}	
 });
 
@@ -529,6 +553,7 @@ app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error: Viva Check Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
@@ -548,6 +573,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error: Exam Creation Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     } 
 });
 
@@ -566,6 +592,7 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
     }
     catch(error) {
         console.log('Error: exam Deletion Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     } 
 });
 
@@ -584,6 +611,7 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error: exam Edit Attempt Failed', error);
+        res.send('Server encountered error: ' + error);
     }
 });
 
