@@ -64,7 +64,8 @@ function verifyJWT(AuthHeader, claimedEmail) {
         return true;
     }
     catch (error) {
-        console.error('Error decoding token or interacting with database:', error);
+        throw error;
+        //console.error('Error decoding token or interacting with database:', error);
         return false;
     }
 }

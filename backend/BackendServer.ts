@@ -96,9 +96,13 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
         }
     }
     catch (error) {
-        console.log(error);
-        res.send('Server encountered error: ' + error);//this method of sending back the error object could be a security concern so we should look into this later
-    }                                                  //but for now it will give them some information about the problem
+        console.log('Error within Login: ' + error);
+        res.send({
+            success: false,
+            token: "",
+            details:`Server encountered error: ${error}`//this method of sending back the error object could be a security concern so we should look into this later
+        });                                             //but for now it will give them some information about the problem
+    }      
 });
 
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
@@ -123,8 +127,11 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
         }
     }
     catch (error) {
-        console.log(error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within signup: ' + error);
+        res.send({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
@@ -137,21 +144,29 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     try {
         console.log('Received GET to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
-            console.log('Received GET to /api/classes');
             const userClasses = await getClasses(Email);//get the classes for the user assigned to that email
             if (userClasses != null) {//if something has returned
                 console.log('GET classes successful');
-                res.json(userClasses);//send them
+                res.json({
+                    data: userClasses,
+                    details: "Classes successfully found"
+                });//send them
             }
             else{
                 console.log('Error: No Classes Found');
-                res.json({});
+                res.json({
+                    data: {},
+                    details: "No Classes found"
+                });
             }
         }            
     }
     catch (error) {
-        console.log('Error: Classes Check Failed', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET classes: ', error);
+        res.send({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }    
 });
 
@@ -159,21 +174,38 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //for MVP adding classes, add removal in later (should be simple)
     //adding classes for that user
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const Session : number = Number(req.body.session);
+    const Year: number = Number(req.body.year);
+    const Title: string = String(req.body.title);
+    const Code: string = String(req.body.code);
     try {
         console.log('Received POST to /api/classes');
-        const success = await createClass(req.body.email, Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title) ,JSON.stringify(req.body.code)); // more fields added post MVP
-        if (success) {
-            console.log('Create class successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: Classes Creation Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await createClass(Email, Session, Year, Title, Code);
+            if (success) {
+                console.log('Create class successful');
+                res.send({
+                    success: true,
+                    details: `Class: ${Code} successfully created`
+                });
+            }
+            else{
+                console.log('Error: Classes Creation Failed');
+                res.send({
+                    success: false,
+                    details: `Class creation failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within post classes: ' + error);
+        res.send({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }    
 });
 
