@@ -6,10 +6,6 @@ import uuid
 
 backend = "http://localhost:3000/api/"
 
-testClassList = '''
-[{"class_id":14,"session":null,"year":null,"code":"JOHN1234","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":15,"session":null,"year":null,"code":"JOHN1234","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":16,"session":null,"year":null,"code":"COMP5823","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":17,"session":null,"year":null,"code":"COMP5824","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":18,"session":null,"year":null,"code":"COMP5826","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null},{"class_id":21,"session":null,"year":null,"code":"COMR92CP","title":null,"creation_date":null,"expiry_date":null,"author_id":5,"tutors":null}]
-'''
-
 app = Flask(__name__)
 app.secret_key = 'SUPERSECRETKEY'
 
@@ -58,6 +54,9 @@ def signup():
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
 
+#-----------------------------------
+#Login Routes
+
 @app.route('/login')
 def login():
     return render_template('login.html')
@@ -73,15 +72,20 @@ def loginDirect():
             return redirect(url_for('dashboard'))
     return render_template('loginDirect.html')
 
+#-----------------------------------
+#Dashboard Route
+
 @app.route('/dashboard')
 def dashboard():
     # add request.get assignments to display
     return render_template('dashboard.html')
 
+#-----------------------------------
+#Class and Unit Routes
+
 @app.route('/classes', methods = ['GET'])
 def classes():
-    classList = requests.get(f'{backend}classes?email={user.email}').content
-    classes = json.loads(classList)
+    classes = getClasses()
     for item in classes:
         print(item)
     return render_template('classes.html', classes = classes)
@@ -91,13 +95,14 @@ def new_class():
     if request.method == 'POST':
         name = request.form['name']
         code = request.form['code']
-        requests.post(f'{backend}classes', json = {'email': user.email, 'session': 1, 'year': 2024, 'title': name, 'code': code})
+        json = {'email': user.email, 'session': 1, 'year': 2024, 'title': name, 'code': code}
+        postClass(json)
         return redirect(url_for('classes'))
     return render_template('newclass.html')
 
 @app.route('/unit')
 def unit():
-    classes = json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+    classes = getClasses()
     print(classes)
     for item in classes:
         if item['code'] == request.args.get('class', ''):
@@ -106,26 +111,26 @@ def unit():
         else:
             print('a')
             class_id = session['last_class_id']
-    assignments = json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={class_id}').content)
-    students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
-    return render_template('unit.html', assignments = assignments, students = students)
+    return render_template('unit.html', assignments = getAssignments(class_id), students = getStudents(class_id))
+
+#-----------------------------------
+#Assignment Routes
 
 @app.route('/assignment')
 def assignment():
-    assignments = json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={session["last_class_id"]}').content)
+    assignments = getAssignments()
     for a in assignments:
         if a['name'] == request.args.get('name', ''):
             assignment_id = a['assignment_id']
             session['last_assignment_id'] = assignment_id
             print(assignment_id)
-    submissions = json.loads(requests.get(f'{backend}submissions?email={user.email}&assignment_id={assignment_id}&class_id={session["last_class_id"]}').content)
-    print(submissions)
+    submissions = getAssignments(assignment_id)
     return render_template('assignment.html', submissions = submissions)
 
 @app.route('/newAssignment', methods = ['GET', 'POST'])
 def newAssignment():
     if request.method == 'POST':
-        classes = json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+        classes = getClasses()
         print(classes)
         for item in classes:
             if item['code'] == request.args.get('class_id', ''):
@@ -134,9 +139,13 @@ def newAssignment():
                 print('no class id found')
         name = request.form['name']
         desc = request.form['desc']
-        requests.post(f'{backend}assignments', json = {'email': user.email, 'class_id': class_id, 'name': name, 'description': desc})
+        json = {'email': user.email, 'class_id': class_id, 'name': name, 'description': desc}
+        postAssignment(json)
         return redirect(url_for('classes'))
     return render_template('newAssignment.html')
+
+#-----------------------------------
+#Student Routes
 
 @app.route('/student')
 def student():
@@ -149,9 +158,13 @@ def newStudent():
         fname = request.form['fname']
         lname = request.form['lname']
         id = request.form['id']
-        requests.post(f'{backend}students', json = {'email': user.email, 'student_id': id, 'first_name': fname, 'last_name': lname})
+        json = {'email': user.email, 'student_id': id, 'first_name': fname, 'last_name': lname}
+        postStudent(json)
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
+
+#-----------------------------------
+#Viva Routes
 
 #fix to recieve viva submission_id as query
 @app.route('/vivas')
@@ -166,14 +179,13 @@ def settings():
 
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
-    class_id = session['last_class_id']
-    students = json.loads(requests.get(f'{backend}students?email={user.email}&class_id={class_id}').content)
+    students = getStudents()
     if request.method == 'POST':
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
         jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': 'this_unit_will_end_me.pdf'}
-        response = requests.post(backend+'submissions', files=files, data=jsons)
+        postSubmission(files, jsons)
         return redirect(url_for('unit'))
     return render_template('newProject.html', students=students)
 
@@ -193,6 +205,253 @@ def generate():
     print(submission_id)
     requests.post(f'{backend}qgen', json = {'email': user.email, 'submission_id': submission_id, 'result_id': 0})
     return redirect(url_for('submission'))
+
+#-----------------------------------
+#Helper Functions
+
+#Login functions
+def login(json = {'email': user.email}):
+    """
+    Logs the user in to the backend server. Defaults to using user.email.
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}login', json = json)
+
+def signup(json = {'email': user.email}):
+    """
+    Signs the user up to the backend server. Defaults to using user.email.
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}signup', json = json)
+
+
+#Class functions
+def getClasses():
+    """
+    Gets a list of classes for the current user.
+    Returns:
+        list: a list of classes
+    """
+    return json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+
+def postClass(json):
+    """
+    Posts a class to the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}classes', json = json)
+
+def deleteClass(classid):
+    """
+    Deletes a class from the backend server.
+    Args:
+        classid (int): The id of the class to delete
+    Returns:
+        response: The response from the server
+    """
+    return requests.delete(f'{backend}classes', json = {'email': user.email, 'class_id': classid})
+
+def updateClass(json):
+    """
+    Updates a class in the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.put(f'{backend}classes', json = json)
+
+#Assignment functions
+def getAssignments(classid = session["last_class_id"]):
+    """
+    Gets a list of assignments for the given class or for the current user's last class if classid is not provided.
+    Args:
+        classid (int): the id of the class to get assignments for; defaults to the current user's last class id
+    Returns:
+        list: A list of assignments
+    """
+    return json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={classid}').content)
+
+def postAssignment(json):
+    """
+    Posts an assignment to the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}assignments', json = json)
+
+def deleteAssignment(assignmentid):
+    """
+    Deletes an assignment from the backend server.
+    Args:
+        assignmentid (int): The id of the assignment to delete
+    Returns:
+        response: The response from the server
+    """
+    return requests.delete(f'{backend}assignments', json = {'email': user.email, 'assignment_id': assignmentid})
+
+def updateAssignment(json):
+    """
+    Updates an assignment in the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.put(f'{backend}assignments', json = json)
+
+#Student functions
+def getStudents(classid = session["last_class_id"]):
+    """
+    Gets a list of students for the given class or for the current user's last class if classid is not provided.
+    Args:
+        classid (int): the id of the class to get students for; defaults to the current user's last class id
+    Returns:
+        list: A list of students
+    """
+    return json.loads(requests.get(f'{backend}students?email={user.email}&class_id={classid}').content)
+
+def postStudent(json):
+    """
+    Posts a student to the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}students', json = json)
+
+def deleteStudent(studentid):
+    """
+    Deletes a student from the backend server.
+    Args:
+        studentid (int): The id of the student to delete
+    Returns:
+        response: The response from the server
+    """
+    return requests.delete(f'{backend}students', json = {'student_id': studentid})
+
+def updateStudent(json):
+    """
+    Updates a student in the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.put(f'{backend}students', json = json)
+
+
+#Submission functions
+def getSubmissions(assignmentid, classid = session["last_class_id"]):
+    """
+    Gets a list of submissions for the given assignment and class.
+    Args:
+        assignmentid (int): The id of the assignment to get submissions for
+        classid (int): The id of the class to get submissions for; defaults to the current user's last class
+    Returns:
+        list: A list of submissions
+    """
+    return json.loads(requests.get(f'{backend}submissions?email={user.email}&assignment_id={assignmentid}&class_id={classid}').content)
+
+def postSubmission(data, json):
+    """
+    Posts a submission to the backend server.
+    Args:
+        data (bytes): The binary data of the submission document
+        json (dict): A json object containing the assignment id, student id and submission date
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}submissions', data = data, json = json)
+
+def deleteSubmission(submissionid):
+    """
+    Deletes a submission from the backend server.
+    Args:
+        submissionid (int): The id of the submission to delete
+    Returns:
+        response: The response from the server
+    """
+    return requests.delete(f'{backend}submissions', json = {'email': user.email, 'submission_id': submissionid})
+
+def updateSubmission(json):
+    """
+    Updates a submission in the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.put(f'{backend}submissions', json = json)
+
+#Viva functions
+def getVivas(classid = session["last_class_id"]):
+    """
+    Gets a list of vivas for the given class or for the current user's last class if classid is not provided.
+    Args:
+        classid (int): the id of the class to get vivas for; defaults to the current user's last class id
+    Returns:
+        list: A list of vivas
+    """
+    return json.loads(requests.get(f'{backend}vivas?email={user.email}&class_id={classid}').content)
+
+def postViva(json):
+    """
+    Posts a viva to the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}vivas', json = json)
+
+def deleteViva(vivaid):
+    """
+    Deletes a viva from the backend server.
+    Args:
+        vivaid (int): The id of the viva to delete
+    Returns:
+        response: The response from the server
+    """
+    return requests.delete(f'{backend}vivas', json = {'email': user.email, 'viva_id': vivaid})
+
+def updateViva(json): 
+    """
+    Updates a viva in the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.put(f'{backend}vivas', json = json)
+
+#Question Gen functions
+def getQuestions():
+    """
+    Gets a list of AI questions from the backend server.
+    Returns:
+        list: A list of questions
+    """
+    return json.loads(requests.get(f'{backend}qgen').content)
+
+def postQuestion(json):
+    """
+    Posts an AI question generation request to the backend server.
+    Args:
+        json (dict): A json object to be posted
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}qgen', json = json)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
