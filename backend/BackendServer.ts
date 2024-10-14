@@ -144,13 +144,14 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received GET to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
             const userClasses = await getClasses(Email);//get the classes for the user assigned to that email
-            if(userClasses != undefined)
-            if (userClasses?.length > 1) {//because userClasses.length only works here not != null and because userClasses is optional
-                console.log('GET classes successful' + userClasses);  //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
-                res.json({
-                    data: userClasses,
-                    details: "Classes successfully found"
-                });//send them
+            if(userClasses != undefined){                               //because userClasses.length only works here not != null and because userClasses is optional
+                if (userClasses?.length > 1) {                          //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
+                    console.log('GET classes successful' + userClasses);
+                    res.json({
+                        data: userClasses,
+                        details: "Classes successfully found"
+                    });//send them
+                }
             }
             else{
                 console.log('Error: No Classes Found');
