@@ -140,8 +140,9 @@ app.get('/api/classes', upload.none(), async (req, res) => {
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.query.email); //still not sure if we need this
+    const Email = String(req.query.email);
     try {
+        console.log('Received GET to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
             console.log('Received GET to /api/classes');
             const userClasses = await (0, DatabaseUtil_1.getClasses)(Email); //get the classes for the user assigned to that email
