@@ -152,20 +152,21 @@ app.get('/api/classes', upload.none(), async (req, res) => {
         console.log('Received GET to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
             const userClasses = await (0, DatabaseUtil_1.getClasses)(Email); //get the classes for the user assigned to that email
-            if (userClasses != null) { //if something has returned
-                console.log('GET classes successful');
-                res.json({
-                    data: userClasses,
-                    details: "Classes successfully found"
-                }); //send them
-            }
-            else {
-                console.log('Error: No Classes Found');
-                res.json({
-                    data: {},
-                    details: "No Classes found"
-                });
-            }
+            if (userClasses != undefined)
+                if (userClasses?.length > 1) { //because userClasses.length only works here not != null and because userClasses is optional
+                    console.log('GET classes successful' + userClasses); //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
+                    res.json({
+                        data: userClasses,
+                        details: "Classes successfully found"
+                    }); //send them
+                }
+                else {
+                    console.log('Error: No Classes Found');
+                    res.json({
+                        data: {},
+                        details: "No Classes found"
+                    });
+                }
         }
     }
     catch (error) {
@@ -207,8 +208,11 @@ app.post('/api/classes', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within post classes: ' + error);
+        res.send({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/classes', upload.none(), async (req, res) => {

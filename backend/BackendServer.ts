@@ -78,7 +78,6 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(Email) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
             const token: string = generateTokenForLogin(Email);//then generate a token
-            
             console.log('login with: ' + Email + ' successful.');
             res.send({//and send it
                 success: true,
@@ -145,8 +144,9 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received GET to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
             const userClasses = await getClasses(Email);//get the classes for the user assigned to that email
-            if (userClasses != null) {//if something has returned
-                console.log('GET classes successful');
+            if(userClasses != undefined)
+            if (userClasses?.length > 1) {//because userClasses.length only works here not != null and because userClasses is optional
+                console.log('GET classes successful' + userClasses);  //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                 res.json({
                     data: userClasses,
                     details: "Classes successfully found"

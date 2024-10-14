@@ -64,10 +64,8 @@ function verifyJWT(AuthHeader, claimedEmail) {
         return true;
     }
     catch (error) {
-        throw error;
-        //console.error('Error decoding token or interacting with database:', error);
-        return false;
-    }
+        throw error; //this will look wierd as we are never explicitly returning false however so long as the endpoints catch the errors
+    } //and deal with them correctly this is not an issue
 }
 function generateTokenForLogin(Email) {
     const tokenbody = { email: Email }; //contain more later
