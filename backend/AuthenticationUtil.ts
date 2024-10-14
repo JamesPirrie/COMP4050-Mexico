@@ -13,8 +13,12 @@ interface JwtPayload {
 dotenv.config();
 
 // JWT Token Verification Authenticaiton
-export function verifyJWT(token: string, claimedEmail: string): boolean {
+export function verifyJWT(AuthHeader: string, claimedEmail: string): boolean {
     try {
+        if(!AuthHeader.startsWith('Bearer ')){
+            throw new Error("Error: Could not read authentication token in authentication header");
+        }
+        const token: string = AuthHeader.split(" ")[1];//get the token after the "Bearer" bit
         // Retrieve the secret key from the environment variables
         const secretKey = process.env.SECRET_KEY;
         if (!secretKey) {

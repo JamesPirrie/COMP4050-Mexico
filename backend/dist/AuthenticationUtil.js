@@ -35,8 +35,12 @@ const tokenLifetime = "1h"; //how long a created token will stay valid for
 //initialisation
 dotenv.config();
 // JWT Token Verification Authenticaiton
-function verifyJWT(token, claimedEmail) {
+function verifyJWT(AuthHeader, claimedEmail) {
     try {
+        if (!AuthHeader.startsWith('Bearer ')) {
+            throw new Error("Error: Could not read authentication token in authentication header");
+        }
+        const token = AuthHeader.split(" ")[1]; //get the token after the "Bearer" bit
         // Retrieve the secret key from the environment variables
         const secretKey = process.env.SECRET_KEY;
         if (!secretKey) {

@@ -102,21 +102,23 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
 });
 
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
-    //we will receive email and password
+    //What we receive
+    const Email : string = req.body.email;
+    const Password : string = req.body.password;
     try {
         console.log('Received POST to /api/signup');
-        if (await signupUser(req.body.email) === true) {
-            console.log('signup with: ' + req.body.email + ' successful');
+        if (await signupUser(Email) === true) {
+            console.log('signup with: ' + Email + ' successful');
             res.json({
                 success: true,
-                details: `Login for ${req.body.email} successful`
+                details: `Login for ${Email} successful`
             });
         }
         else{//only taken is signupuser returns false which is only is email is taken
-            console.log('Error: Sign Up with ' + req.body.email + 'Failed');
+            console.log('Error: Sign Up with ' + Email + 'Failed');
             res.json({
                 success: false,
-                details: `Login for ${req.body.email} failed: email is already taken`
+                details: `Login for ${Email} failed: email is already taken`
             });
         }
     }
@@ -130,27 +132,21 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.query.email);//still not sure if we need this
     try {
-        if(req.headers.authorization){
-            let token;
-            if (req.headers.authorization.startsWith('Bearer ')){
-                token = req.headers.authorization.split(" ")[1];
-            } else {
-                token = req.headers.authorization;
+        if (verifyJWT(AuthHeader, Email) == true){
+            console.log('Received GET to /api/classes');
+            const userClasses = await getClasses(Email);//get the classes for the user assigned to that email
+            if (userClasses != null) {//if something has returned
+                console.log('GET classes successful');
+                res.json(userClasses);//send them
             }
-            if (verifyJWT(token, JSON.stringify(req.query.email)) == true){
-                console.log('Received GET to /api/classes');
-                const userClasses = await getClasses(JSON.stringify(req.query.email));//get the classes for the user assigned to that email
-                if (userClasses != null) {//if something has returned
-                    console.log('GET classes successful');
-                    res.json(userClasses);//send them
-                }
-                else{
-                    console.log('Error: No Classes Found');
-                    res.json({});
-                }
-            }            
-        }
+            else{
+                console.log('Error: No Classes Found');
+                res.json({});
+            }
+        }            
     }
     catch (error) {
         console.log('Error: Classes Check Failed', error);
