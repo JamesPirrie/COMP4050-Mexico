@@ -13,9 +13,9 @@ In order to run the webserver
 In order to run the backend
 1. navigate to `/backend`
 2. The database (assuming this is being done in a docker container)
-    - Ensure docker is installed
-    - navigate to the backend-db folder (NOTE: we need to provide this in the repo)
-    - run `docker-compose up`
+    - Download and Install Docker from https://docs.docker.com/get-started/get-docker/
+    - Run `npm run build_db`
+    - When the build is complete, run `npm run db` to start the container.
 3. The backend server
     - install the dependencies in package.json using `npm install "package"@"version"`
     - this includes the AI library `npm install git+https://github.com/stroogle/COMP4050AI.git`
