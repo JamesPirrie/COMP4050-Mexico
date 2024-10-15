@@ -4,7 +4,7 @@
 import express, { query } from 'express';
 import {Response, Request} from 'express';
 import multer from 'multer';
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 
 //AI Imports
@@ -21,7 +21,6 @@ const port = 3000;
 //Initialisaion
 const app = express();
 app.use(express.json());//without this req.body is undefined and works if and only if the content-type header is application/json
-dotenv.config();
 
 //multer middleware
 const storageEngine = multer.diskStorage({
