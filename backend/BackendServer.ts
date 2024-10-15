@@ -107,7 +107,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const Email : string = req.body.email;
-    const Password : string = req.body.password;
+    //const Password : string = req.body.password;
     try {
         console.log('Received POST to /api/signup');
         if (await signupUser(Email) === true) {
@@ -136,8 +136,6 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 
 //class endpoints
 app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
-    //for MVP (listing classes)
-    // get list of classes of the user (how we are doing sessions though)
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.query.email);
@@ -284,7 +282,6 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
-    //list assignments for a specific class
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.query.email);
@@ -321,7 +318,6 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
 });
 
 app.post('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
-    //adding assignments a class
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.body.email);
@@ -358,6 +354,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
 });
 
 app.delete('/api/assignments', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.body.email);
     const AssignmentID: number = Number(req.body.assignment_id);
@@ -391,6 +388,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
 });
 
 app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
+    //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.body.email);
     const AssignmentID: number = Number(req.body.assignment_id);
@@ -418,7 +416,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
         }
     }
     catch(error){
-        console.log('Error within PUT Assignments: ', error);
+        console.log('Error within PUT Assignments: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -427,82 +425,148 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
 });
 
 //submission endpoints
-app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
-    //list submissions for a specific assignment
+app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{//we might need an endpoint for sending the actual file back to them if needed from frontend
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.query.email);
+    const ClassID: number = Number(req.query.class_id);
+    const AssignmentID: number = Number(req.query.assignment_id);
     try {
         console.log('Received GET to /api/submissions');
-        const userSubmissions = await getSubmissionsForAssignments(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
-        if (userSubmissions != null) {
-            console.log('GET submissions successful');
-            res.json(userSubmissions);
-        }
-        else{
-            console.log('Error: No Submissions Found');
-            res.json({});
+        if (verifyJWT(AuthHeader, Email) == true){
+            const userSubmissions = await getSubmissionsForAssignments(Email, ClassID, AssignmentID);//sending this an assignmentID that doesnt exist results incorrect error fix inside
+            if (userSubmissions != undefined) {                                                      //query later (proper error handling)
+                if(userSubmissions?.length > 1){                
+                    console.log('GET submissions successful');
+                    res.json({
+                        data: userSubmissions,
+                        details: "Submissions successfully found"
+                    });
+                }
+            }
+            else{
+                console.log('Error: No Submissions Found');
+                res.json({
+                    data: {},
+                    details: "No Submissions found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Submission Check Failed', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET Submissions: ' + error);
+        res.json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
 app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
-    //adding submissions to an assignment
-    try {
+        //What we receive
+        const AuthHeader : string = String(req.headers.authorization);
+        const Email: string = String(req.body.email);
+        const AssignmentID: number = Number(req.body.assignment_id);
+        const StudentID: number = Number(req.body.student_id);
+        const SubmissionDate: string = String(req.body.submission_date);        //this isnt being used because we just set it internally anyway
+        const SubmissionFilePath: string = String(req.body.submission_filepath);//and this may be a security vulnerability as u can overwrite if the file has the same name
+    try {                                                                       //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
-        const success = await createSubmission(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
-        if (success) {
-            console.log('Create submission successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: submission Creation Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await createSubmission(Email, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+            if (success) {
+                console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
+                res.json({
+                    success: true,
+                    details: "Submission successfully created"
+                });
+            }
+            else{
+                console.log('Error: submission Creation Failed');
+                res.json({
+                    success: false,
+                    details: "Submission creation failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within POST submissions: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }  
 });
 
 //TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
 app.delete('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const SubmissionID: number = Number(req.body.submission_id);
     try{
         console.log('Received DELETE to /api/submissions');
-        const success = await deleteSubmission('', Number(req.body.submission_id));//email is placeholder for now
-        if (success) {
-            console.log('Delete submission successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: submission Deletion Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await deleteSubmission(Email, SubmissionID);//email is placeholder for now
+            if (success){
+                console.log('Delete submission successful');
+                res.json({
+                    success: true,
+                    details: "Submission successfully deleted"
+                });
+            }
+            else{
+                console.log('Error: submission Deletion Failed');
+                res.json({
+                    success: false,
+                    details: "Submission deletion failed"
+                });
+            }
         }
     }
     catch(error){
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within DELETE Submissions: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
 app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const SubmissionID: number = Number(req.body.submission_id);
+    const AssignmentID: number = Number(req.body.assignment_id)
+    const StudentID: number = Number(req.body.student_id);
+    const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here?
+    const SubmissionFilePath: string = String(req.body.submission_filepath);//once we fix it lets use the previous filepath 
     try{
         console.log('Received PUT to /api/submissions');
-        const success = await editSubmission('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
-        if(success){
-            console.log('Edit submission successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: submission edit Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await editSubmission(Email, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+            if(success){
+                console.log('Edit submission successful');
+                res.json({
+                    success: true,
+                    details: "Submission successfully edited"
+                });
+            }
+            else{
+                console.log('Error: submission edit Failed');
+                res.json({
+                    success: false,
+                    details: "Editing Submission failed"
+                });
+            }
         }
     }
     catch(error){
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within PUT submissions: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
