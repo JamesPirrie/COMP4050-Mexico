@@ -138,6 +138,7 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //for MVP (listing classes)
     // get list of classes of the user (how we are doing sessions though)
+    //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.query.email);
     try {
@@ -173,8 +174,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
 app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
-    //for MVP adding classes, add removal in later (should be simple)
-    //adding classes for that user
+    //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const Email: string = String(req.body.email);
     const Session : number = Number(req.body.session);
@@ -211,40 +211,74 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 });
 
 app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>{
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const ClassID: number = Number(req.body.class_id)
     try{
         console.log('Received DELETE to /api/classes');
-        const success = await deleteClass('', Number(req.body.class_id));//email is placeholder for now
-        if (success) {
-            console.log('Delete class successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: class Deletion Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await deleteClass(Email, ClassID);//email is placeholder for now
+            if (success) {
+                console.log('Delete class successful');
+                res.json({
+                    success: true,
+                    details: 'Delete class successful'
+                });
+            }
+            else{
+                console.log('Error: class Deletion Failed');
+                res.json({
+                    success: false,
+                    details: 'Delete class failed'
+                });
+            }
         }
     }
     catch(error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within delete classes: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }    
 });
 
 app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const Session : number = Number(req.body.session);
+    const Year: number = Number(req.body.year);
+    const Title: string = String(req.body.title);
+    const Code: string = String(req.body.code);
+    const ClassID: number = Number(req.body.class_id)
     try{
         console.log('Received PUT to /api/classes');
-        const success = await editClass(JSON.stringify(req.body.email), Number(req.body.class_id), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.code), JSON.stringify(req.body.title));
-        if (success) {
-            console.log('Edit class successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: class edit Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await editClass(Email, ClassID, Session, Year, Code, Title);
+            if (success) {
+                console.log('Edit class successful');
+                res.json({
+                    success: true,
+                    details: "Edit class successful"
+                });
+            }
+            else{
+                console.log('Error: class edit Failed');
+                res.json({
+                    success: false,
+                    details: "Edit class failed"
+                });
+            }
         }
     }
     catch(error){
         console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
