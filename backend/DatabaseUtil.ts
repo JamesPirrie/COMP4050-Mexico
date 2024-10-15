@@ -401,6 +401,17 @@ export async function editExam(email: string, exam_id: number, submission_id: nu
         throw error;
     }
 }
+//NAME GETTERS
+export async function getNameOfClass(classID: number){
+    try{
+        const temp = await sql`SELECT code FROM class WHERE class_id = ${classID}`;
+        return temp[0]['code']
+    }
+    catch(error){
+        throw error;
+    }
+}
+
 
 
 

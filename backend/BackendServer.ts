@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import {AiFactory} from "comp4050ai";
 
 //Local Imports
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass} from "./DatabaseUtil";
 import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
 import {generateTokenForLogin, verifyJWT} from './AuthenticationUtil';
 
@@ -218,12 +218,13 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
     try{
         console.log('Received DELETE to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
+            const origName = await getNameOfClass(ClassID);
             const success = await deleteClass(Email, ClassID);//email is placeholder for now
             if (success) {
-                console.log('Delete class successful');
+                console.log(`Delete class successful`);
                 res.json({
                     success: true,
-                    details: 'Delete class successful'
+                    details: `Delete class with name originally: ${origName} successful`
                 });
             }
             else{
@@ -256,12 +257,13 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
+            const origName = await getNameOfClass(ClassID);
             const success = await editClass(Email, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
                     success: true,
-                    details: "Edit class successful"
+                    details: `Edit class with name originally: ${origName} successful`
                 });
             }
             else{

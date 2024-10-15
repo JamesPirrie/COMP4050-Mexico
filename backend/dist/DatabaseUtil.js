@@ -56,6 +56,7 @@ exports.editSubmission = editSubmission;
 exports.editClass = editClass;
 exports.editAssignment = editAssignment;
 exports.editExam = editExam;
+exports.getNameOfClass = getNameOfClass;
 const postgres_1 = __importDefault(require("postgres"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -423,6 +424,16 @@ async function editExam(email, exam_id, submission_id, student_id, examiner_id, 
         //add a check that the submission exists
         await sql `UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = TRIM(both '"' from ${comments}, examiner_id = ${examiner_id}) WHERE exam_id = ${exam_id};`;
         return true;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+//NAME GETTERS
+async function getNameOfClass(classID) {
+    try {
+        const temp = await sql `SELECT code FROM class WHERE class_id = ${classID}`;
+        return temp[0]['code'];
     }
     catch (error) {
         throw error;

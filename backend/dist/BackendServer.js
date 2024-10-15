@@ -224,12 +224,13 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const origName = await (0, DatabaseUtil_1.getNameOfClass)(ClassID);
             const success = await (0, DatabaseUtil_1.deleteClass)(Email, ClassID); //email is placeholder for now
             if (success) {
-                console.log('Delete class successful');
+                console.log(`Delete class ${origName} successful`);
                 res.json({
                     success: true,
-                    details: 'Delete class successful'
+                    details: `Delete class ${origName} successful`
                 });
             }
             else {
@@ -261,12 +262,13 @@ app.put('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const origName = await (0, DatabaseUtil_1.getNameOfClass)(ClassID);
             const success = await (0, DatabaseUtil_1.editClass)(Email, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
                     success: true,
-                    details: "Edit class successful"
+                    details: `Edit class originally: ${origName} successful`
                 });
             }
             else {
