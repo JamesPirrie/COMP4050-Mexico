@@ -1,7 +1,7 @@
 //https://expressjs.com/en/5x/api.html  
 
 //Package Imports
-import express from 'express';
+import express, { query } from 'express';
 import {Response, Request} from 'express';
 import multer from 'multer';
 import * as dotenv from 'dotenv';
@@ -218,13 +218,12 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
     try{
         console.log('Received DELETE to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
-            const origName = await getNameOfClass(ClassID);
             const success = await deleteClass(Email, ClassID);//email is placeholder for now
             if (success) {
                 console.log(`Delete class successful`);
                 res.json({
                     success: true,
-                    details: `Delete class with name originally: ${origName} successful`
+                    details: `Delete class successful`
                 });
             }
             else{
@@ -257,13 +256,12 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/classes');
         if (verifyJWT(AuthHeader, Email) == true){
-            const origName = await getNameOfClass(ClassID);
             const success = await editClass(Email, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
                     success: true,
-                    details: `Edit class with name originally: ${origName} successful`
+                    details: `Edit class successful`
                 });
             }
             else{
@@ -276,7 +274,7 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
         }
     }
     catch(error){
-        console.log('Error: ', error);
+        console.log('Error within PUT classes: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -287,79 +285,144 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //list assignments for a specific class
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.query.email);
+    const ClassID: number = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
-        const userClassAssignments = await getAssignments(JSON.stringify(req.query.email), Number(req.query.class_id));
-        if (userClassAssignments != null) {
-            console.log('GET assignments successful');
-            res.json(userClassAssignments);
-        }
-        else{
-            console.log('Error: No Assignments Found');
-            res.json({});
+        if (verifyJWT(AuthHeader, Email) == true){
+            const userClassAssignments = await getAssignments(Email, ClassID);
+            if (userClassAssignments != undefined) {
+                if(userClassAssignments?.length > 1){         
+                    console.log('GET assignments successful');
+                    res.json({
+                        data: userClassAssignments,
+                        details: "Assignments successfully found"
+                    });
+                }
+            }
+            else{
+                console.log('Error: No Assignments Found');
+                res.json({
+                    data: {},
+                    details: "No Assignments found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Assignment Check Failed', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET assignments: ' + error);
+        res.json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
 app.post('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
-    //adding assignments to that class
+    //adding assignments a class
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const ClassID: number = Number(req.body.class_id);
+    const Name: string = String(req.body.name);
+    const Description: string = String(req.body.description);
     try {
         console.log('Received POST to /api/assignments');
-        const success = await createAssignment(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
-        if (success) {
-            console.log('Create class successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: Assignment Creation Failed', Error);
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await createAssignment(Email, ClassID, Name, Description); // more fields added post MVP
+            if (success) {
+                console.log('Create Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment ${Name} successfully created`
+                });
+            }
+            else{
+                console.log('Error: Assignment Creation Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment Creation Failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within POST assignments:' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }  
 });
 
 app.delete('/api/assignments', upload.none(), async (req: Request, res: Response) => {
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const AssignmentID: number = Number(req.body.assignment_id);
     try{
         console.log('Received DELETE to /api/assignments');
-        const success = await deleteAssignment('', Number(req.body.assignment_id));//email is placeholder for now
-        if (success) {
-            console.log('Delete assignment successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: assignment Deletion Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await deleteAssignment(Email, AssignmentID);//email is placeholder for now
+            if (success) {
+                console.log('Delete Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment successfully deleted`
+                });
+            }
+            else{
+                console.log('Error: Assignment Deletion Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment deletion failed`
+                });
+            }
         }
     }
     catch(error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within DELETE assignments: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }  
 });
 
 app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const Email: string = String(req.body.email);
+    const AssignmentID: number = Number(req.body.assignment_id);
+    const ClassID: number = Number(req.body.class_id);
+    const Name: string = String(req.body.name);
+    const Description: string = String(req.body.description);
     try{
         console.log('Received PUT to /api/assignments');
-        const success = await editAssignment(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
-        if (success) {
-            console.log('Edit assignment successful');
-            res.send(JSON.stringify(true));
-        }
-        else{
-            console.log('Error: Assignment edit Failed');
-            res.send(JSON.stringify(false));
+        if (verifyJWT(AuthHeader, Email) == true){
+            const success = await editAssignment(Email, AssignmentID, ClassID, Name, Description);
+            if (success) {
+                console.log('Edit Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment successfully edited`
+                });
+            }
+            else{
+                console.log('Error: Assignment edit Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment editing failed`
+                });
+            }
         }
     }
     catch(error){
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within PUT Assignments: ', error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 

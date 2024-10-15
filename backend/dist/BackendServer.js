@@ -224,13 +224,12 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const origName = await (0, DatabaseUtil_1.getNameOfClass)(ClassID);
             const success = await (0, DatabaseUtil_1.deleteClass)(Email, ClassID); //email is placeholder for now
             if (success) {
-                console.log(`Delete class ${origName} successful`);
+                console.log(`Delete class successful`);
                 res.json({
                     success: true,
-                    details: `Delete class ${origName} successful`
+                    details: `Delete class successful`
                 });
             }
             else {
@@ -262,13 +261,12 @@ app.put('/api/classes', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/classes');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const origName = await (0, DatabaseUtil_1.getNameOfClass)(ClassID);
             const success = await (0, DatabaseUtil_1.editClass)(Email, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
                     success: true,
-                    details: `Edit class originally: ${origName} successful`
+                    details: `Edit class successful`
                 });
             }
             else {
@@ -281,7 +279,7 @@ app.put('/api/classes', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within PUT classes: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -291,76 +289,141 @@ app.put('/api/classes', upload.none(), async (req, res) => {
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req, res) => {
     //list assignments for a specific class
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const Email = String(req.query.email);
+    const ClassID = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
-        const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
-        if (userClassAssignments != null) {
-            console.log('GET assignments successful');
-            res.json(userClassAssignments);
-        }
-        else {
-            console.log('Error: No Assignments Found');
-            res.json({});
+        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(Email, ClassID);
+            if (userClassAssignments != undefined) {
+                if (userClassAssignments?.length > 1) {
+                    console.log('GET assignments successful');
+                    res.json({
+                        data: userClassAssignments,
+                        details: "Assignments successfully found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Assignments Found');
+                res.json({
+                    data: {},
+                    details: "No Assignments found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Assignment Check Failed', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET assignments: ' + error);
+        res.json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/assignments', upload.none(), async (req, res) => {
-    //adding assignments to that class
+    //adding assignments a class
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const Email = String(req.body.email);
+    const ClassID = Number(req.body.class_id);
+    const Name = String(req.body.name);
+    const Description = String(req.body.description);
     try {
         console.log('Received POST to /api/assignments');
-        const success = await (0, DatabaseUtil_2.createAssignment)(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
-        if (success) {
-            console.log('Create class successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: Assignment Creation Failed', Error);
-            res.send(JSON.stringify(false));
+        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const success = await (0, DatabaseUtil_2.createAssignment)(Email, ClassID, Name, Description); // more fields added post MVP
+            if (success) {
+                console.log('Create Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment ${Name} successfully created`
+                });
+            }
+            else {
+                console.log('Error: Assignment Creation Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment Creation Failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within POST assignments:' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/assignments', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const Email = String(req.body.email);
+    const AssignmentID = Number(req.body.assignment_id);
     try {
         console.log('Received DELETE to /api/assignments');
-        const success = await (0, DatabaseUtil_1.deleteAssignment)('', Number(req.body.assignment_id)); //email is placeholder for now
-        if (success) {
-            console.log('Delete assignment successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: assignment Deletion Failed');
-            res.send(JSON.stringify(false));
+        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const success = await (0, DatabaseUtil_1.deleteAssignment)(Email, AssignmentID); //email is placeholder for now
+            if (success) {
+                console.log('Delete Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment successfully deleted`
+                });
+            }
+            else {
+                console.log('Error: Assignment Deletion Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment deletion failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within DELETE assignments: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/assignments', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const Email = String(req.body.email);
+    const AssignmentID = Number(req.body.assignment_id);
+    const ClassID = Number(req.body.class_id);
+    const Name = String(req.body.name);
+    const Description = String(req.body.description);
     try {
         console.log('Received PUT to /api/assignments');
-        const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
-        if (success) {
-            console.log('Edit assignment successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: Assignment edit Failed');
-            res.send(JSON.stringify(false));
+        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const success = await (0, DatabaseUtil_1.editAssignment)(Email, AssignmentID, ClassID, Name, Description);
+            if (success) {
+                console.log('Edit Assignment successful');
+                res.json({
+                    success: true,
+                    details: `Assignment successfully edited`
+                });
+            }
+            else {
+                console.log('Error: Assignment edit Failed');
+                res.json({
+                    success: false,
+                    details: `Assignment editing failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within PUT Assignments: ', error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //submission endpoints

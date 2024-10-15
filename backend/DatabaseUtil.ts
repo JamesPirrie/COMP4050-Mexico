@@ -402,10 +402,16 @@ export async function editExam(email: string, exam_id: number, submission_id: nu
     }
 }
 //NAME GETTERS
-export async function getNameOfClass(classID: number){
+export async function getNameOfClass(email: string, classID: number){
     try{
-        const temp = await sql`SELECT code FROM class WHERE class_id = ${classID}`;
-        return temp[0]['code']
+        const users = await getUserIDbyEmail(email);
+        if (users) {
+            const temp = await sql`SELECT code FROM class WHERE class_id = ${classID} AND author_id = ${users}`;
+            return temp[0]['code'];
+        }
+        else{
+            throw new Error('User does not posess such a class');
+        }
     }
     catch(error){
         throw error;
