@@ -3,10 +3,19 @@
 {% block title %}VivaMQ Classes{% endblock %}
 
 {% block content %}
+<div class="welcome-box">
 <h2>Classes</h2>
 <p>This is where we display a list of classes, based on user email and backend DB results.</p>
+</div>
+<div class="content-box">
 {% for class in classes %}
+<div class="link">
     <a class="test-assignment-button" href="{{ url_for('unit', class=class['code']) }}">{{ class['code'] }}</a>
+</div>
 {% endfor %}
-<a class="add-class-button" href="{{ url_for('new_class')}}">Add New Class</a>
+<div class="button-spacer"></div>
+<div class="add-button">
+<a href="{{ url_for('new_class')}}">Add New Class</a>
+</div>
+</div>
 {% endblock %}

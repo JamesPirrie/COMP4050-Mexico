@@ -1,7 +1,12 @@
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
 
-/* Testing */
+/* Base */
+
+body {
+    font: 1em sans-serif;
+}
+
 .dashboard-container {
     display: flex;
     flex-direction: column;
@@ -24,7 +29,7 @@
 .heading {
     font-size: 28px;
     text-decoration: none;
-    color: #A6192E; /* Dark Red Color */
+    color: #A6192E;
     font-weight: bold;
 }
 
@@ -41,13 +46,19 @@
     margin-right: 10px;
 }
 
+.user-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
 .logout-button img {
     width: 24px;
     height: 24px;
     vertical-align: middle;
 }
 
-/* Sidebar and Main Container */
+/* Sidebar Container */
 .main-container {
     flex: 1;
     display: flex;
@@ -84,22 +95,23 @@
     width: 80%;
 }
 
-/* Content and Boxes */
+/* Global Content and Boxes */
 .content {
-    display: flex;
+    display: inline-block;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 10vh 10vw;
+    width: 80vw;
 }
 .welcome-box {
     background: #E7E4DB;
     border-radius: 10px;
-    padding: 20px;
+    padding: 1vh 1vw;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
     text-align: center;
-    max-width: 600px;
+    width: 100%;
 }
 
 .welcome-box p {
@@ -107,27 +119,91 @@
     color: #333;
 }
 
-.new-project-box {
+.content-box {
     background: #E7E4DB;
     border-radius: 10px;
-    padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 400px;
-    height: 200px;
-    display: flex;
+    padding: 1vh 1vw;
+    width: 100%;
+    display: inline-block;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    margin: auto;
 }
 
-.new-project-box p {
+.content-box p {
     font-size: 18px;
     color: #333;
     margin-bottom: 20px;
 }
 
-.new-project-box img {
-    width: 50px;
-    height: 50px;
+.content-box img {
+    width: 36px;
+    scale: 0.5;
+}
+
+.content-box .link {
+    border-radius: 5px;
+    background-color: #ffffff;
+    margin: 10px;
+    padding: 10px;
+}
+
+.content-box a {
+    text-decoration: none;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.content-box .button-spacer {
+    margin: 20px;
+    padding: 5px;
+}
+
+.content-box .add-button {
+    border-radius: 5px;
+    background-color: #A6192E;
+    margin: 5px;
+    padding: 5px;
+}
+
+.content-box .add-button a {
+    color: #fff;
+}
+
+.content-box .add-button:hover {
+    background-color: #8b0a1a;
+}
+
+
+
+
+.create-form {
+    margin-top: 20px;
+}
+
+.create-form input {
+    width: 95%;
+    height: 40px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.create-form button[type="submit"] {
+    width: 100%;
+    height: 40px;
+    background-color: #A6192E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.create-form button[type="submit"]:hover {
+    background-color: #8b0a1a;
 }

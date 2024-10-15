@@ -4,12 +4,13 @@
 
 {% block content %}
 <div class="welcome-box">
+    <h2>Dashboard</h2>
     <p>Welcome to VivaMQ, your favourite viva marking assistant! Simply start a new project, upload a file and we do the rest!</p>
 </div>
-<div class="new-project-box">
+<div class="content-box">
     <p>Start New Project</p>
     <a href="{{ url_for('new_project') }}" title="New Project">
-        <img src="{{ url_for('static', filename='images/plus.png') }}" alt="New Project">
+    <img src="{{ url_for('static', filename='icons/plus.png') }}" alt="New Project">
     </a>
 </div>
 {% endblock %}
