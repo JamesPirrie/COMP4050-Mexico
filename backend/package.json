@@ -4,7 +4,11 @@
 
         "build": "tsc -p .",
 
-        "server": "tsc -p . & node ./dist/BackendServer.js"
+        "server": "tsc -p . & node ./dist/BackendServer.js",
+
+        "build_db": "docker-compose up --force-recreate --no-start",
+
+        "db": "docker start pgsql-dev"
 
     },
 
