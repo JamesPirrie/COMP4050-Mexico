@@ -1,34 +1,47 @@
 {% extends 'base.html' %}
-
 {% block title %}Unit - {{ request.args.get('class', '') }} - VivaMQ{% endblock %}
-
 {% block content %}
-<h2>{{ request.args.get('class', '') }}</h2>
-<div class="classMgmtcontent">
+
+<div class="welcome-box">
+    <h2>{{ request.args.get('class', '') }}</h2>
+</div>
+
+<div class="content-box">
     <div class="assignments-section">
-        <h2></h2>
+        <h3>Assignments</h3>
         <div id="assignments-list" class="assignments-list">
-            <div class="placeholder-text">There are no assignments for this class.</div>
-        {% for assignment in assignments %}
-            <a href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
-        {% endfor %}
+            {% if assignments %}
+                {% for assignment in assignments %}
+                    <div class="link">
+                        <a href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="placeholder-text">There are no assignments for this class.</p>
+            {% endif %}
         </div>
         <div class="new-item-bar">
-            <a id="add-assignment-button" href="{{ url_for('newAssignment', class_id=request.args.get('class', ''))}}">Add Assignment</a>
+            <a href="{{ url_for('newAssignment', class_id=request.args.get('class', '')) }}" id="add-assignment-button">Add Assignment</a>
         </div>
     </div>
 
     <div class="students-section">
-        <h2></h2>
+        <h3>Students</h3>
         <div id="students-list" class="students-list">
-            <div class="placeholder-text">There are no students for this class.</div>
-        {% for student in students %}
-            <a href="{{ url_for('student', id=student['student_id']) }}">{{ student['first_name'] }} {{ student['last_name'] }}</a>
-        {% endfor %}
+            {% if students %}
+                {% for student in students %}
+                    <div class="link">
+                        <span>{{ student['first_name'] }} {{ student['last_name'] }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="placeholder-text">There are no students for this class.</p>
+            {% endif %}
         </div>
         <div class="new-item-bar">
-            <a id="add-student-button" href="{{ url_for('newStudent')}}">Add Student</a>
+            <a href="{{ url_for('new_student') }}" id="add-student-button">Add Student</a>
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -1,15 +1,40 @@
 {% extends 'base.html' %}
-
-{% block title %}VivaMQ New Assignment{% endblock %}
-
+{% block title %}Student Details - VivaMQ{% endblock %}
 {% block content %}
-<h2>Student {{ id }}</h2>
-<p>This is where we create a new student</p>
-<form method="post" id="login" class="login-form">
-    <input type="text" id="fname" name="fname" placeholder="Student First Name" required>
-    <input type="text" id="lname" name="lname" placeholder="Student Last Name" required>
-    <input type="text" id="id" name="id" placeholder="Student ID" required>
-    <input type="email" id="email" name="email" placeholder="Student Email" required>
-    <button type="submit">Create</button>
-</form>
+
+<div class="welcome-box">
+    <h2>Student Details</h2>
+    <p>View and manage student information for {{ student.first_name }} {{ student.last_name }}</p>
+</div>
+
+<div class="content-box">
+    <h3>Student Information</h3>
+    <div class="student-info">
+        <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+        <p><strong>Student ID:</strong> {{ student.student_id }}</p>
+        <!-- Add more student details as needed -->
+    </div>
+
+    <h3>Assignments</h3>
+    <div class="assignments-list">
+        {% if assignments %}
+            {% for assignment in assignments %}
+                <div class="link">
+                    <a href="{{ url_for('assignment', name=assignment.name) }}" class="test-assignment-button">
+                        {{ assignment.name }}
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="placeholder-text">No assignments for this student.</p>
+        {% endif %}
+    </div>
+
+    <div class="button-spacer"></div>
+
+    <div class="add-button">
+        <a href="{{ url_for('newAssignment', student_id=student.student_id) }}">Add New Assignment</a>
+    </div>
+</div>
+
 {% endblock %}

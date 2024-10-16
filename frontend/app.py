@@ -3,6 +3,8 @@ from datetime import date
 import requests
 import json
 import uuid
+import logging
+
 
 backend = "http://localhost:3000/api/"
 
@@ -17,6 +19,8 @@ user = User()
 
 def isAuthenticated():
     return user.userAuthenticated
+
+logging.basicConfig(level=logging.DEBUG)
 
 # How to use this code
 # url requests from the user are detected using @app.route()
@@ -34,6 +38,7 @@ def isAuthenticated():
 
 # accessing the backend API is handled with the helper functions at the bottom of this code
 # look through the code to see examples of how this is done
+
 
 @app.route('/')
 def default():
@@ -146,12 +151,10 @@ def newAssignment():
 #-----------------------------------
 #Student Routes
 
+#Student Routes
 @app.route('/student')
-def student():
-    return render_template('student.html')
-
-@app.route('/newStudent', methods = ['GET', 'POST'])
-def newStudent():
+@app.route('/new_student', methods=['GET', 'POST'])
+def new_student():
     if request.method == 'POST':
         email = user.email
         fname = request.form['fname']
@@ -161,6 +164,26 @@ def newStudent():
         postStudent(json)
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
+
+def getStudents(classid):
+    """
+    Gets a list of students for the given class.
+    Args:
+        classid (int): the id of the class to get students for
+    Returns:
+        list: A list of students
+    """
+    return json.loads(requests.get(f'{backend}students?email={user.email}&class_id={classid}').content)
+
+def postStudent(json):
+    """
+    Posts a new student to the backend server.
+    Args:
+        json (dict): A json object containing the student details
+    Returns:
+        response: The response from the server
+    """
+    return requests.post(f'{backend}students', json=json)
 
 #-----------------------------------
 #Viva Routes
