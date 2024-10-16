@@ -138,7 +138,6 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id)
-    const Email: string = String(req.query.email);
     try {
         console.log('Received GET to /api/classes');        
         const claimedEmail = await getEmailbyUserID(userID);
