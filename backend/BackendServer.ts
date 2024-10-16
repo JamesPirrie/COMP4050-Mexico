@@ -12,7 +12,7 @@ import {AiFactory} from "comp4050ai";
 
 //Local Imports
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass} from "./DatabaseUtil";
-import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID} from "./DatabaseUtil";
+import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID, getStudentsByClass} from "./DatabaseUtil";
 import {generateTokenForLogin, verifyJWT} from './AuthenticationUtil';
 
 //Globals
@@ -587,12 +587,13 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
 app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{//placeholder for now just dumps all students in database
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.query.user_id);
+    const classID: number = Number(req.query.class_id);
     try{
         console.log('Received GET to /api/students');
         const claimedEmail = await getEmailbyUserID(userID);
         if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
-            const studentsList = await getAllStudents();
+            const studentsList = await getStudentsByClass(userID, classID);
             if (studentsList != undefined) {
                 if(studentsList?.length > 1){
                     console.log('GET Students successful');
