@@ -128,7 +128,7 @@ app.get('/api/classes', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userClasses = await (0, DatabaseUtil_1.getClasses)(userID); //get the classes for the user assigned to that email
             if (userClasses != undefined) { //because userClasses.length only works here not != null and because userClasses is optional
-                if (userClasses?.length > 1) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
+                if (userClasses?.length > 0) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                     console.log('GET classes successful' + userClasses);
                     res.json({
                         data: userClasses,
@@ -271,7 +271,7 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(userID, ClassID);
             if (userClassAssignments != undefined) {
-                if (userClassAssignments?.length > 1) {
+                if (userClassAssignments?.length > 0) {
                     console.log('GET assignments successful');
                     res.json({
                         data: userClassAssignments,
@@ -412,7 +412,7 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(userID, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
             if (userSubmissions != undefined) { //query later (proper error handling)
-                if (userSubmissions?.length > 1) {
+                if (userSubmissions?.length > 0) {
                     console.log('GET submissions successful');
                     res.json({
                         data: userSubmissions,
@@ -555,7 +555,7 @@ app.get('/api/students', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const studentsList = await (0, DatabaseUtil_2.getStudentsByClass)(userID, classID);
             if (studentsList != undefined) {
-                if (studentsList?.length > 1) {
+                if (studentsList?.length > 0) {
                     console.log('GET Students successful');
                     res.json({
                         data: studentsList,
@@ -684,22 +684,29 @@ app.put('/api/students', upload.none(), async (req, res) => {
 });
 //AI endpoints
 app.get('/api/qgen', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
     try {
         console.log('Received GET to /api/qgen');
-        const questions = await (0, DatabaseUtil_2.getQuestions)(Number(req.query.submission_id));
-        if (questions != null) {
-            console.log('GET questions successful');
-            res.json({
-                data: questions,
-                details: "Questions successfully found"
-            });
-        }
-        else {
-            console.log('Error: No questions Found');
-            res.json({
-                data: {},
-                details: "no Questions found"
-            });
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const questions = await (0, DatabaseUtil_2.getQuestions)(SubmissionID);
+            if (questions != undefined) {
+                if (questions?.length > 0) {
+                    console.log('GET questions successful');
+                    res.json({
+                        data: questions,
+                        details: "Questions successfully found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No questions Found');
+                res.json({
+                    data: {},
+                    details: "no Questions found"
+                });
+            }
         }
     }
     catch (error) {
@@ -712,67 +719,72 @@ app.get('/api/qgen', upload.none(), async (req, res) => {
 });
 app.post('/api/qgen', upload.none(), async (req, res) => {
     //We will get Submission ID
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id);
     try {
-        const apiKey = process.env.OPENAI_API_KEY || '';
-        if (!apiKey) {
-            console.log('Error: API_KEY could not be read inside .env');
-        }
-        let pdfPath; //Refers to file name not full path.
-        try {
-            pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(Number(req.body.submission_id));
-        }
-        catch (error) {
-            console.log('Error: Get Submission Path from Sub ID Failed', error);
-        }
-        //Construct Mock AI
-        let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
-        //Writes questions/answers file to "./ServerStorage" specified in constructor
-        let doc_id;
-        try {
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
-            doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
-        }
-        catch (error) {
-            console.log('Error: AI Generation Failed', error);
-        }
-        if (doc_id) {
-            //Accesses the storage location specified in the contructor
-            let questions;
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env');
+            }
+            let pdfPath; //Refers to file name not full path.
             try {
-                questions = await ai.getQuestions(doc_id);
+                pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(SubmissionID);
             }
             catch (error) {
-                console.log('Error: Assigning questions to location failed', error);
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
             }
-            //Insert generated AI Questions into results table for submission_id
-            if (questions) {
-                (0, DatabaseUtil_2.postAIOutputForSubmission)(Number(req.body.submission_id), JSON.stringify((questions)));
+            //Construct Mock AI
+            let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id;
+            try {
+                const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
+                doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+            if (doc_id) {
+                //Accesses the storage location specified in the contructor
+                let questions;
+                try {
+                    questions = await ai.getQuestions(doc_id);
+                }
+                catch (error) {
+                    console.log('Error: Assigning questions to location failed', error);
+                }
+                //Insert generated AI Questions into results table for submission_id
+                if (questions) {
+                    (0, DatabaseUtil_2.postAIOutputForSubmission)(SubmissionID, JSON.stringify((questions)));
+                }
+                else {
+                    res.send(JSON.stringify(false));
+                    console.log('Error: Assigning questions to location failed');
+                }
             }
             else {
                 res.send(JSON.stringify(false));
-                console.log('Error: Assigning questions to location failed');
+                console.log('Error: AI Generation Failed');
             }
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: AI Generation Failed');
-        }
-        //verify any questions exist for submission
-        // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
-        const foundAIQs = (0, DatabaseUtil_2.getQuestions)(Number(req.body.submission_id));
-        if (foundAIQs != null) {
-            console.log('AI question generation successful');
-            res.json({
-                success: true,
-                details: ""
-            });
-        }
-        else {
-            console.log('Error: AI Question Generation Failed');
-            res.json({
-                success: false,
-                details: ""
-            });
+            //verify any questions exist for submission
+            // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
+            const foundAIQs = (0, DatabaseUtil_2.getQuestions)(SubmissionID);
+            if (foundAIQs != null) {
+                console.log('AI question generation successful');
+                res.json({
+                    success: true,
+                    details: "Questions successfully generated"
+                });
+            }
+            else {
+                console.log('Error: AI Question Generation Failed');
+                res.json({
+                    success: false,
+                    details: "failed to generate questions"
+                });
+            }
         }
     }
     catch (error) {
@@ -786,21 +798,37 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
 //viva endpoints
 app.get('/api/vivas', upload.none(), async (req, res) => {
     //list viva for a specific submission
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
     try {
         console.log('Received GET to /api/vivas');
-        const foundVivas = await (0, DatabaseUtil_2.getExams)(Number(req.query.submission_id));
-        if (foundVivas != null) {
-            console.log('GET vivas successful');
-            res.json(foundVivas);
-        }
-        else {
-            console.log('Error: No Vivas Found');
-            res.json({});
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const foundVivas = await (0, DatabaseUtil_2.getExams)(SubmissionID);
+            if (foundVivas != undefined) {
+                if (foundVivas?.length > 0) {
+                    console.log('GET vivas successful');
+                    res.json({
+                        data: foundVivas,
+                        details: "Vivas successfully found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Vivas Found');
+                res.json({
+                    data: {},
+                    details: "Failed to find Vivas"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Viva Check Failed', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET vivas: ' + error);
+        res.json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/vivas', upload.none(), async (req, res) => {
@@ -819,7 +847,10 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: Exam Creation Attempt Failed', error);
-        res.send('Server encountered error: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/vivas', upload.none(), async (req, res) => {
@@ -837,7 +868,10 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: exam Deletion Attempt Failed', error);
-        res.send('Server encountered error: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/vivas', upload.none(), async (req, res) => {
@@ -855,7 +889,10 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
     }
     catch (error) {
         console.log('Error: exam Edit Attempt Failed', error);
-        res.send('Server encountered error: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //start the server
