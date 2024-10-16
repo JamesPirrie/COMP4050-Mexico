@@ -71,8 +71,8 @@ app.put('/', (req: Request, res: Response) => {
 //login/signup
 app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     //What we receive
-    const Email : string = req.body.email;
-    const Password : string = req.body.password;
+    const Email : string = String(req.body.email);
+    const Password : string = String(req.body.password);
     try {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(Email) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
@@ -105,7 +105,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
 
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     //What we receive
-    const Email : string = req.body.email;
+    const Email : string = String(req.body.email);
     //const Password : string = req.body.password;
     try {
         console.log('Received POST to /api/signup');
@@ -137,7 +137,7 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.query.user_id);
     try {
         console.log('Received GET to /api/classes');        
         if (await verifyJWT(AuthHeader, userID) == true){
@@ -173,7 +173,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const Session : number = Number(req.body.session);
     const Year: number = Number(req.body.year);
     const Title: string = String(req.body.title);
@@ -210,7 +210,7 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const ClassID: number = Number(req.body.class_id)
     try{
         console.log('Received DELETE to /api/classes');
@@ -244,7 +244,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
 app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const Session : number = Number(req.body.session);
     const Year: number = Number(req.body.year);
     const Title: string = String(req.body.title);
@@ -283,7 +283,7 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.query.user_id);
     const ClassID: number = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
@@ -319,7 +319,7 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
 app.post('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const ClassID: number = Number(req.body.class_id);
     const Name: string = String(req.body.name);
     const Description: string = String(req.body.description);
@@ -355,7 +355,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
 app.delete('/api/assignments', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const AssignmentID: number = Number(req.body.assignment_id);
     try{
         console.log('Received DELETE to /api/assignments');
@@ -389,7 +389,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
 app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const AssignmentID: number = Number(req.body.assignment_id);
     const ClassID: number = Number(req.body.class_id);
     const Name: string = String(req.body.name);
@@ -427,7 +427,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
 app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{//we might need an endpoint for sending the actual file back to them if needed from frontend
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.query.user_id);
     const ClassID: number = Number(req.query.class_id);
     const AssignmentID: number = Number(req.query.assignment_id);
     try {
@@ -464,7 +464,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
 app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
         //What we receive
         const AuthHeader : string = String(req.headers.authorization);
-        const userID: number = Number(req.query.user_id)
+        const userID: number = Number(req.body.user_id);
         const AssignmentID: number = Number(req.body.assignment_id);
         const StudentID: number = Number(req.body.student_id);
         const SubmissionDate: string = String(req.body.submission_date);        //this isnt being used because we just set it internally anyway
@@ -502,7 +502,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
 app.delete('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const SubmissionID: number = Number(req.body.submission_id);
     try{
         console.log('Received DELETE to /api/submissions');
@@ -536,9 +536,9 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
 app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const userID: number = Number(req.query.user_id)
+    const userID: number = Number(req.body.user_id);
     const SubmissionID: number = Number(req.body.submission_id);
-    const AssignmentID: number = Number(req.body.assignment_id)
+    const AssignmentID: number = Number(req.body.assignment_id);
     const StudentID: number = Number(req.body.student_id);
     const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here?
     const SubmissionFilePath: string = String(req.body.submission_filepath);//once we fix it lets use the previous filepath 
@@ -609,22 +609,30 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
 });
 
 app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const Email: string = String(req.body.email);//this is the student email not the user email
+    const StudentID: number = Number(req.body.student_id);
+    const FirstName: string = String(req.body.first_name);
+    const LastName: string = String(req.body.last_name);
     try{
         console.log('Received POST to /api/students');
-        const success = await addStudent(JSON.stringify(req.body.user_id), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
-        if (success) {
-            console.log('Create student successful');
-            res.json({
-                success: true,
-                details: "Student successfully created"
-            });
-        }
-        else{
-            console.log('Error: student Creation Failed');
-            res.json({
-                success: false,
-                details: "Student creation failed"
-            });
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await addStudent(Email, StudentID, FirstName, LastName);
+            if (success) {
+                console.log('Create student successful');
+                res.json({
+                    success: true,
+                    details: "Student successfully created"
+                });
+            }
+            else{
+                console.log('Error: student Creation Failed');
+                res.json({
+                    success: false,
+                    details: "Student creation failed"
+                });
+            }
         }
     }
     catch(error){
@@ -637,22 +645,27 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
 });
 
 app.delete('/api/students', upload.none(), async (req: Request, res: Response) =>{//for deleting students
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const StudentID: number = Number(req.body.student_id);
     try{
         console.log('Received DELETE to /api/students');
-        const success = await deleteStudent(Number(req.body.student_id));
-        if (success) {
-            console.log('Delete student successful');
-            res.json({
-                success: true,
-                details: "Student successfully deleted"
-            });
-        }
-        else{
-            console.log('Error: student Deletion Failed');
-            res.json({
-                success: false,
-                details: "Student deletion failed"
-            });
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await deleteStudent(StudentID);
+            if (success) {
+                console.log('Delete student successful');
+                res.json({
+                    success: true,
+                    details: "Student successfully deleted"
+                });
+            }
+            else{
+                console.log('Error: student Deletion Failed');
+                res.json({
+                    success: false,
+                    details: "Student deletion failed"
+                });
+            }
         }
     }
     catch(error){
@@ -665,22 +678,30 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
 });
 
 app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const Email: string = String(req.query.email);//this is the student email not the user email
+    const StudentID: number = Number(req.body.student_id);
+    const FirstName: string = String(req.body.first_name);
+    const LastName: string = String(req.body.last_name);
     try{
         console.log('Received PUT to /api/students');
-        const success = await editStudent(JSON.stringify(req.body.user_id), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
-        if (success) {
-            console.log('Edit student successful');
-            res.json({
-                success: true,
-                details: "Student successfully edited"
-            });
-        }
-        else{
-            console.log('Error: student edit Failed');
-            res.json({
-                success: false,
-                details: "Student editing failed"
-            });
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await editStudent(Email, StudentID, FirstName, LastName);
+            if (success) {
+                console.log('Edit student successful');
+                res.json({
+                    success: true,
+                    details: "Student successfully edited"
+                });
+            }
+            else{
+                console.log('Error: student edit Failed');
+                res.json({
+                    success: false,
+                    details: "Student editing failed"
+                });
+            }
         }
     }
     catch(error){
@@ -699,16 +720,25 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         const questions = await getQuestions(Number(req.query.submission_id));
         if(questions != null){
             console.log('GET questions successful');
-            res.json(questions);
+            res.json({
+                data: questions,
+                details: "Questions successfully found"
+            });
         }
         else{
             console.log('Error: No questions Found');
-            res.json({});
+            res.json({
+                data: {},
+                details: "no Questions found"
+            });
         }
     }
     catch(error){
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET qgen: ', error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 
@@ -767,17 +797,26 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
         const foundAIQs = getQuestions(Number(req.body.submission_id)); 
         if (foundAIQs != null){
-            res.send(JSON.stringify(true));
             console.log('AI question generation successful');
+            res.json({
+                success: true,
+                details: ""
+            });
         }
         else{
-            res.send(JSON.stringify(false));
             console.log('Error: AI Question Generation Failed');
+            res.json({
+                success: false,
+                details: ""
+            });
         }
 	}
 	catch (error) {
-	    console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+	    console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
 	}	
 });
 
