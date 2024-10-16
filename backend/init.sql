@@ -18,7 +18,8 @@ title text,
 creation_date timestamptz,
 expiry_date timestamptz,
 author_id int4,
-tutors integer array
+tutors integer array,
+students integer array
 );
 
 CREATE TABLE assignments (
