@@ -1,28 +1,5 @@
 "use strict";
 //https://expressjs.com/en/5x/api.html  
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -30,7 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //Package Imports
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
-const dotenv = __importStar(require("dotenv"));
+require("dotenv/config");
 //AI Imports
 const comp4050ai_1 = require("comp4050ai");
 //Local Imports
@@ -42,7 +19,6 @@ const port = 3000;
 //Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
-dotenv.config();
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
@@ -434,8 +410,8 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
     try {
         console.log('Received GET to /api/submissions');
         if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(Email, ClassID, AssignmentID);
-            if (userSubmissions != undefined) {
+            const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(Email, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
+            if (userSubmissions != undefined) { //query later (proper error handling)
                 if (userSubmissions?.length > 1) {
                     console.log('GET submissions successful');
                     res.json({
