@@ -315,20 +315,18 @@ async function getStudentsByClass(user_id, specificClass) {
             const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
             if (verifyUser[0]['author_id'] === users) { //verifying that the user is the one that owns this class
                 // Get class by class_id
-                const classes = await sql `SELECT student_ids FROM class WHERE id = ${specificClass};`;
+                const classes = await sql `SELECT * FROM class WHERE class_id = ${specificClass};`;
                 if (classes.length === 0) {
                     throw new Error('Class not found');
                 }
                 const studentIds = classes[0]['students'];
                 if (studentIds && studentIds.length > 0) {
                     // Get students based on the class 'students' list
-                    const students = await sql `SELECT * FROM students WHERE id IN (${sql(studentIds)});`;
+                    const students = await sql `SELECT * FROM students WHERE student_id IN (${sql(studentIds)});`;
                     return students;
                 }
                 else {
-                    // throw new Error('No students not found');
-                    // No students in list
-                    return [];
+                    throw new Error('No students found');
                 }
             }
             else {
