@@ -611,7 +611,7 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
 app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
     try{
         console.log('Received POST to /api/students');
-        const success = await addStudent(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
+        const success = await addStudent(JSON.stringify(req.body.user_id), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             console.log('Create student successful');
             res.json({
@@ -667,7 +667,7 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
 app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/students');
-        const success = await editStudent(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
+        const success = await editStudent(JSON.stringify(req.body.user_id), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             console.log('Edit student successful');
             res.json({
