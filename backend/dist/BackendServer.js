@@ -475,6 +475,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
 });
 //TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
 app.delete('/api/submissions', upload.none(), async (req, res) => {
+    //what we receive
     const AuthHeader = String(req.headers.authorization);
     const Email = String(req.body.email);
     const SubmissionID = Number(req.body.submission_id);
@@ -507,6 +508,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
     }
 });
 app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
+    //what we receive
     const AuthHeader = String(req.headers.authorization);
     const Email = String(req.body.email);
     const SubmissionID = Number(req.body.submission_id);
@@ -544,21 +546,37 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
 });
 //student endpoints
 app.get('/api/students', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const Email = String(req.query.email);
     try {
         console.log('Received GET to /api/students');
-        const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
-        if (studentsList != null) {
-            console.log('GET Students successful');
-            res.json(studentsList);
-        }
-        else {
-            console.log('GET students failed');
-            res.json({});
+        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
+            const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
+            if (studentsList != undefined) {
+                if (studentsList?.length > 1) {
+                    console.log('GET Students successful');
+                    res.json({
+                        data: studentsList,
+                        details: "Students successfully found"
+                    });
+                }
+            }
+            else {
+                console.log('GET students failed');
+                res.json({
+                    data: {},
+                    details: "No Students found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within GET students: ' + error);
+        res.json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/students', upload.none(), async (req, res) => {
@@ -567,16 +585,25 @@ app.post('/api/students', upload.none(), async (req, res) => {
         const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             console.log('Create student successful');
-            res.send(JSON.stringify(true));
+            res.json({
+                success: true,
+                details: "Student successfully created"
+            });
         }
         else {
             console.log('Error: student Creation Failed');
-            res.send(JSON.stringify(false));
+            res.json({
+                success: false,
+                details: "Student creation failed"
+            });
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within POST students: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/students', upload.none(), async (req, res) => {
@@ -585,16 +612,25 @@ app.delete('/api/students', upload.none(), async (req, res) => {
         const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.body.student_id));
         if (success) {
             console.log('Delete student successful');
-            res.send(JSON.stringify(true));
+            res.json({
+                success: true,
+                details: "Student successfully deleted"
+            });
         }
         else {
             console.log('Error: student Deletion Failed');
-            res.send(JSON.stringify(false));
+            res.json({
+                success: false,
+                details: "Student deletion failed"
+            });
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within DELETE students: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/students', upload.none(), async (req, res) => {
@@ -603,16 +639,25 @@ app.put('/api/students', upload.none(), async (req, res) => {
         const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
         if (success) {
             console.log('Edit student successful');
-            res.send(JSON.stringify(true));
+            res.json({
+                success: true,
+                details: "Student successfully edited"
+            });
         }
         else {
             console.log('Error: student edit Failed');
-            res.send(JSON.stringify(false));
+            res.json({
+                success: false,
+                details: "Student editing failed"
+            });
         }
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.send('Server encountered error: ' + error);
+        console.log('Error within PUT students: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //AI endpoints
