@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
+import { getEmailbyUserID } from './DatabaseUtil';
 
 //global variables
 const tokenLifetime: string = "1h";//how long a created token will stay valid for
@@ -13,7 +14,7 @@ interface JwtPayload {
 dotenv.config();
 
 // JWT Token Verification Authenticaiton
-export function verifyJWT(AuthHeader: string, userID: number, User_idEmail: string): boolean {
+export async function verifyJWT(AuthHeader: string, userID: number): Promise<boolean> {
     try {
         if(!AuthHeader.startsWith('Bearer ')){
             throw new Error("Error: Could not read authentication token in authentication header");
@@ -37,9 +38,9 @@ export function verifyJWT(AuthHeader: string, userID: number, User_idEmail: stri
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
         }
-        const claimedEmail = User_idEmail;
-        if (email != claimedEmail){
-            throw new Error('Token not matched to claimed email');
+        const EmailFromID = await getEmailbyUserID(userID);
+        if (email != EmailFromID){
+            throw new Error('Token not matched to email associated to userID');
         }
         return true;
     } catch (error) {

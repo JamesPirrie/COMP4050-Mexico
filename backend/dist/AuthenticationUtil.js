@@ -30,12 +30,13 @@ exports.verifyJWT = verifyJWT;
 exports.generateTokenForLogin = generateTokenForLogin;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv = __importStar(require("dotenv"));
+const DatabaseUtil_1 = require("./DatabaseUtil");
 //global variables
 const tokenLifetime = "1h"; //how long a created token will stay valid for
 //initialisation
 dotenv.config();
 // JWT Token Verification Authenticaiton
-function verifyJWT(AuthHeader, claimedEmail) {
+async function verifyJWT(AuthHeader, userID) {
     try {
         if (!AuthHeader.startsWith('Bearer ')) {
             throw new Error("Error: Could not read authentication token in authentication header");
@@ -58,8 +59,9 @@ function verifyJWT(AuthHeader, claimedEmail) {
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
         }
-        if (email != claimedEmail) {
-            throw new Error('Token not matched to claimed email');
+        const EmailFromID = await (0, DatabaseUtil_1.getEmailbyUserID)(userID);
+        if (email != EmailFromID) {
+            throw new Error('Token not matched to email associated to userID');
         }
         return true;
     }

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserIDbyEmail = getUserIDbyEmail;
+exports.getEmailbyUserID = getEmailbyUserID;
 exports.loginUserCheck = loginUserCheck;
 exports.signupUser = signupUser;
 exports.getUser = getUser;
@@ -23,6 +24,7 @@ exports.getExams = getExams;
 exports.createExams = createExams;
 exports.addStudent = addStudent;
 exports.getAllStudents = getAllStudents;
+exports.getStudentsByClass = getStudentsByClass;
 exports.deleteStudent = deleteStudent;
 exports.deleteSubmission = deleteSubmission;
 exports.deleteClass = deleteClass;
@@ -43,6 +45,16 @@ async function getUserIDbyEmail(email) {
     try {
         const users = await sql `SELECT user_id FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? users[0]['user_id'] : null;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+// Convert email to user_id. Returns string if found, null otherwise.
+async function getEmailbyUserID(user_id) {
+    try {
+        const users = await sql `SELECT * FROM users WHERE user_id = ${user_id};`;
+        return users.length ? users[0]['email'] : null;
     }
     catch (error) {
         throw error;
@@ -96,9 +108,9 @@ async function signup(email) {
     }
 }
 // get classes by user from email.
-async function getClasses(email) {
+async function getClasses(user_id) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         if (users) {
             const results = await sql `SELECT * FROM class WHERE author_id = ${users};`;
             return results;
@@ -113,9 +125,9 @@ async function getClasses(email) {
     }
 }
 // post classes by user from email. Input: email, class code
-async function createClass(email, session, year, title, code) {
+async function createClass(user_id, session, year, title, code) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         //we should probably add some sort of class already exists protection in future
         if (users) {
             await sql `INSERT INTO class (author_id, session, year, title, code, creation_date) VALUES
@@ -131,9 +143,9 @@ async function createClass(email, session, year, title, code) {
     }
 }
 // get assignments based on class.
-async function getAssignments(email, specificClass) {
+async function getAssignments(user_id, specificClass) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         if (users) {
             const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
             if (verifyUser[0]['author_id'] === users) {
@@ -150,9 +162,9 @@ async function getAssignments(email, specificClass) {
     }
 }
 // post assignments based on class.
-async function createAssignment(email, class_id, name, description) {
+async function createAssignment(user_id, class_id, name, description) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         await sql `INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
         return true;
     }
@@ -162,9 +174,9 @@ async function createAssignment(email, class_id, name, description) {
 }
 // get viva based on submissions JOIN viva_output
 // TO DO
-async function getVivaForSubmission(email, specificSubmission, specificGenQ) {
+async function getVivaForSubmission(user_id, specificSubmission, specificGenQ) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         if (users) {
             //TO DO
         }
@@ -188,9 +200,9 @@ async function getSubmissionFilePathForSubID(specificSubmission) {
     }
 }
 // get submissions with user, class, and assignment
-async function getSubmissionsForAssignments(email, specificClass, specificAssignment) {
+async function getSubmissionsForAssignments(user_id, specificClass, specificAssignment) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         if (users) {
             const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
             if (verifyUser[0]['author_id'] === users) { //verifying that the user is the one that owns this class			
@@ -210,9 +222,9 @@ async function getSubmissionsForAssignments(email, specificClass, specificAssign
     }
 }
 // post submissions with document, class, placeholder student
-async function createSubmission(email, assignment_id, student_id, submission_date, submission_filepath) {
+async function createSubmission(user_id, assignment_id, student_id, submission_date, submission_filepath) {
     try {
-        const users = await getUserIDbyEmail(email); //not used?
+        const users = user_id; //not used, but will be used for verification
         await sql `INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
                                     (${assignment_id}, ${student_id}, NOW(), TRIM(both '"' from ${submission_filepath}));`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
         return true;
@@ -265,9 +277,9 @@ async function getExams(submission_id) {
     }
 }
 // post exams
-async function createExams(email, submission_id, student_id) {
+async function createExams(user_id, submission_id, student_id) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         await sql `INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
                                     (${submission_id}, ${student_id}, ${users});`;
         return true;
@@ -295,6 +307,42 @@ async function getAllStudents() {
         throw error;
     }
 }
+// get students based on class.
+async function getStudentsByClass(user_id, specificClass) {
+    try {
+        const users = user_id;
+        if (users) {
+            const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            if (verifyUser[0]['author_id'] === users) { //verifying that the user is the one that owns this class
+                // Get class by class_id
+                const classes = await sql `SELECT student_ids FROM class WHERE id = ${specificClass};`;
+                if (classes.length === 0) {
+                    throw new Error('Class not found');
+                }
+                const studentIds = classes[0]['students'];
+                if (studentIds && studentIds.length > 0) {
+                    // Get students based on the class 'students' list
+                    const students = await sql `SELECT * FROM students WHERE id IN (${sql(studentIds)});`;
+                    return students;
+                }
+                else {
+                    // throw new Error('No students not found');
+                    // No students in list
+                    return [];
+                }
+            }
+            else {
+                throw new Error('User not permitted to get this list');
+            }
+        }
+        else {
+            throw new Error('User not found');
+        }
+    }
+    catch (error) {
+        throw error;
+    }
+}
 //DELETE FUNCTIONS
 async function deleteStudent(student_id) {
     try {
@@ -306,7 +354,7 @@ async function deleteStudent(student_id) {
         throw error;
     }
 }
-async function deleteSubmission(email, submission_id) {
+async function deleteSubmission(user_id, submission_id) {
     try {
         //may add a check that the submission exists
         //may add a check that the author is the one sending the request
@@ -317,7 +365,7 @@ async function deleteSubmission(email, submission_id) {
         throw error;
     }
 }
-async function deleteClass(email, class_id) {
+async function deleteClass(user_id, class_id) {
     try {
         //may add a check that the class exists
         //may add a check that the author is the one sending the request
@@ -328,7 +376,7 @@ async function deleteClass(email, class_id) {
         throw error;
     }
 }
-async function deleteAssignment(email, assignment_id) {
+async function deleteAssignment(user_id, assignment_id) {
     try {
         //may add a check that the assignment exists
         //may add a check that the author is the one sending the request
@@ -339,7 +387,7 @@ async function deleteAssignment(email, assignment_id) {
         throw error;
     }
 }
-async function deleteExam(email, exam_id) {
+async function deleteExam(user_id, exam_id) {
     try {
         //may add a check that the exam exists
         //may add a check that the author is the one sending the request
@@ -361,7 +409,7 @@ async function editStudent(email, student_id, first_name, last_name) {
         throw error;
     }
 }
-async function editSubmission(email, submission_id, assignment_id, student_id, submission_date, submission_filepath) {
+async function editSubmission(user_id, submission_id, assignment_id, student_id, submission_date, submission_filepath) {
     try {
         //add a check that the submission exists
         //add a check that the author is the one sending the request 
@@ -372,7 +420,7 @@ async function editSubmission(email, submission_id, assignment_id, student_id, s
         throw error;
     }
 }
-async function editClass(email, class_id, session, year, code, title) {
+async function editClass(user_id, class_id, session, year, code, title) {
     try {
         //add a check that the author is the one sending the request 
         //add a check that the class exists
@@ -383,7 +431,7 @@ async function editClass(email, class_id, session, year, code, title) {
         throw error;
     }
 }
-async function editAssignment(email, assignment_id, class_id, name, description) {
+async function editAssignment(user_id, assignment_id, class_id, name, description) {
     try {
         //add a check that the author is the one sending the request 
         //add a check that the submission exists
@@ -394,7 +442,7 @@ async function editAssignment(email, assignment_id, class_id, name, description)
         throw error;
     }
 }
-async function editExam(email, exam_id, submission_id, student_id, examiner_id, marks, comments) {
+async function editExam(user_id, exam_id, submission_id, student_id, examiner_id, marks, comments) {
     try {
         //add a check that the author is the one sending the request 
         //add a check that the submission exists
@@ -406,9 +454,9 @@ async function editExam(email, exam_id, submission_id, student_id, examiner_id, 
     }
 }
 //NAME GETTERS
-async function getNameOfClass(email, classID) {
+async function getNameOfClass(user_id, classID) {
     try {
-        const users = await getUserIDbyEmail(email);
+        const users = user_id;
         if (users) {
             const temp = await sql `SELECT code FROM class WHERE class_id = ${classID} AND author_id = ${users}`;
             return temp[0]['code'];

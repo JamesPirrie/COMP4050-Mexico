@@ -122,11 +122,11 @@ app.post('/api/signup', upload.none(), async (req, res) => {
 app.get('/api/classes', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.query.email);
+    const userID = Number(req.query.user_id);
     try {
         console.log('Received GET to /api/classes');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const userClasses = await (0, DatabaseUtil_1.getClasses)(Email); //get the classes for the user assigned to that email
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userClasses = await (0, DatabaseUtil_1.getClasses)(userID); //get the classes for the user assigned to that email
             if (userClasses != undefined) { //because userClasses.length only works here not != null and because userClasses is optional
                 if (userClasses?.length > 1) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                     console.log('GET classes successful' + userClasses);
@@ -157,15 +157,15 @@ app.get('/api/classes', upload.none(), async (req, res) => {
 app.post('/api/classes', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const Session = Number(req.body.session);
     const Year = Number(req.body.year);
     const Title = String(req.body.title);
     const Code = String(req.body.code);
     try {
         console.log('Received POST to /api/classes');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_2.createClass)(Email, Session, Year, Title, Code);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.createClass)(userID, Session, Year, Title, Code);
             if (success) {
                 console.log('Create class successful');
                 res.send({
@@ -193,12 +193,12 @@ app.post('/api/classes', upload.none(), async (req, res) => {
 app.delete('/api/classes', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const ClassID = Number(req.body.class_id);
     try {
         console.log('Received DELETE to /api/classes');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.deleteClass)(Email, ClassID); //email is placeholder for now
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.deleteClass)(userID, ClassID); //email is placeholder for now
             if (success) {
                 console.log(`Delete class successful`);
                 res.json({
@@ -226,7 +226,7 @@ app.delete('/api/classes', upload.none(), async (req, res) => {
 app.put('/api/classes', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const Session = Number(req.body.session);
     const Year = Number(req.body.year);
     const Title = String(req.body.title);
@@ -234,8 +234,8 @@ app.put('/api/classes', upload.none(), async (req, res) => {
     const ClassID = Number(req.body.class_id);
     try {
         console.log('Received PUT to /api/classes');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.editClass)(Email, ClassID, Session, Year, Code, Title);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.editClass)(userID, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
@@ -264,12 +264,12 @@ app.put('/api/classes', upload.none(), async (req, res) => {
 app.get('/api/assignments', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.query.email);
+    const userID = Number(req.query.user_id);
     const ClassID = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(Email, ClassID);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(userID, ClassID);
             if (userClassAssignments != undefined) {
                 if (userClassAssignments?.length > 1) {
                     console.log('GET assignments successful');
@@ -299,14 +299,14 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
 app.post('/api/assignments', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const ClassID = Number(req.body.class_id);
     const Name = String(req.body.name);
     const Description = String(req.body.description);
     try {
         console.log('Received POST to /api/assignments');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_2.createAssignment)(Email, ClassID, Name, Description); // more fields added post MVP
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.createAssignment)(userID, ClassID, Name, Description); // more fields added post MVP
             if (success) {
                 console.log('Create Assignment successful');
                 res.json({
@@ -334,12 +334,12 @@ app.post('/api/assignments', upload.none(), async (req, res) => {
 app.delete('/api/assignments', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const AssignmentID = Number(req.body.assignment_id);
     try {
         console.log('Received DELETE to /api/assignments');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.deleteAssignment)(Email, AssignmentID); //email is placeholder for now
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.deleteAssignment)(userID, AssignmentID); //email is placeholder for now
             if (success) {
                 console.log('Delete Assignment successful');
                 res.json({
@@ -367,15 +367,15 @@ app.delete('/api/assignments', upload.none(), async (req, res) => {
 app.put('/api/assignments', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const AssignmentID = Number(req.body.assignment_id);
     const ClassID = Number(req.body.class_id);
     const Name = String(req.body.name);
     const Description = String(req.body.description);
     try {
         console.log('Received PUT to /api/assignments');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.editAssignment)(Email, AssignmentID, ClassID, Name, Description);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.editAssignment)(userID, AssignmentID, ClassID, Name, Description);
             if (success) {
                 console.log('Edit Assignment successful');
                 res.json({
@@ -404,13 +404,13 @@ app.put('/api/assignments', upload.none(), async (req, res) => {
 app.get('/api/submissions', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.query.email);
+    const userID = Number(req.query.user_id);
     const ClassID = Number(req.query.class_id);
     const AssignmentID = Number(req.query.assignment_id);
     try {
         console.log('Received GET to /api/submissions');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(Email, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(userID, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
             if (userSubmissions != undefined) { //query later (proper error handling)
                 if (userSubmissions?.length > 1) {
                     console.log('GET submissions successful');
@@ -440,15 +440,15 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
 app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const AssignmentID = Number(req.body.assignment_id);
     const StudentID = Number(req.body.student_id);
     const SubmissionDate = String(req.body.submission_date); //this isnt being used because we just set it internally anyway
     const SubmissionFilePath = String(req.body.submission_filepath); //and this may be a security vulnerability as u can overwrite if the file has the same name
     try { //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_2.createSubmission)(Email, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.createSubmission)(userID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
             if (success) {
                 console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here
                 res.json({
@@ -477,12 +477,12 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
 app.delete('/api/submissions', upload.none(), async (req, res) => {
     //what we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const SubmissionID = Number(req.body.submission_id);
     try {
         console.log('Received DELETE to /api/submissions');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.deleteSubmission)(Email, SubmissionID); //email is placeholder for now
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.deleteSubmission)(userID, SubmissionID); //email is placeholder for now
             if (success) {
                 console.log('Delete submission successful');
                 res.json({
@@ -510,7 +510,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
 app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     //what we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.body.email);
+    const userID = Number(req.query.user_id);
     const SubmissionID = Number(req.body.submission_id);
     const AssignmentID = Number(req.body.assignment_id);
     const StudentID = Number(req.body.student_id);
@@ -518,8 +518,8 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     const SubmissionFilePath = String(req.body.submission_filepath); //once we fix it lets use the previous filepath 
     try {
         console.log('Received PUT to /api/submissions');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const success = await (0, DatabaseUtil_1.editSubmission)(Email, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_1.editSubmission)(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
             if (success) {
                 console.log('Edit submission successful');
                 res.json({
@@ -548,11 +548,12 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
 app.get('/api/students', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
-    const Email = String(req.query.email);
+    const userID = Number(req.query.user_id);
+    const classID = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/students');
-        if ((0, AuthenticationUtil_1.verifyJWT)(AuthHeader, Email) == true) {
-            const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const studentsList = await (0, DatabaseUtil_2.getStudentsByClass)(userID, classID);
             if (studentsList != undefined) {
                 if (studentsList?.length > 1) {
                     console.log('GET Students successful');
@@ -767,7 +768,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
-        const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
+        const success = await (0, DatabaseUtil_2.createExams)(Number(req.body.user_id), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
         if (success) {
             console.log('Create Exam successful');
             res.send(JSON.stringify(true));
@@ -785,7 +786,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
 app.delete('/api/vivas', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/vivas');
-        const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.body.email), Number(req.body.exam_id));
+        const success = await (0, DatabaseUtil_2.deleteExam)(Number(req.body.user_id), Number(req.body.exam_id));
         if (success) {
             console.log('Delete exam successful');
             res.send(JSON.stringify(true));
@@ -803,7 +804,7 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
 app.put('/api/vivas', upload.none(), async (req, res) => {
     try {
         console.log('Received PUT to /api/vivas');
-        const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
+        const success = await (0, DatabaseUtil_2.editExam)(Number(req.body.user_id), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
         if (success) {
             console.log('Edit exam successful');
             res.send(JSON.stringify(true));
