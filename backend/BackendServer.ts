@@ -5,7 +5,6 @@ import express, { query } from 'express';
 import {Response, Request} from 'express';
 import multer from 'multer';
 import 'dotenv/config';
-import jwt from 'jsonwebtoken';
 
 //AI Imports
 import {AiFactory} from "comp4050ai";

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
 import * as bcrypt from 'bcrypt';
 import { getEmailbyUserID } from './DatabaseUtil';
 
@@ -11,9 +11,6 @@ const SALT_ROUNDS = 10; //how many times(rounds) bcrypt runs salt hashing
 interface JwtPayload {
     email: string;
 }
-
-//initialisation
-dotenv.config();
 
 // JWT Token Verification Authenticaiton
 export async function verifyJWT(AuthHeader: string, userID: number): Promise<boolean> {
