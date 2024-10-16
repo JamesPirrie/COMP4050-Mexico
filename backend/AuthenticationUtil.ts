@@ -1,9 +1,11 @@
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
+import * as bcrypt from 'bcrypt';
 import { getEmailbyUserID } from './DatabaseUtil';
 
 //global variables
 const tokenLifetime: string = "1h";//how long a created token will stay valid for
+const SALT_ROUNDS = 10; //how many times(rounds) bcrypt runs salt hashing
 
 // Defining the interface for the JWT payload
 interface JwtPayload {
@@ -56,4 +58,30 @@ export function generateTokenForLogin(Email : string) : string {
     console.log('Generated Token: '+ token);
 
     return token;
+}
+
+//Function to hash a password using bcrypt
+//param password - The plain text password to hash
+//returns A promise that resolves to the hashed password*/
+export async function hashPassword(password: string): Promise<string> {
+    try {
+        const salt = await bcrypt.genSalt(SALT_ROUNDS);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        return hashedPassword; //store it somewhere.
+    } catch (error) {
+        throw new Error('Error hashing the password');
+    }
+}
+
+//Function to compare a plain text password with a hashed password
+//param password - The plain text password
+//param hash - The hashed password
+//returns A promise that resolves to true if passwords match, false otherwise*/
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+    try {
+        const isMatch = await bcrypt.compare(password, hash);
+        return isMatch;
+    } catch (error) {
+        throw new Error('Error comparing passwords');
+    }
 }
