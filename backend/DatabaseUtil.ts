@@ -313,7 +313,7 @@ export async function getStudentsByClass(user_id: number, specificClass: number)
                     const students = await sql`SELECT * FROM students WHERE student_id IN (${sql(studentIds)});`;
                     return students;
                 } else {
-                    throw new Error('No students not found');
+                    throw new Error('No students found');
                 }
             }
             else {
