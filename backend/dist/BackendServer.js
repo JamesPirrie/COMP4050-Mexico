@@ -833,20 +833,32 @@ app.get('/api/vivas', upload.none(), async (req, res) => {
 });
 app.post('/api/vivas', upload.none(), async (req, res) => {
     //adding viva to submission
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id);
+    const StudentID = Number(req.body.student_id);
     try {
         console.log('Received POST to /api/vivas');
-        const success = await (0, DatabaseUtil_2.createExams)(Number(req.body.user_id), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
-        if (success) {
-            console.log('Create Exam successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: Exam Creation Failed');
-            res.send(JSON.stringify(false));
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.createExams)(userID, SubmissionID, StudentID); // more fields added post MVP
+            if (success) {
+                console.log('Create Exam successful');
+                res.json({
+                    success: true,
+                    details: "Viva successfully generated"
+                });
+            }
+            else {
+                console.log('Error: Exam Creation Failed');
+                res.json({
+                    success: false,
+                    details: "failed to create Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Exam Creation Attempt Failed', error);
+        console.log('Error within POST vivas' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -854,20 +866,31 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 app.delete('/api/vivas', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ExamID = Number(req.body.exam_id);
     try {
         console.log('Received DELETE to /api/vivas');
-        const success = await (0, DatabaseUtil_2.deleteExam)(Number(req.body.user_id), Number(req.body.exam_id));
-        if (success) {
-            console.log('Delete exam successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: exam Deletion Failed');
-            res.send(JSON.stringify(false));
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.deleteExam)(userID, ExamID);
+            if (success) {
+                console.log('Delete exam successful');
+                res.json({
+                    success: true,
+                    details: "Viva successfully deleted"
+                });
+            }
+            else {
+                console.log('Error: exam Deletion Failed');
+                res.json({
+                    success: false,
+                    details: "failed to delete Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: exam Deletion Attempt Failed', error);
+        console.log('Error within DELETE vivas' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -875,20 +898,36 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 app.put('/api/vivas', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ExamID = Number(req.body.exam_id);
+    const SubmissionID = Number(req.body.submission_id);
+    const StudentID = Number(req.body.student_id);
+    const ExaminerID = Number(req.body.examiner_id);
+    const Marks = Number(req.body.marks);
+    const Comments = String(req.body.comments);
     try {
         console.log('Received PUT to /api/vivas');
-        const success = await (0, DatabaseUtil_2.editExam)(Number(req.body.user_id), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
-        if (success) {
-            console.log('Edit exam successful');
-            res.send(JSON.stringify(true));
-        }
-        else {
-            console.log('Error: exam Edit Failed');
-            res.send(JSON.stringify(false));
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await (0, DatabaseUtil_2.editExam)(userID, ExamID, SubmissionID, StudentID, ExaminerID, Marks, Comments);
+            if (success) {
+                console.log('Edit exam successful');
+                res.json({
+                    success: true,
+                    details: "Viva successfully edited"
+                });
+            }
+            else {
+                console.log('Error: exam Edit Failed');
+                res.json({
+                    success: false,
+                    details: "failed to edit Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: exam Edit Attempt Failed', error);
+        console.log('Error within PUT vivas' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
