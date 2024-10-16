@@ -13,7 +13,7 @@ interface JwtPayload {
 dotenv.config();
 
 // JWT Token Verification Authenticaiton
-export function verifyJWT(AuthHeader: string, claimedEmail: string): boolean {
+export function verifyJWT(AuthHeader: string, userID: number, User_idEmail: string): boolean {
     try {
         if(!AuthHeader.startsWith('Bearer ')){
             throw new Error("Error: Could not read authentication token in authentication header");
@@ -37,6 +37,7 @@ export function verifyJWT(AuthHeader: string, claimedEmail: string): boolean {
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
         }
+        const claimedEmail = User_idEmail;
         if (email != claimedEmail){
             throw new Error('Token not matched to claimed email');
         }
