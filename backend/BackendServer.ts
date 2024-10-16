@@ -12,7 +12,7 @@ import {AiFactory} from "comp4050ai";
 
 //Local Imports
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass} from "./DatabaseUtil";
-import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam} from "./DatabaseUtil";
+import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID} from "./DatabaseUtil";
 import {generateTokenForLogin, verifyJWT} from './AuthenticationUtil';
 
 //Globals
@@ -137,11 +137,13 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id)
     const Email: string = String(req.query.email);
     try {
-        console.log('Received GET to /api/classes');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const userClasses = await getClasses(Email);//get the classes for the user assigned to that email
+        console.log('Received GET to /api/classes');        
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const userClasses = await getClasses(userID);//get the classes for the user assigned to that email
             if(userClasses != undefined){                               //because userClasses.length only works here not != null and because userClasses is optional
                 if (userClasses?.length > 1) {                          //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                     console.log('GET classes successful' + userClasses);
@@ -173,15 +175,16 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const Session : number = Number(req.body.session);
     const Year: number = Number(req.body.year);
     const Title: string = String(req.body.title);
     const Code: string = String(req.body.code);
     try {
         console.log('Received POST to /api/classes');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await createClass(Email, Session, Year, Title, Code);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await createClass(userID, Session, Year, Title, Code);
             if (success) {
                 console.log('Create class successful');
                 res.send({
@@ -210,12 +213,13 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const ClassID: number = Number(req.body.class_id)
     try{
         console.log('Received DELETE to /api/classes');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await deleteClass(Email, ClassID);//email is placeholder for now
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await deleteClass(userID, ClassID);//email is placeholder for now
             if (success) {
                 console.log(`Delete class successful`);
                 res.json({
@@ -244,7 +248,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
 app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const Session : number = Number(req.body.session);
     const Year: number = Number(req.body.year);
     const Title: string = String(req.body.title);
@@ -252,8 +256,9 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     const ClassID: number = Number(req.body.class_id)
     try{
         console.log('Received PUT to /api/classes');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await editClass(Email, ClassID, Session, Year, Code, Title);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await editClass(userID, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
                 res.json({
@@ -283,12 +288,13 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.query.email);
+    const userID: number = Number(req.query.user_id)
     const ClassID: number = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const userClassAssignments = await getAssignments(Email, ClassID);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const userClassAssignments = await getAssignments(userID, ClassID);
             if (userClassAssignments != undefined) {
                 if(userClassAssignments?.length > 1){         
                     console.log('GET assignments successful');
@@ -319,14 +325,15 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
 app.post('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const ClassID: number = Number(req.body.class_id);
     const Name: string = String(req.body.name);
     const Description: string = String(req.body.description);
     try {
         console.log('Received POST to /api/assignments');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await createAssignment(Email, ClassID, Name, Description); // more fields added post MVP
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await createAssignment(userID, ClassID, Name, Description); // more fields added post MVP
             if (success) {
                 console.log('Create Assignment successful');
                 res.json({
@@ -355,12 +362,13 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
 app.delete('/api/assignments', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const AssignmentID: number = Number(req.body.assignment_id);
     try{
         console.log('Received DELETE to /api/assignments');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await deleteAssignment(Email, AssignmentID);//email is placeholder for now
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await deleteAssignment(userID, AssignmentID);//email is placeholder for now
             if (success) {
                 console.log('Delete Assignment successful');
                 res.json({
@@ -389,15 +397,16 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
 app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const AssignmentID: number = Number(req.body.assignment_id);
     const ClassID: number = Number(req.body.class_id);
     const Name: string = String(req.body.name);
     const Description: string = String(req.body.description);
     try{
         console.log('Received PUT to /api/assignments');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await editAssignment(Email, AssignmentID, ClassID, Name, Description);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await editAssignment(userID, AssignmentID, ClassID, Name, Description);
             if (success) {
                 console.log('Edit Assignment successful');
                 res.json({
@@ -427,13 +436,14 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
 app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{//we might need an endpoint for sending the actual file back to them if needed from frontend
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.query.email);
+    const userID: number = Number(req.query.user_id)
     const ClassID: number = Number(req.query.class_id);
     const AssignmentID: number = Number(req.query.assignment_id);
     try {
         console.log('Received GET to /api/submissions');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const userSubmissions = await getSubmissionsForAssignments(Email, ClassID, AssignmentID);//sending this an assignmentID that doesnt exist results incorrect error fix inside
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const userSubmissions = await getSubmissionsForAssignments(userID, ClassID, AssignmentID);//sending this an assignmentID that doesnt exist results incorrect error fix inside
             if (userSubmissions != undefined) {                                                      //query later (proper error handling)
                 if(userSubmissions?.length > 1){                
                     console.log('GET submissions successful');
@@ -464,15 +474,16 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
 app.post('/api/submissions', upload.single('submission_PDF') , async (req: Request, res: Response) =>{//upload middleware is here
         //What we receive
         const AuthHeader : string = String(req.headers.authorization);
-        const Email: string = String(req.body.email);
+        const userID: number = Number(req.query.user_id)
         const AssignmentID: number = Number(req.body.assignment_id);
         const StudentID: number = Number(req.body.student_id);
         const SubmissionDate: string = String(req.body.submission_date);        //this isnt being used because we just set it internally anyway
         const SubmissionFilePath: string = String(req.body.submission_filepath);//and this may be a security vulnerability as u can overwrite if the file has the same name
     try {                                                                       //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await createSubmission(Email, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await createSubmission(userID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
             if (success) {
                 console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
                 res.json({
@@ -502,12 +513,13 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
 app.delete('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const SubmissionID: number = Number(req.body.submission_id);
     try{
         console.log('Received DELETE to /api/submissions');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await deleteSubmission(Email, SubmissionID);//email is placeholder for now
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await deleteSubmission(userID, SubmissionID);//email is placeholder for now
             if (success){
                 console.log('Delete submission successful');
                 res.json({
@@ -536,7 +548,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
 app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.body.email);
+    const userID: number = Number(req.query.user_id)
     const SubmissionID: number = Number(req.body.submission_id);
     const AssignmentID: number = Number(req.body.assignment_id)
     const StudentID: number = Number(req.body.student_id);
@@ -544,8 +556,9 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
     const SubmissionFilePath: string = String(req.body.submission_filepath);//once we fix it lets use the previous filepath 
     try{
         console.log('Received PUT to /api/submissions');
-        if (verifyJWT(AuthHeader, Email) == true){
-            const success = await editSubmission(Email, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
+            const success = await editSubmission(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
             if(success){
                 console.log('Edit submission successful');
                 res.json({
@@ -575,10 +588,11 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
 app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{//placeholder for now just dumps all students in database
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
-    const Email: string = String(req.query.email);
+    const userID: number = Number(req.query.user_id)
     try{
         console.log('Received GET to /api/students');
-        if (verifyJWT(AuthHeader, Email) == true){
+        const claimedEmail = await getEmailbyUserID(userID);
+        if (verifyJWT(AuthHeader, userID, claimedEmail) == true){
             const studentsList = await getAllStudents();
             if (studentsList != undefined) {
                 if(studentsList?.length > 1){
@@ -805,7 +819,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     //adding viva to submission
     try {
         console.log('Received POST to /api/vivas');
-        const success = await createExams(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
+        const success = await createExams(Number(req.body.user_id), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
         if (success) {
             console.log('Create Exam successful');
             res.send(JSON.stringify(true));
@@ -824,7 +838,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
 app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
     try{
         console.log('Received DELETE to /api/vivas');
-        const success = await deleteExam(JSON.stringify(req.body.email), Number(req.body.exam_id));
+        const success = await deleteExam(Number(req.body.user_id), Number(req.body.exam_id));
         if (success) {
             console.log('Delete exam successful');
             res.send(JSON.stringify(true));
@@ -843,7 +857,7 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
 app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     try{
         console.log('Received PUT to /api/vivas');
-        const success = await editExam(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
+        const success = await editExam(Number(req.body.user_id), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
         if (success) {
             console.log('Edit exam successful');
             res.send(JSON.stringify(true));
