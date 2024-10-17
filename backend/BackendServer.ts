@@ -10,7 +10,7 @@ import 'dotenv/config';
 import {AiFactory} from "comp4050ai";
 
 //Local Imports
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass, getHashedPasswordFromDatabase} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass, getHashedPasswordFromDatabase, updateLastLoggedIn} from "./DatabaseUtil";
 import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID, getStudentsByClass} from "./DatabaseUtil";
 import {comparePassword, generateTokenForLogin, hashPassword, verifyJWT} from './AuthenticationUtil';
 
@@ -77,8 +77,9 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     try {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(Email) === true && await comparePassword(Password, await getHashedPasswordFromDatabase(Email))) {//if the email and password match a user in our database
-                const userID: string = await getUserIDbyEmail(Email);
+                const userID: number = await getUserIDbyEmail(Email);
                 const token: string = generateTokenForLogin(Email, userID);//then generate a token
+                updateLastLoggedIn(userID);
                 console.log('login with: ' + Email + ' successful.');
                 res.send({//and send it
                     success: true,

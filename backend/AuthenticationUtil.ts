@@ -47,7 +47,7 @@ export async function verifyJWT(AuthHeader: string, userID: number): Promise<boo
     }               //and deal with them correctly this is not an issue
 }
 
-export function generateTokenForLogin(Email: string, UserID: string) : string {
+export function generateTokenForLogin(Email: string, UserID: number) : string {
     const tokenbody = {
         email : Email,
         userID: UserID

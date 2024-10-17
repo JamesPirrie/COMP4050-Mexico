@@ -67,6 +67,7 @@ app.post('/api/login', upload.none(), async (req, res) => {
         if (await (0, DatabaseUtil_1.loginUserCheck)(Email) === true && await (0, AuthenticationUtil_1.comparePassword)(Password, await (0, DatabaseUtil_1.getHashedPasswordFromDatabase)(Email))) { //if the email and password match a user in our database
             const userID = await (0, DatabaseUtil_1.getUserIDbyEmail)(Email);
             const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email, userID); //then generate a token
+            (0, DatabaseUtil_1.updateLastLoggedIn)(userID);
             console.log('login with: ' + Email + ' successful.');
             res.send({
                 success: true,

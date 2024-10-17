@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserIDbyEmail = getUserIDbyEmail;
 exports.getEmailbyUserID = getEmailbyUserID;
 exports.loginUserCheck = loginUserCheck;
+exports.updateLastLoggedIn = updateLastLoggedIn;
 exports.getHashedPasswordFromDatabase = getHashedPasswordFromDatabase;
 exports.signupUser = signupUser;
 exports.getUser = getUser;
@@ -66,6 +67,14 @@ async function loginUserCheck(email) {
     try {
         const users = await sql `SELECT * FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
         return users.length ? true : false;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+async function updateLastLoggedIn(userID) {
+    try {
+        await sql `UPDATE users SET last_login_date = NOW() WHERE user_id = ${userID};`;
     }
     catch (error) {
         throw error;

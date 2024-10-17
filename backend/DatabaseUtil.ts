@@ -38,6 +38,15 @@ export async function loginUserCheck(email: string) {
     }
 }
 
+export async function updateLastLoggedIn(userID: number){
+    try{
+        await sql`UPDATE users SET last_login_date = NOW() WHERE user_id = ${userID};`;
+    }
+    catch(error){
+        throw error;
+    }
+}
+
 //get hashed password for a user
 export async function getHashedPasswordFromDatabase(email: string) {
     try {
