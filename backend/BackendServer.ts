@@ -802,12 +802,18 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 if (questions){
                     postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
                 } else {
-                    res.send(JSON.stringify(false));
-                    console.log('Error: Assigning questions to location failed');
+                    console.log('Error within POST qgen: Assigning questions to location failed');
+                    res.json({
+                        success: false,
+                        details: "Could not assign questions to internal storage location"
+                    });
                 }
-            } else {            
-                res.send(JSON.stringify(false));
-                console.log('Error: AI Generation Failed');
+            } else {   
+                console.log('Error within POST qgen: AI Generation Failed');         
+                res.json({
+                    success: false,
+                    details: "AI generation failed"
+                });
             }        
                 
             //verify any questions exist for submission
