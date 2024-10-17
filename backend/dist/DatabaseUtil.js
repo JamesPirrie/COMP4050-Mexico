@@ -279,7 +279,7 @@ async function postAIOutputForSubmission(submission_id, generated_questions) {
 // get AI Gen Questions based on submission id.
 async function getQuestions(submission_id) {
     try {
-        const result = await sql `SELECT * FROM ai_output WHERE submission_id = ${submission_id};`;
+        const result = await sql `SELECT * FROM ai_output WHERE submission_id = ${submission_id} ORDER BY generation_date DESC;`;
         return result.length ? result : null;
     }
     catch (error) {

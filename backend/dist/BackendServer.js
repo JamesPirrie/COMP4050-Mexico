@@ -15,8 +15,9 @@ const DatabaseUtil_1 = require("./DatabaseUtil");
 const DatabaseUtil_2 = require("./DatabaseUtil");
 const AuthenticationUtil_1 = require("./AuthenticationUtil");
 //Globals
-const port = 3000;
-var tempFileName; //memory to store StorageEngine's generated name
+const PORT = 3000;
+const ROOTDIR = __dirname.slice(0, __dirname.length - 5); //get rid of /dist at the end
+var TEMPFILENAME; //memory to store StorageEngine's generated name
 //Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
@@ -26,9 +27,9 @@ const storageEngine = multer_1.default.diskStorage({
         callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
     filename: async (req, file, callBack) => {
-        tempFileName = await (0, DatabaseUtil_2.getEmailbyUserID)(req.body.user_id) + '_' + Date.now() + '.PDF'; //construct a name from the email of the user + unix time
+        TEMPFILENAME = await (0, DatabaseUtil_2.getEmailbyUserID)(req.body.user_id) + '_' + Date.now() + '.PDF'; //construct a name from the email of the user + unix time
         console.log('Received file: ' + file);
-        callBack(null, tempFileName); //notes for now: we are nulling the errors well fix that later
+        callBack(null, TEMPFILENAME); //notes for now: we are nulling the errors well fix that later
     }
 });
 const upload = (0, multer_1.default)({ storage: storageEngine });
@@ -444,6 +445,32 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
         });
     }
 });
+app.get('/api/submissionFile', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
+    try {
+        console.log('Received GET to /api/submissions');
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const filePath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(SubmissionID); //still need permissions check: is userID permitted to access this submissionID?
+            res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                if (error) {
+                    throw error;
+                }
+                else {
+                    console.log('Sent file successfully');
+                }
+            });
+        }
+    }
+    catch (error) {
+        console.log('Error within GET SubmissionFile: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
 app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
@@ -455,7 +482,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
     try { //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            const success = await (0, DatabaseUtil_2.createSubmission)(userID, AssignmentID, StudentID, SubmissionDate, tempFileName);
+            const success = await (0, DatabaseUtil_2.createSubmission)(userID, AssignmentID, StudentID, SubmissionDate, TEMPFILENAME);
             if (success) {
                 console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here
                 res.json({
@@ -526,7 +553,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     try {
         console.log('Received PUT to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            const success = await (0, DatabaseUtil_1.editSubmission)(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, tempFileName);
+            const success = await (0, DatabaseUtil_1.editSubmission)(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, TEMPFILENAME);
             if (success) {
                 console.log('Edit submission successful');
                 res.json({
@@ -954,6 +981,6 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 //start the server
-app.listen(port, () => {
-    console.log('listening at port:', port);
+app.listen(PORT, () => {
+    console.log('listening at port:', PORT);
 });
