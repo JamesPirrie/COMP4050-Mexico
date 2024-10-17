@@ -16,6 +16,7 @@ const DatabaseUtil_2 = require("./DatabaseUtil");
 const AuthenticationUtil_1 = require("./AuthenticationUtil");
 //Globals
 const port = 3000;
+var tempFileName;
 //Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
@@ -24,9 +25,10 @@ const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
         callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
-    filename: (req, file, callBack) => {
+    filename: async (req, file, callBack) => {
+        tempFileName = await (0, DatabaseUtil_2.getEmailbyUserID)(req.body.user_id) + '_' + Date.now() + '.PDF';
         console.log('Received file: ' + file);
-        callBack(null, req.body.submission_filepath.replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
+        callBack(null, tempFileName); //notes for now: we are nulling the errors well fix that later
     } //there is an assumption here that the submission_filepath already has                                                                
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
@@ -63,11 +65,13 @@ app.post('/api/login', upload.none(), async (req, res) => {
     try {
         console.log('Received POST to /api/login');
         if (await (0, DatabaseUtil_1.loginUserCheck)(Email) === true && await (0, AuthenticationUtil_1.comparePassword)(Password, await (0, DatabaseUtil_1.getHashedPasswordFromDatabase)(Email))) { //if the email and password match a user in our database
-            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email); //then generate a token
+            const userID = await (0, DatabaseUtil_1.getUserIDbyEmail)(Email);
+            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email, userID); //then generate a token
             console.log('login with: ' + Email + ' successful.');
             res.send({
                 success: true,
                 token: token,
+                userID: userID,
                 details: "Login Successful"
             });
         }
@@ -76,6 +80,7 @@ app.post('/api/login', upload.none(), async (req, res) => {
             res.json({
                 success: false,
                 token: "",
+                userID: "",
                 details: "Login Failed: Credentials do not match user in system"
             });
         }
@@ -85,6 +90,7 @@ app.post('/api/login', upload.none(), async (req, res) => {
         res.send({
             success: false,
             token: "",
+            userID: "",
             details: `Server encountered error: ${error}` //this method of sending back the error object could be a security concern so we should look into this later
         }); //but for now it will give them some information about the problem
     }
@@ -448,7 +454,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
     try { //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            const success = await (0, DatabaseUtil_2.createSubmission)(userID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+            const success = await (0, DatabaseUtil_2.createSubmission)(userID, AssignmentID, StudentID, SubmissionDate, tempFileName);
             if (success) {
                 console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here
                 res.json({

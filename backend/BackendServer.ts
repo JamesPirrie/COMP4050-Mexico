@@ -13,9 +13,11 @@ import {AiFactory} from "comp4050ai";
 import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass, getHashedPasswordFromDatabase} from "./DatabaseUtil";
 import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID, getStudentsByClass} from "./DatabaseUtil";
 import {comparePassword, generateTokenForLogin, hashPassword, verifyJWT} from './AuthenticationUtil';
+import { time } from 'console';
 
 //Globals
 const port = 3000;
+var tempFileName: string;
 
 //Initialisaion
 const app = express();
@@ -26,9 +28,10 @@ const storageEngine = multer.diskStorage({
     destination: (req, file, callBack) => {
         callBack(null,'./ServerStorage/PDF_Storage');//where the file is saved
     },
-    filename: (req, file, callBack) => {
+    filename: async (req, file, callBack) => {
+        tempFileName = await getEmailbyUserID(req.body.user_id) + '_' +  Date.now() + '.PDF';
         console.log('Received file: ' + file);
-        callBack(null, req.body.submission_filepath.replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
+        callBack(null, tempFileName); //notes for now: we are nulling the errors well fix that later
     }                                                                                   //there is an assumption here that the submission_filepath already has                                                                
 });                                                                                     //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = multer({storage : storageEngine});                                       //-later note looks like it does we good
@@ -75,11 +78,13 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     try {
         console.log('Received POST to /api/login');
         if (await loginUserCheck(Email) === true && await comparePassword(Password, await getHashedPasswordFromDatabase(Email))) {//if the email and password match a user in our database
-                const token: string = generateTokenForLogin(Email);//then generate a token
+                const userID: string = await getUserIDbyEmail(Email);
+                const token: string = generateTokenForLogin(Email, userID);//then generate a token
                 console.log('login with: ' + Email + ' successful.');
                 res.send({//and send it
                     success: true,
                     token: token,
+                    userID: userID,
                     details: "Login Successful"
                 });
         }
@@ -88,6 +93,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
             res.json({
                 success: false,
                 token: "",
+                userID: "",
                 details: "Login Failed: Credentials do not match user in system"
             });
         }
@@ -97,6 +103,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
         res.send({
             success: false,
             token: "",
+            userID: "",
             details:`Server encountered error: ${error}`//this method of sending back the error object could be a security concern so we should look into this later
         });                                             //but for now it will give them some information about the problem
     }      
@@ -471,7 +478,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
     try {                                                                       //so i will rework this but for the rewrite of all these endpoints they can stay for now
         console.log('Received POST to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await createSubmission(userID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+            const success = await createSubmission(userID, AssignmentID, StudentID, SubmissionDate, tempFileName);
             if (success) {
                 console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
                 res.json({

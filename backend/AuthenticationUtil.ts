@@ -47,8 +47,11 @@ export async function verifyJWT(AuthHeader: string, userID: number): Promise<boo
     }               //and deal with them correctly this is not an issue
 }
 
-export function generateTokenForLogin(Email : string) : string {
-    const tokenbody = {email : Email};//contain more later
+export function generateTokenForLogin(Email: string, UserID: string) : string {
+    const tokenbody = {
+        email : Email,
+        userID: UserID
+    };//contain more later
             
     //create the cookie
     const token = jwt.sign(tokenbody, process.env.SECRET_KEY as string, {expiresIn : tokenLifetime});//ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn

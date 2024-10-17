@@ -71,8 +71,11 @@ async function verifyJWT(AuthHeader, userID) {
         throw error; //this will look wierd as we are never explicitly returning false however so long as the endpoints catch the errors
     } //and deal with them correctly this is not an issue
 }
-function generateTokenForLogin(Email) {
-    const tokenbody = { email: Email }; //contain more later
+function generateTokenForLogin(Email, UserID) {
+    const tokenbody = {
+        email: Email,
+        userID: UserID
+    }; //contain more later
     //create the cookie
     const token = jsonwebtoken_1.default.sign(tokenbody, process.env.SECRET_KEY, { expiresIn: tokenLifetime }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
     console.log('Generated Token: ' + token);
