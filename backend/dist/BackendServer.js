@@ -108,7 +108,7 @@ app.post('/api/signup', upload.none(), async (req, res) => {
                 details: `Login for ${Email} successful`
             });
         }
-        else { //only taken is signupuser returns false which is only is email is taken
+        else { //only taken when signupuser returns false which is only is email is taken
             console.log('Error: Sign Up with ' + Email + 'Failed');
             res.json({
                 success: false,
@@ -525,7 +525,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     try {
         console.log('Received PUT to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            const success = await (0, DatabaseUtil_1.editSubmission)(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, SubmissionFilePath);
+            const success = await (0, DatabaseUtil_1.editSubmission)(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, tempFileName);
             if (success) {
                 console.log('Edit submission successful');
                 res.json({
@@ -874,7 +874,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within POST vivas' + error);
+        console.log('Error within POST vivas: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -907,7 +907,7 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within DELETE vivas' + error);
+        console.log('Error within DELETE vivas: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -945,7 +945,7 @@ app.put('/api/vivas', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within PUT vivas' + error);
+        console.log('Error within PUT vivas: ' + error);
         res.json({
             success: false,
             details: `Server encountered error: ${error}`
