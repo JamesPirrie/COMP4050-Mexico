@@ -16,7 +16,7 @@ const DatabaseUtil_2 = require("./DatabaseUtil");
 const AuthenticationUtil_1 = require("./AuthenticationUtil");
 //Globals
 const port = 3000;
-var tempFileName;
+var tempFileName; //memory to store StorageEngine's generated name
 //Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
@@ -26,12 +26,12 @@ const storageEngine = multer_1.default.diskStorage({
         callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
     filename: async (req, file, callBack) => {
-        tempFileName = await (0, DatabaseUtil_2.getEmailbyUserID)(req.body.user_id) + '_' + Date.now() + '.PDF';
+        tempFileName = await (0, DatabaseUtil_2.getEmailbyUserID)(req.body.user_id) + '_' + Date.now() + '.PDF'; //construct a name from the email of the user + unix time
         console.log('Received file: ' + file);
         callBack(null, tempFileName); //notes for now: we are nulling the errors well fix that later
-    } //there is an assumption here that the submission_filepath already has                                                                
-}); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
-const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
+    }
+});
+const upload = (0, multer_1.default)({ storage: storageEngine });
 //GET requests
 app.get('/', (req, res) => {
     console.log('GET request received');
@@ -587,6 +587,7 @@ app.get('/api/students', upload.none(), async (req, res) => {
     }
 });
 app.post('/api/students', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const Email = String(req.body.email); //this is the student email not the user email
@@ -622,6 +623,7 @@ app.post('/api/students', upload.none(), async (req, res) => {
     }
 });
 app.delete('/api/students', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const StudentID = Number(req.body.student_id);
@@ -654,6 +656,7 @@ app.delete('/api/students', upload.none(), async (req, res) => {
     }
 });
 app.put('/api/students', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const Email = String(req.query.email); //this is the student email not the user email
@@ -690,6 +693,7 @@ app.put('/api/students', upload.none(), async (req, res) => {
 });
 //AI endpoints
 app.get('/api/qgen', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.query.user_id);
     const SubmissionID = Number(req.query.submission_id);
@@ -724,7 +728,7 @@ app.get('/api/qgen', upload.none(), async (req, res) => {
     }
 });
 app.post('/api/qgen', upload.none(), async (req, res) => {
-    //We will get Submission ID
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const SubmissionID = Number(req.body.submission_id);
@@ -809,7 +813,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
 });
 //viva endpoints
 app.get('/api/vivas', upload.none(), async (req, res) => {
-    //list viva for a specific submission
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.query.user_id);
     const SubmissionID = Number(req.query.submission_id);
@@ -844,7 +848,7 @@ app.get('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 app.post('/api/vivas', upload.none(), async (req, res) => {
-    //adding viva to submission
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const SubmissionID = Number(req.body.submission_id);
@@ -878,6 +882,7 @@ app.post('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 app.delete('/api/vivas', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const ExamID = Number(req.body.exam_id);
@@ -910,6 +915,7 @@ app.delete('/api/vivas', upload.none(), async (req, res) => {
     }
 });
 app.put('/api/vivas', upload.none(), async (req, res) => {
+    //What we receive
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.body.user_id);
     const ExamID = Number(req.body.exam_id);
