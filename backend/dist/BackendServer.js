@@ -31,15 +31,9 @@ const storageEngine = multer_1.default.diskStorage({
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
 //GET requests
-app.get('/', async (req, res) => {
+app.get('/', (req, res) => {
     console.log('GET request received');
     res.status(200).send('GET request received'); //this is how to do codes
-    const origPass = "ELLOTHIS IS TEST???";
-    const hash = await (0, AuthenticationUtil_1.hashPassword)(origPass);
-    console.log("Original Password: " + origPass);
-    console.log("Hashed Password: " + hash);
-    console.log("DO THEY MATCH? " + await (0, AuthenticationUtil_1.comparePassword)(origPass, hash));
-    console.log(await (0, DatabaseUtil_1.getHashedPasswordFromDatabase)("JOHN@TESTPASS.COM"));
 });
 //POST requests
 app.post('/', upload.none(), (req, res) => {

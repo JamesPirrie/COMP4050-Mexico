@@ -35,17 +35,9 @@ const upload = multer({storage : storageEngine});                               
 
 
 //GET requests
-app.get('/', async (req: Request, res: Response) => {
+app.get('/', (req: Request, res: Response) => {
     console.log('GET request received');
     res.status(200).send('GET request received');//this is how to do codes
-
-    const origPass: string = "ELLOTHIS IS TEST???"
-    const hash: string = await hashPassword(origPass)
-    console.log("Original Password: " + origPass);
-    console.log("Hashed Password: " + hash);
-    console.log("DO THEY MATCH? " + await comparePassword(origPass,hash));
-
-    console.log(await getHashedPasswordFromDatabase("JOHN@TESTPASS.COM"));
 });
 
 //POST requests
