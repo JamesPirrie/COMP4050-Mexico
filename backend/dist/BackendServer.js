@@ -31,9 +31,15 @@ const storageEngine = multer_1.default.diskStorage({
 }); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
 const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
 //GET requests
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     console.log('GET request received');
     res.status(200).send('GET request received'); //this is how to do codes
+    const origPass = "ELLOTHIS IS TEST???";
+    const hash = await (0, AuthenticationUtil_1.hashPassword)(origPass);
+    console.log("Original Password: " + origPass);
+    console.log("Hashed Password: " + hash);
+    console.log("DO THEY MATCH? " + await (0, AuthenticationUtil_1.comparePassword)(origPass, hash));
+    console.log(await (0, DatabaseUtil_1.getHashedPasswordFromDatabase)("JOHN@TESTPASS.COM"));
 });
 //POST requests
 app.post('/', upload.none(), (req, res) => {
@@ -62,7 +68,7 @@ app.post('/api/login', upload.none(), async (req, res) => {
     const Password = String(req.body.password);
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(Email) === true) { //if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
+        if (await (0, DatabaseUtil_1.loginUserCheck)(Email) === true && await (0, AuthenticationUtil_1.comparePassword)(Password, await (0, DatabaseUtil_1.getHashedPasswordFromDatabase)(Email))) { //if the email and password match a user in our database
             const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email); //then generate a token
             console.log('login with: ' + Email + ' successful.');
             res.send({
@@ -92,10 +98,10 @@ app.post('/api/login', upload.none(), async (req, res) => {
 app.post('/api/signup', upload.none(), async (req, res) => {
     //What we receive
     const Email = String(req.body.email);
-    //const Password : string = req.body.password;
+    const Password = req.body.password;
     try {
         console.log('Received POST to /api/signup');
-        if (await (0, DatabaseUtil_1.signupUser)(Email) === true) {
+        if (await (0, DatabaseUtil_1.signupUser)(Email, await (0, AuthenticationUtil_1.hashPassword)(Password)) === true) { //TODO: ADD THE REST OF THE FIELDS
             console.log('signup with: ' + Email + ' successful');
             res.json({
                 success: true,

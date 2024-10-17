@@ -28,13 +28,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyJWT = verifyJWT;
 exports.generateTokenForLogin = generateTokenForLogin;
+exports.hashPassword = hashPassword;
+exports.comparePassword = comparePassword;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const dotenv = __importStar(require("dotenv"));
+require("dotenv/config");
+const bcrypt = __importStar(require("bcrypt"));
 const DatabaseUtil_1 = require("./DatabaseUtil");
 //global variables
 const tokenLifetime = "1h"; //how long a created token will stay valid for
-//initialisation
-dotenv.config();
+const SALT_ROUNDS = 10; //how many times(rounds) bcrypt runs salt hashing
 // JWT Token Verification Authenticaiton
 async function verifyJWT(AuthHeader, userID) {
     try {
@@ -75,4 +77,30 @@ function generateTokenForLogin(Email) {
     const token = jsonwebtoken_1.default.sign(tokenbody, process.env.SECRET_KEY, { expiresIn: tokenLifetime }); //ensure that the first parameter is json {} otherwise it says somethings wrong with expiresIn
     console.log('Generated Token: ' + token);
     return token;
+}
+//Function to hash a password using bcrypt
+//param password - The plain text password to hash
+//returns A promise that resolves to the hashed password*/
+async function hashPassword(password) {
+    try {
+        const salt = await bcrypt.genSalt(SALT_ROUNDS);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        return hashedPassword; //store it somewhere.
+    }
+    catch (error) {
+        throw new Error('Error hashing the password');
+    }
+}
+//Function to compare a plain text password with a hashed password
+//param password - The plain text password
+//param hash - The hashed password
+//returns A promise that resolves to true if passwords match, false otherwise*/
+async function comparePassword(password, hash) {
+    try {
+        const isMatch = await bcrypt.compare(password, hash);
+        return isMatch;
+    }
+    catch (error) {
+        throw new Error('Error comparing passwords');
+    }
 }

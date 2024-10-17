@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserIDbyEmail = getUserIDbyEmail;
 exports.getEmailbyUserID = getEmailbyUserID;
 exports.loginUserCheck = loginUserCheck;
+exports.getHashedPasswordFromDatabase = getHashedPasswordFromDatabase;
 exports.signupUser = signupUser;
 exports.getUser = getUser;
 exports.signup = signup;
@@ -70,16 +71,26 @@ async function loginUserCheck(email) {
         throw error;
     }
 }
+//get hashed password for a user
+async function getHashedPasswordFromDatabase(email) {
+    try {
+        const password = await sql `SELECT pass FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
+        return password[0]['pass']; //return the password string
+    }
+    catch (error) {
+        throw error;
+    }
+}
 // Add user into users table based on placeholder values and the email parameter.
-async function signupUser(email) {
+async function signupUser(email, hashedPassword) {
     try {
         if (await loginUserCheck(email) != true) { //if name isnt already present
-            await sql `INSERT INTO users (username, first_name, last_name, email, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), false)`;
+            await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
             return true;
         }
         else {
-            console.log('email: ' + email + ' already in use');
-            return false;
+            console.log(`email: ${email} already in use`);
+            throw new Error(`Email already in use`);
         }
     }
     catch (error) {
@@ -96,10 +107,10 @@ async function getUser(email) {
     }
 }
 // Signup User via POST request with email
-async function signup(email) {
+async function signup(email, hashedPassword) {
     try {
         if (!await getUser(email)) {
-            return await signupUser(email);
+            return await signupUser(email, hashedPassword);
         }
         return false;
     }

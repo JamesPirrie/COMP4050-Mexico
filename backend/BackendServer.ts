@@ -10,9 +10,9 @@ import 'dotenv/config';
 import {AiFactory} from "comp4050ai";
 
 //Local Imports
-import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass} from "./DatabaseUtil";
+import {addStudent, getAllStudents, getUserIDbyEmail, loginUserCheck, signupUser, getUser, signup, getClasses, getAssignments, getSubmissionsForAssignments, deleteStudent, deleteSubmission, deleteAssignment, deleteClass, editStudent, editSubmission, editClass, editAssignment, getNameOfClass, getHashedPasswordFromDatabase} from "./DatabaseUtil";
 import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, createClass, createAssignment, createSubmission, postAIOutputForSubmission, getExams, createExams, deleteExam, editExam, getEmailbyUserID, getStudentsByClass} from "./DatabaseUtil";
-import {generateTokenForLogin, verifyJWT} from './AuthenticationUtil';
+import {comparePassword, generateTokenForLogin, hashPassword, verifyJWT} from './AuthenticationUtil';
 
 //Globals
 const port = 3000;
@@ -35,9 +35,17 @@ const upload = multer({storage : storageEngine});                               
 
 
 //GET requests
-app.get('/', (req: Request, res: Response) => {
+app.get('/', async (req: Request, res: Response) => {
     console.log('GET request received');
     res.status(200).send('GET request received');//this is how to do codes
+
+    const origPass: string = "ELLOTHIS IS TEST???"
+    const hash: string = await hashPassword(origPass)
+    console.log("Original Password: " + origPass);
+    console.log("Hashed Password: " + hash);
+    console.log("DO THEY MATCH? " + await comparePassword(origPass,hash));
+
+    console.log(await getHashedPasswordFromDatabase("JOHN@TESTPASS.COM"));
 });
 
 //POST requests
@@ -74,14 +82,14 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     const Password : string = String(req.body.password);
     try {
         console.log('Received POST to /api/login');
-        if (await loginUserCheck(Email) === true) {//if the email matches a user in our database NOTE WE NEED TO ADD PASSWORD check here in some form too
-            const token: string = generateTokenForLogin(Email);//then generate a token
-            console.log('login with: ' + Email + ' successful.');
-            res.send({//and send it
-                success: true,
-                token: token,
-                details: "Login Successful"
-            });
+        if (await loginUserCheck(Email) === true && await comparePassword(Password, await getHashedPasswordFromDatabase(Email))) {//if the email and password match a user in our database
+                const token: string = generateTokenForLogin(Email);//then generate a token
+                console.log('login with: ' + Email + ' successful.');
+                res.send({//and send it
+                    success: true,
+                    token: token,
+                    details: "Login Successful"
+                });
         }
         else{
             console.log('Error: Login with ' + Email + 'Failed');//otherwise return success: false with no token
@@ -105,10 +113,10 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
 app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const Email : string = String(req.body.email);
-    //const Password : string = req.body.password;
+    const Password : string = req.body.password;
     try {
         console.log('Received POST to /api/signup');
-        if (await signupUser(Email) === true) {
+        if (await signupUser(Email, await hashPassword(Password)) === true) {//TODO: ADD THE REST OF THE FIELDS
             console.log('signup with: ' + Email + ' successful');
             res.json({
                 success: true,
