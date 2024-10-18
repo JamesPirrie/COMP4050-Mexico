@@ -3,11 +3,15 @@
 {% block title %}VivaMQ New Assignment{% endblock %}
 
 {% block content %}
+<div class="welcome-box">
 <h2>New Assignment</h2>
 <p>This is where we create a new assignment</p>
-<form method="post" id="login" class="login-form">
+</div> 
+<div class="content-box">
+<form method="post" id="login" class="create-form">
     <input type="text" id="name" name="name" placeholder="Assignment Name" required>
     <input type="text" id="desc" name="desc" placeholder="Assignment Description" required>
     <button type="submit">Create</button>
 </form>
+</div>
 {% endblock %}

@@ -107,14 +107,11 @@ def new_class():
 @app.route('/unit')
 def unit():
     classes = getClasses()
-    print(classes)
     for item in classes:
         if item['code'] == request.args.get('class', ''):
+            print(f'comparing {item["code"]} vs {request.args.get("class", "")}')
             class_id = item['class_id']
             session['last_class_id'] = class_id
-        else:
-            print('a')
-            class_id = session['last_class_id']
     return render_template('unit.html', assignments = getAssignments(class_id), students = getStudents(class_id))
 
 #-----------------------------------
@@ -122,12 +119,11 @@ def unit():
 
 @app.route('/assignment')
 def assignment():
-    assignments = getAssignments()
+    assignments = getAssignments(session['last_class_id'])
     for a in assignments:
         if a['name'] == request.args.get('name', ''):
             assignment_id = a['assignment_id']
             session['last_assignment_id'] = assignment_id
-            print(assignment_id)
     submissions = getAssignments(assignment_id)
     return render_template('assignment.html', submissions = submissions)
 
@@ -153,6 +149,16 @@ def newAssignment():
 
 #Student Routes
 @app.route('/student')
+def student():
+    students = getStudents(session['last_class_id'])
+    print(request.args.get('student_id', ''))
+    for s in students:
+        print(f'checking {s["student_id"]} vs {request.args.get("student_id", "")}')
+        if s['student_id'] == int(request.args.get('student_id', '')):
+            student = s
+            session['last_student_id'] = student['student_id']
+    return render_template('student.html', student = student)
+
 @app.route('/new_student', methods=['GET', 'POST'])
 def new_student():
     if request.method == 'POST':
@@ -164,26 +170,6 @@ def new_student():
         postStudent(json)
         return redirect(url_for('classes'))
     return render_template('newStudent.html')
-
-def getStudents(classid):
-    """
-    Gets a list of students for the given class.
-    Args:
-        classid (int): the id of the class to get students for
-    Returns:
-        list: A list of students
-    """
-    return json.loads(requests.get(f'{backend}students?email={user.email}&class_id={classid}').content)
-
-def postStudent(json):
-    """
-    Posts a new student to the backend server.
-    Args:
-        json (dict): A json object containing the student details
-    Returns:
-        response: The response from the server
-    """
-    return requests.post(f'{backend}students', json=json)
 
 #-----------------------------------
 #Viva Routes

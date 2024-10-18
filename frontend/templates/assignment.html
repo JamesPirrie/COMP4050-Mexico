@@ -3,9 +3,17 @@
 {% block title %}Assignment{% endblock %}
 
 {% block content %}
+<div class ="welcome-box">
 <h2>Assignment {{ request.args.get('name', '') }}</h2>
 <p>This is where we view assignment details</p>
+</div>
+<div class="content-box">
 {% for submission in submissions %}
-    <li>{{ submission }}</li>
+    <p>assignment id: {{ submission.assignment_id }}</p>
+    <p>class id: {{ submission.class_id }}</p>
+    <p>name: {{ submission.name }}</p>
+    <p>description: {{ submission.description }}</p>
+    <p>generic questions: {{ submission.generic_questions }}</p>
 {% endfor %}
+</div>
 {% endblock %}
