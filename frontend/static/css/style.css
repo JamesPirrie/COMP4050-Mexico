@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
 
 /* Base */
-
 body {
     font: 1em sans-serif;
 }
@@ -104,6 +103,7 @@ body {
     padding: 10vh 10vw;
     width: 80vw;
 }
+
 .welcome-box {
     background: #E7E4DB;
     border-radius: 10px;
@@ -178,9 +178,6 @@ body {
     background-color: #8b0a1a;
 }
 
-
-
-
 .create-form {
     margin-top: 20px;
 }
@@ -198,7 +195,7 @@ body {
     width: 100%;
     height: 40px;
     background-color: #A6192E;
-    color: #fff;
+    color: #f2f2f2;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -207,3 +204,51 @@ body {
 .create-form button[type="submit"]:hover {
     background-color: #8b0a1a;
 }
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1e1e1e;
+    color: #f4f4f4; 
+}
+
+body.dark-mode .welcome-box,
+body.dark-mode .content-box {
+    background-color: #333;
+    color: #f4f4f4;
+}
+
+body.dark-mode .welcome-box p,
+body.dark-mode .content-box p {
+    color: #f4f4f4; 
+}
+
+body.dark-mode .content-box a {
+    color: #020202; 
+}
+
+body.dark-mode .add-button {
+    background-color: #897777; 
+}
+
+body.dark-mode .add-button:hover {
+    background-color: #7a5e5e;
+}
+
+body.dark-mode .toolbar {
+    background-color: #2e2e2e; 
+}
+
+body.dark-mode .toolbar-button {
+    background-color: #555; 
+    color: #f4f4f4; 
+}
+
+body.dark-mode .header {
+    background-color: #333;
+    border-bottom: 1px solid #555; 
+}
+
+body.dark-mode .heading {
+    color: #ffffff; 
+}
+

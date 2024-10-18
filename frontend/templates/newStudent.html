@@ -16,4 +16,11 @@
     </form>
 </div>
 
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+
 {% endblock %}
