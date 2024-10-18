@@ -10,4 +10,12 @@
     <input type="text" id="desc" name="desc" placeholder="Assignment Description" required>
     <button type="submit">Create</button>
 </form>
+
+
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 {% endblock %}

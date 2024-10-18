@@ -13,4 +13,11 @@
     <img src="{{ url_for('static', filename='icons/plus.png') }}" alt="New Project">
     </a>
 </div>
+
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 {% endblock %}

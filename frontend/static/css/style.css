@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
 
 /* Base */
-
 body {
     font: 1em sans-serif;
 }
@@ -104,6 +103,7 @@ body {
     padding: 10vh 10vw;
     width: 80vw;
 }
+
 .welcome-box {
     background: #E7E4DB;
     border-radius: 10px;
@@ -178,9 +178,6 @@ body {
     background-color: #8b0a1a;
 }
 
-
-
-
 .create-form {
     margin-top: 20px;
 }
@@ -207,3 +204,51 @@ body {
 .create-form button[type="submit"]:hover {
     background-color: #8b0a1a;
 }
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1e1e1e; /* Background for the body */
+    color: #f4f4f4; /* Default text color */
+}
+
+body.dark-mode .welcome-box,
+body.dark-mode .content-box {
+    background-color: #333; /* Background for boxes */
+    color: #f4f4f4; /* Text color in boxes */
+}
+
+body.dark-mode .welcome-box p,
+body.dark-mode .content-box p {
+    color: #f4f4f4; /* Ensure paragraphs in boxes have correct color */
+}
+
+body.dark-mode .content-box a {
+    color: #f4f4f4; /* Link color */
+}
+
+body.dark-mode .add-button {
+    background-color: #555; /* Add button background in dark mode */
+}
+
+body.dark-mode .add-button:hover {
+    background-color: #3a1111; /* Add button hover color */
+}
+
+body.dark-mode .toolbar {
+    background-color: #2e2e2e; /* Sidebar color */
+}
+
+body.dark-mode .toolbar-button {
+    background-color: #555; /* Toolbar button background */
+    color: #f4f4f4; /* Toolbar button text color */
+}
+
+body.dark-mode .header {
+    background-color: #333; /* Header color */
+    border-bottom: 1px solid #555; /* Header border */
+}
+
+body.dark-mode .heading {
+    color: #ffffff; /* Heading color in dark mode */
+}
+

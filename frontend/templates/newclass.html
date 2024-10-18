@@ -8,10 +8,17 @@
     <p>This is where we create a new class</p>
 </div>
 <div class="content-box">
-    <form method="post" id="login" class="create-form">
+    <form method="post" id="createClassForm" class="create-form">
         <input type="text" id="name" name="name" placeholder="Unit Name" required>
         <input type="text" id="code" name="code" placeholder="Unit Code" required>
         <button type="submit">Create</button>
     </form>
 </div>
+
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 {% endblock %}

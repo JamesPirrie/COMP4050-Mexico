@@ -70,4 +70,11 @@ function displayGeneratedQuestions(questions) {
 // Example usage:
 // displayGeneratedQuestions(['Question 1', 'Question 2', 'Question 3']);
 </script>
+
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 {% endblock %}

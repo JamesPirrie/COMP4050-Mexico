@@ -27,7 +27,13 @@
         </div>
     </div>
 </div>
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 
+<!-- Darkmode  -->
 <div id="popup" class="popup">
     <!-- Popup content goes here -->
 </div>
