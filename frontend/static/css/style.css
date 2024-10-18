@@ -145,10 +145,23 @@ body {
 }
 
 .content-box .link {
+    position: relative;
+    height: 24px;
     border-radius: 5px;
     background-color: #ffffff;
     margin: 10px;
     padding: 10px;
+}
+
+.content-box .link a {
+    position: absolute;
+    top: 8px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    color: #000;
+    text-decoration: none; /* No underlines on the link */
+    z-index: 10; /* Places the link above everything else in the div */
 }
 
 .content-box a {
@@ -164,6 +177,8 @@ body {
 }
 
 .content-box .add-button {
+    position: relative;
+    height: 24px;
     border-radius: 5px;
     background-color: #A6192E;
     margin: 5px;
@@ -171,7 +186,14 @@ body {
 }
 
 .content-box .add-button a {
+    position: absolute;
+    top: 8px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
     color: #fff;
+    text-decoration: none; /* No underlines on the link */
+    z-index: 10; /* Places the link above everything else in the div */
 }
 
 .content-box .add-button:hover {

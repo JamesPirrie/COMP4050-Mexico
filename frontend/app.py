@@ -150,13 +150,8 @@ def newAssignment():
 #Student Routes
 @app.route('/student')
 def student():
-    students = getStudents(session['last_class_id'])
-    print(request.args.get('student_id', ''))
-    for s in students:
-        print(f'checking {s["student_id"]} vs {request.args.get("student_id", "")}')
-        if s['student_id'] == int(request.args.get('student_id', '')):
-            student = s
-            session['last_student_id'] = student['student_id']
+    student = getStudentSingle(session['last_class_id'], request.args.get('student_id', ''))
+    session['last_student_id'] = student['student_id']
     return render_template('student.html', student = student)
 
 @app.route('/new_student', methods=['GET', 'POST'])
@@ -217,6 +212,19 @@ def generate():
 #-----------------------------------
 #Helper Functions
 
+def getStudentSingle(classid, id):
+    """
+    Gets a single student for the current user.
+    Returns:
+        dict: A single student
+    """
+    students = getStudents(classid)
+    for s in students:
+        if s['student_id'] == int(id):
+            return s
+    return ''
+
+#-----------------------------------
 #Login functions
 def login(json = {'email': user.email}):
     """
