@@ -286,6 +286,40 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
 });
 
+app.post('/api/classesStudents', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const StudentID: number = Number(req.body.student_id);
+    const ClassID: number = Number(req.body.class_id);
+    try{
+        //TODO ADD STUDENTS TO CLASS
+    }
+    catch(error){
+        console.log('Error within POST classesStudents: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const StudentID: number = Number(req.body.student_id);
+    const ClassID: number = Number(req.body.class_id);
+    try{
+        //TODO REMOVE STUDENTS FROM CLASS
+    }
+    catch(error){
+        console.log('Error within DELETE classesStudents: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =>{
     //What we receive

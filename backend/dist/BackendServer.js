@@ -268,6 +268,38 @@ app.put('/api/classes', upload.none(), async (req, res) => {
         });
     }
 });
+app.post('/api/classesStudents', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const StudentID = Number(req.body.student_id);
+    const ClassID = Number(req.body.class_id);
+    try {
+        //TODO ADD STUDENTS TO CLASS
+    }
+    catch (error) {
+        console.log('Error within POST classesStudents: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+app.delete('/api/classesStudents', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const StudentID = Number(req.body.student_id);
+    const ClassID = Number(req.body.class_id);
+    try {
+        //TODO REMOVE STUDENTS FROM CLASS
+    }
+    catch (error) {
+        console.log('Error within DELETE classesStudents: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req, res) => {
     //What we receive
