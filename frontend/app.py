@@ -124,7 +124,7 @@ def assignment():
         if a['name'] == request.args.get('name', ''):
             assignment_id = a['assignment_id']
             session['last_assignment_id'] = assignment_id
-    submissions = getAssignments(assignment_id)
+    submissions = getSubmissions(assignment_id, session['last_class_id'])     #Changed to getSubmissions
     return render_template('assignment.html', submissions = submissions)
 
 @app.route('/newAssignment', methods = ['GET', 'POST'])
@@ -196,7 +196,7 @@ def new_project():
         jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': pdf.filename}
         postSubmission(files, jsons)
         return redirect(url_for('unit'))
-    return render_template('newProject.html', students=students)
+    return render_template('newProject.html', students=students, assignment_name=assignment_name)
 
 @app.route('/logout')
 def logout():

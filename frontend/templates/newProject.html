@@ -3,28 +3,6 @@
 {% block title %}New Project - VivaMQ{% endblock %}
 
 {% block content %}
-
-<!-- <div class ="welcome-box">
-    <h2>Viva for {{ request.args.get('assignment_id', '') }}</h2>
-    <p> Assign a Student: </p>
-    </div>
-    <div class="columns-container">
-        <div class="column">
-            <h3>Viva Questions</h3>
-                <p>Write your own questions below</p>
-                <input type="text" id="manual_qs" name="manual_qs" placeholder="Enter your own Questions" style="min-width:100%;">
-        </div>
-        <div class="column">
-            <h3>Use our AI Tool</h3>
-            <p>Upload a document and generate some questions below.</p>
-            <form method="post" enctype="multipart/form-data" class="upload-generate-container">
-                <input type="file" name="pdf_file" id="pdf_file" accept=".pdf">
-                <button type="submit" class="small-button">Generate/Regenerate</button>
-            </form>
-        </div>
-        
-    </div> -->
-
     <div class="welcome-box">
         <h2>Viva for {{ assignment_name }}</h2>
         
@@ -38,22 +16,27 @@
             </select>
         </form>
     </div>
-
             
-            <div class="columns-container">
-                <div class="column">
-                    <h3>Viva Questions</h3>
-                    <p>Write your own questions below</p>
-                    <textarea name="questions" rows="10" cols="30" placeholder="Write your own questions here" style="resize:none; width:100%"></textarea>
-                </div>
-                
-                <div class="column">
-                    <h3>Use our AI Tool</h3>
-                    <p>Upload a document and generate some questions below.</p>
-                    <input type="file" name="pdf_file" accept=".pdf" required>
-                    <button type="submit" class="small-button">Generate/Regenerate</button>
-                </div>
-            </div>
+    <div class="columns-container">
+        <div class="column">
+            <h3>Viva Questions</h3>
+            <p>Write your own questions below</p>
+            <textarea name="questions" rows="15" cols="30" placeholder="Write your own questions here" style="resize:none; width:100%"></textarea>
+        </div>
+        
+        <div class="column">
+            <h3>Use our AI Tool</h3>
+            <p>Upload a document and generate some questions below.</p>
+            <input type="file" name="pdf_file" accept=".pdf" style="padding: 10px;">
+            <button type="submit" class="small-button">Generate/Regenerate</button>
+        </div>
+    </div>
+
+    <div class = "content-box">
+        <form method="post" id="createViva" class="create-form">
+            <button type="submit">Create</button>
+        </form>
+    </div>
 
 
 
