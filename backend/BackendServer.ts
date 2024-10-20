@@ -785,6 +785,7 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
 });
 
 //AI endpoints
+//AI Question Generation 
 app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
@@ -812,50 +813,50 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 }
             }
         }
-        catch(error){
-            console.log('Error within GET qgen: ', error);
-            res.json({
-                success: false,
-                details: `Server encountered error: ${error}`
-            });
-        }
-    });
+    catch(error){
+        console.log('Error within GET qgen: ', error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
 
-    app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
-        //What we receive
-        const AuthHeader : string = String(req.headers.authorization);
-        const userID: number = Number(req.body.user_id);
-        const SubmissionID: number = Number(req.body.submission_id);
-        try {
-            if (await verifyJWT(AuthHeader, userID) == true){
+app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const SubmissionID: number = Number(req.body.submission_id);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
             const apiKey = process.env.OPENAI_API_KEY || '';
-            
-            if(!apiKey){
+
+            if (!apiKey) {
                 console.log('Error: API_KEY could not be read inside .env')
             }
 
             let pdfPath; //Refers to file name not full path.
-            try {            
+            try {
                 pdfPath = await getSubmissionFilePathForSubID(SubmissionID);
             }
             catch (error) {
                 console.log('Error: Get Submission Path from Sub ID Failed', error);
             }
-            
-            //Construct Mock AI
-            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage','./ServerStorage/qGEN', apiKey);
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
 
             //Writes questions/answers file to "./ServerStorage" specified in constructor
             let doc_id;
-            try {            
+            try {
                 const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);//currently generating 6 questions
-                doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json");
+                doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);
             }
 
-            if(doc_id){
+            if (doc_id) {
                 //Accesses the storage location specified in the contructor
                 let questions;
                 try {
@@ -865,7 +866,7 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     console.log('Error: Assigning questions to location failed', error);
                 }
                 //Insert generated AI Questions into results table for submission_id
-                if (questions){
+                if (questions) {
                     postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
                 } else {
                     console.log('Error within POST qgen: Assigning questions to location failed');
@@ -874,25 +875,25 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                         details: "Could not assign questions to internal storage location"
                     });
                 }
-            } else {   
-                console.log('Error within POST qgen: AI Generation Failed');         
+            } else {
+                console.log('Error within POST qgen: AI Generation Failed');
                 res.json({
                     success: false,
                     details: "AI generation failed"
                 });
-            }        
-                
+            }
+
             //verify any questions exist for submission
             // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
-            const foundAIQs = getQuestions(SubmissionID); 
-            if (foundAIQs != null){
+            const foundAIQs = getQuestions(SubmissionID);
+            if (foundAIQs != null) {
                 console.log('AI question generation successful');
                 res.json({
                     success: true,
                     details: "Questions successfully generated"
                 });
             }
-            else{
+            else {
                 console.log('Error: AI Question Generation Failed');
                 res.json({
                     success: false,
@@ -900,7 +901,187 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 });
             }
         }
-	}
+    }
+	catch (error) {
+	    console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+	}	
+});
+
+//AI Rubric Generate and Return
+app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    const ProjectOverview: string = String(req.query.project_overview);
+    const Criteria: string[] = req.query.criteria;
+    const Topics: string[] = req.query.topics;
+    const Goals: string[] = req.query.goals;
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            pdfPath = String(req.headers.ProjectOverview);
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id;
+            let rubric;
+            try {
+                rubric = await ai.createRubric(ProjectOverview,Criteria,Topics,Goals);
+            }
+            catch (error) {
+                console.log('Error: AI Rubric Generation Failed', error);
+            }
+            if (rubric != undefined) {
+                if(rubric?.length > 0){
+                    console.log('GET Rubric successful');
+                    res.json({
+                        data: rubric,
+                        details: "Rubric generation/get successfully"
+                    });
+                }
+            }
+            else{
+                console.log('Error: Generated Rubric not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Rubric not found"
+                });
+            }
+        }
+    }
+	catch (error) {
+	    console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+	}	
+});
+
+//AI Summary Generate and Return
+app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await getSubmissionFilePathForSubID(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes summary file to Promise<string>
+            let summary;
+            try {
+                let summary = await ai.summarizeSubmission(pdfPath)
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+
+            if (summary != undefined) {
+                console.log('GET Summary successful');
+                    res.json({
+                        data: summary,
+                        details: "Summary generation/get successfully"
+                });
+            }
+            else{
+                console.log('Error: Generated Summary not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Summary not found"
+                });
+            }
+        }
+    }
+	catch (error) {
+	    console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+	}	
+});
+
+// TODO Clarify with AI team about the nature of "Rubric" input
+//AI Feedback Generate and Return
+app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    const Rubric: string = String(req.query.rubric);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await getSubmissionFilePathForSubID(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes feedback file to Promise<string>
+            let feedback;
+            try {
+                let feedback = await ai.generateFeedback("sample.pdf", Rubric);
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+
+            if (feedback != undefined) {
+                console.log('GET Feedback successful');
+                    res.json({
+                        data: feedback,
+                        details: "Feedback generation/get successfully"
+                });
+            }
+            else{
+                console.log('Error: Generated Feedback not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Feedback not found"
+                });
+            }
+        }
+    }
 	catch (error) {
 	    console.log('Error within POST qgen: ' + error);
         res.json({
