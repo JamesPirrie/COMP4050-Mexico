@@ -39,7 +39,7 @@ Many endpoints are the same however:
 - Output parameters : { 
     success: boolean, 
     details: string
-- }
+}
 - Description: Used for signing up a user
 
 # Class endpoints
@@ -119,29 +119,32 @@ Many endpoints are the same however:
 - Output parameters : {
     
 }
-- Description: Gets a list of all students 
+- Description: Gets a list of all students in database
 
 `POST  /api/students - Adding students to the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, student_id: number, first_name: string, last_name: string, email: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-Description: Creates a new student
+- Description: Creates a new student in database
 `PUT  /api/students - Editing students in the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, student_id: number, first_name: string, last_name: string, email: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: Edits student in database
 `DELETE  /api/students - Deleting students from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, student_id: number
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: Deletes student at student_id from the whole database
 # Assignment endpoints
 `GET  /api/assignments - Getting assignments from the database`
 - Token in Authentication Header: Required
@@ -173,45 +176,45 @@ Description: Creates a new student
 - Description:
 # AI Question endpoints
 `GET  /api/qgen - Getting generated questions from the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
 `POST  /api/qgen - Generating and then adding questions to the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
 # Viva endpoints
 `GET  /api/vivas - Getting vivas from the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
 `POST  /api/vivas - Adding vivas to the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
 `PUT  /api/vivas - Editing vivas in the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
 `DELETE  /api/vivas - Deleting vivas from the database`
-Token in Authentication Header: Required
-Input parameters:
-Output parameters : {
+- Token in Authentication Header: Required
+- Input parameters:
+- Output parameters : {
     
 }
 - Description:
