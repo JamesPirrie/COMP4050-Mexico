@@ -183,11 +183,17 @@ def settings():
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
     students = getStudents(session['last_class_id'])
+    assignment_name = ""
+    assignments = getAssignments(session['last_class_id'])
+    for a in assignments:
+        if a['assignment_id'] == session['last_assignment_id']:
+            assignment_name = a['name']
+
     if request.method == 'POST':
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
-        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': 'this_unit_will_end_me.pdf'}
+        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': pdf.filename}
         postSubmission(files, jsons)
         return redirect(url_for('unit'))
     return render_template('newProject.html', students=students)

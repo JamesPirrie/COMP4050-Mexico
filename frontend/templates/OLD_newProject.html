@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}New Project - VivaMQ{% endblock %}
+
+{% block content %}
+
+<div class="newProjcontent">
+    <div class="project-info">
+        <div class="project-title">Project Information</div>
+        <input type="text" class="editable-title" placeholder="Enter project title">
+    </div>
+
+    <div class="columns-container">
+        <div class="column">
+            <h3>Viva Questions</h3>
+            <p>Write your own questions below</p>
+            <textarea class="question-box" placeholder="Enter your questions here..."></textarea>
+        </div>
+        <div class="column">
+            <h3>Use our AI Tool</h3>
+            <p>Upload a document and generate some questions below.</p>
+            <form method="post" enctype="multipart/form-data" class="upload-generate-container">
+                <label class="upload-button">
+                    <img src="{{ url_for('static', filename='icons/upload.png') }}" alt="Upload">
+                    <input type="file" name="pdf_file" id="pdf_file" accept=".pdf">
+                </label>
+                <button type="submit" class="generate-button">Generate/Regenerate</button>
+            </form>
+            <div class="generated-questions" id="generated-questions">
+                <!-- Generated questions will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <a href="vivas.html" class="cancel-button">Cancel</a>
+        <a href="vivas.html" class="save-button">Save</a>
+    </div>
+</div>
+</div>
+</div>
+
+<script>
+function uploadPDF() {
+    const form = document.getElementById('uploadForm');
+    const formData = new FormData(form);
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle the response from the backend
+        if (data.questions) {
+            displayGeneratedQuestions(data.questions);
+        } else {
+            alert('Failed to generate questions. Please try again.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// This script will handle the display of generated questions from JSON
+function displayGeneratedQuestions(questions) {
+    const container = document.getElementById('generated-questions');
+    container.innerHTML = questions.map(q => `<p>${q}</p>`).join('');
+}
+
+// Example usage:
+// displayGeneratedQuestions(['Question 1', 'Question 2', 'Question 3']);
+</script>
+
+<!-- Darkmode  -->
+<script>
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+{% endblock %}

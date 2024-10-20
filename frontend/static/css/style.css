@@ -243,12 +243,16 @@ body {
     background-color: #A6192E;
     color: white;
     font-size: 14px;
+    width: 95%;
     border: none;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
     flex-grow: 1;
     margin-left: 10px;
+}
+.small-button-hover {
+    background-color: #8b0a1a;
 }
 
 
