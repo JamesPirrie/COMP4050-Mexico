@@ -227,6 +227,31 @@ body {
     background-color: #8b0a1a;
 }
 
+/* Global Column Design Boxes */
+.columns-container {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+}
+.column {
+    flex: 1;
+    background-color: #E7E4DB;
+    padding: 25px;
+    border-radius: 10px;
+}
+.small-button {
+    background-color: #A6192E;
+    color: white;
+    font-size: 14px;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+
 /* Dark mode styles */
 body.dark-mode {
     background-color: #1e1e1e;

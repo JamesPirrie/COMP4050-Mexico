@@ -182,7 +182,7 @@ def settings():
 
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
-    students = getStudents()
+    students = getStudents(session['last_class_id'])
     if request.method == 'POST':
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}

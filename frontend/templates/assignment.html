@@ -4,16 +4,34 @@
 
 {% block content %}
 <div class ="welcome-box">
-<h2>Assignment {{ request.args.get('name', '') }}</h2>
-<p>This is where we view assignment details</p>
+<h2>{{ request.args.get('name', '') }}</h2>
+{% if submissions %}
+        <p>About: {{ submissions[0].description }}</p>
+    {% else %}
+        <p>No description available for this assignment.</p>
+    {% endif %}
 </div>
 <div class="content-box">
-{% for submission in submissions %}
+<!-- {% for submission in submissions %}
     <p>assignment id: {{ submission.assignment_id }}</p>
     <p>class id: {{ submission.class_id }}</p>
     <p>name: {{ submission.name }}</p>
     <p>description: {{ submission.description }}</p>
     <p>generic questions: {{ submission.generic_questions }}</p>
-{% endfor %}
+{% endfor %} -->
+
+{% if vivas %}
+{% for viva in vivas %}
+        <div class="link">
+            <a href="{{ url_for('new_project', name=assignment['name']) }}">{{ assignment['name'] }}</a>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="placeholder-text">There are no vivas for this assignment.</p>
+{% endif %}
+
+    <div class="add-button">
+        <a href="{{ url_for('new_project', class_id=request.args.get('class', '')) }}" id="add-submission-button">Add Viva</a>
+    </div>
 </div>
 {% endblock %}

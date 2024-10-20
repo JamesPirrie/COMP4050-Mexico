@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<div class="newProjcontent">
+<!-- <div class="newProjcontent">
     <div class="project-info">
         <div class="project-title">Project Information</div>
         <input type="text" class="editable-title" placeholder="Enter project title">
@@ -27,7 +27,7 @@
                 <button type="submit" class="generate-button">Generate/Regenerate</button>
             </form>
             <div class="generated-questions" id="generated-questions">
-                <!-- Generated questions will be displayed here -->
+                Generated questions will be displayed here
             </div>
         </div>
     </div>
@@ -38,9 +38,9 @@
     </div>
 </div>
 </div>
-</div>
+</div> -->
 
-<script>
+<!-- <script>
 function uploadPDF() {
     const form = document.getElementById('uploadForm');
     const formData = new FormData(form);
@@ -69,7 +69,30 @@ function displayGeneratedQuestions(questions) {
 
 // Example usage:
 // displayGeneratedQuestions(['Question 1', 'Question 2', 'Question 3']);
-</script>
+</script> -->
+
+<div class ="welcome-box">
+    <h2>Viva for {{ request.args.get('assignment_id', '') }}</h2>
+    <p> Assign a Student: </p>
+    </div>
+    <div class="columns-container">
+        <div class="column">
+            <h3>Viva Questions</h3>
+                <p>Write your own questions below</p>
+                <input type="text" id="manual_qs" name="manual_qs" placeholder="Enter your own Questions" style="min-width:100%;">
+        </div>
+        <div class="column">
+            <h3>Use our AI Tool</h3>
+            <p>Upload a document and generate some questions below.</p>
+            <form method="post" enctype="multipart/form-data" class="upload-generate-container">
+                <input type="file" name="pdf_file" id="pdf_file" accept=".pdf">
+                <button type="submit" class="small-button">Generate/Regenerate</button>
+            </form>
+        </div>
+        
+    </div>
+
+
 
 <!-- Darkmode  -->
 <script>
