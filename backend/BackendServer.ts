@@ -125,14 +125,14 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
             console.log('signup with: ' + Email + ' successful');
             res.json({
                 success: true,
-                details: `Login for ${Email} successful`
+                details: `Signup for ${Email} successful`
             });
         }
         else{//only taken when signupuser returns false which is only is email is taken
             console.log('Error: Sign Up with ' + Email + 'Failed');
             res.json({
                 success: false,
-                details: `Login for ${Email} failed: email is already taken`
+                details: `Signup for ${Email} failed: email is already taken`
             });
         }
     }

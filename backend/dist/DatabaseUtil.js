@@ -12,7 +12,7 @@ class dbUtils {
     // Convert email to user_id. Returns integer if found, null otherwise.
     async getUserIDbyEmail(email) {
         try {
-            const users = await sql `SELECT user_id FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
+            const users = await sql `SELECT user_id FROM users WHERE email LIKE ${email};`;
             return users.length ? users[0]['user_id'] : null;
         }
         catch (error) {
@@ -32,7 +32,7 @@ class dbUtils {
     // Check if user email exists. Return false otherwise.
     async loginUserCheck(email) {
         try {
-            const users = await sql `SELECT * FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
+            const users = await sql `SELECT * FROM users WHERE email LIKE ${email};`;
             return users.length ? true : false;
         }
         catch (error) {
@@ -50,7 +50,7 @@ class dbUtils {
     //get hashed password for a user
     async getHashedPasswordFromDatabase(email) {
         try {
-            const password = await sql `SELECT pass FROM users WHERE email LIKE TRIM(both '"' from ${email});`;
+            const password = await sql `SELECT pass FROM users WHERE email LIKE ${email};`;
             return password[0]['pass']; //return the password string
         }
         catch (error) {
@@ -61,7 +61,7 @@ class dbUtils {
     async signupUser(email, hashedPassword, user_name, first_name, last_name) {
         try {
             if (await this.loginUserCheck(email) != true) { //if name isnt already present
-                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
+                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, ${email}, ${hashedPassword}, false)`;
                 return true;
             }
             else {
@@ -118,7 +118,7 @@ class dbUtils {
             //we should probably add some sort of class already exists protection in future
             if (users) {
                 await sql `INSERT INTO class (author_id, session, year, title, code, creation_date, expiry_date) VALUES
-                                            (${users}, ${session}, ${year}, TRIM(both '"' from ${title}), TRIM(both '"' from ${code}), NOW(), NOW() + '1 year');`; //the TRIM bit is because this has "" on it because typescript/javascript
+                                            (${users}, ${session}, ${year}, ${title}, ${code}, NOW(), NOW() + '1 year');`;
                 return true;
             }
             else
@@ -152,7 +152,7 @@ class dbUtils {
     async createAssignment(user_id, class_id, name, description) {
         try {
             const users = user_id;
-            await sql `INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, TRIM(both '"' from ${name}), TRIM(both '"' from ${description}));`;
+            await sql `INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, ${name}, ${description});`;
             return true;
         }
         catch (error) {
@@ -213,7 +213,7 @@ class dbUtils {
         try {
             const users = user_id; //not used, but will be used for verification
             await sql `INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                        (${assignment_id}, ${student_id}, NOW(), TRIM(both '"' from ${submission_filepath}));`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
+                                        (${assignment_id}, ${student_id}, NOW(), ${submission_filepath});`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
             return true;
         }
         catch (error) {
@@ -236,7 +236,7 @@ class dbUtils {
     async postAIOutputForSubmission(submission_id, generated_questions) {
         try {
             await sql `INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                    VALUES (${submission_id}, ${JSON.parse(generated_questions)}, CURRENT_TIMESTAMP);`; //TRIM might be weird here idk 
+                                    VALUES (${submission_id}, ${JSON.parse(generated_questions)}, CURRENT_TIMESTAMP);`;
             return true;
         }
         catch (error) {
@@ -278,7 +278,7 @@ class dbUtils {
     async addStudent(email, student_id, first_name, last_name) {
         try {
             await sql `INSERT INTO students (student_id, first_name, last_name, email) VALUES
-                                        (${student_id},TRIM(both '"' from ${first_name}), TRIM(both '"' from ${last_name}), TRIM(both '"' from ${email}));`;
+                                        (${student_id}, ${first_name}, ${last_name}, ${email});`;
             return true;
         }
         catch (error) {
@@ -407,7 +407,7 @@ class dbUtils {
     async editStudent(email, student_id, first_name, last_name) {
         try {
             //add a check that the student exists
-            await sql `UPDATE students SET first_name = TRIM(both '"' from ${first_name}), last_name = TRIM(both '"' from ${last_name}), email = TRIM(both '"' from ${email}) WHERE student_id = ${student_id};`;
+            await sql `UPDATE students SET first_name = ${first_name}, last_name = ${last_name}, email = ${email} WHERE student_id = ${student_id};`;
             return true;
         }
         catch (error) {
@@ -418,7 +418,7 @@ class dbUtils {
         try {
             //add a check that the submission exists
             //add a check that the author is the one sending the request 
-            await sql `UPDATE submissions SET student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = TRIM(both '"' from ${submission_filepath}) WHERE submission_id = ${submission_id};`;
+            await sql `UPDATE submissions SET student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = ${submission_filepath} WHERE submission_id = ${submission_id};`;
             return true;
         }
         catch (error) {
@@ -429,7 +429,7 @@ class dbUtils {
         try {
             //add a check that the author is the one sending the request 
             //add a check that the class exists
-            await sql `UPDATE class SET session = ${session}, year = ${year}, code = TRIM(both '"' from ${code}), title = TRIM(both '"' from ${title}) WHERE class_id = ${class_id};`; // more fields added post MVP
+            await sql `UPDATE class SET session = ${session}, year = ${year}, code = ${code}, title = ${title} WHERE class_id = ${class_id};`; // more fields added post MVP
             return true;
         }
         catch (error) {
@@ -440,7 +440,7 @@ class dbUtils {
         try {
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
-            await sql `UPDATE assignments SET class_id = ${class_id}, name = TRIM(both '"' from ${name}), description = TRIM(both '"' from ${description}) WHERE assignment_id = ${assignment_id};`;
+            await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description} WHERE assignment_id = ${assignment_id};`;
             return true;
         }
         catch (error) {
@@ -451,7 +451,7 @@ class dbUtils {
         try {
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
-            await sql `UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = TRIM(both '"' from ${comments}, examiner_id = ${examiner_id}) WHERE exam_id = ${exam_id};`;
+            await sql `UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = ${comments}, examiner_id = ${examiner_id} WHERE exam_id = ${exam_id};`;
             return true;
         }
         catch (error) {
