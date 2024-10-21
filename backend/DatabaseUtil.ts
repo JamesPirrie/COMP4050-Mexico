@@ -352,7 +352,8 @@ export class dbUtils {
     async addStudentToClass(user_id: number, student_id: number, specificClass: number){
         try{
             //add verifications
-            sql`UPDATE class SET students = students || ${student_id} WHERE class_id = ${specificClass};`;
+            const studentBuffer: ArrayBuffer = new ArrayBuffer(student_id);
+            await sql`UPDATE class SET students = students || ${student_id} WHERE class_id = ${specificClass};`;
             return true;
         }
         catch(error){
@@ -363,7 +364,7 @@ export class dbUtils {
     async removeStudentFromClass(user_id: number, student_id: number, specificClass: number){
         try{
             //add verifications
-            sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
             return true;
         }
         catch(error){
