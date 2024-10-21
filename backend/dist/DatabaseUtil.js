@@ -328,6 +328,26 @@ class dbUtils {
             throw error;
         }
     }
+    async addStudentToClass(user_id, student_id, specificClass) {
+        try {
+            //add verifications
+            sql `UPDATE class SET students = students || ${student_id} WHERE class_id = ${specificClass};`;
+            return true;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    async removeStudentFromClass(user_id, student_id, specificClass) {
+        try {
+            //add verifications
+            sql `UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            return true;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
     //DELETE FUNCTIONS
     async deleteStudent(student_id) {
         try {

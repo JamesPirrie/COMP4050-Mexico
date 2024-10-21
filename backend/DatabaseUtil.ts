@@ -349,6 +349,28 @@ export class dbUtils {
         }
     }
 
+    async addStudentToClass(user_id: number, student_id: number, specificClass: number){
+        try{
+            //add verifications
+            sql`UPDATE class SET students = students || ${student_id} WHERE class_id = ${specificClass};`;
+            return true;
+        }
+        catch(error){
+            throw error;
+        }
+    }
+
+    async removeStudentFromClass(user_id: number, student_id: number, specificClass: number){
+        try{
+            //add verifications
+            sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            return true;
+        }
+        catch(error){
+            throw error;
+        }
+    }
+
     //DELETE FUNCTIONS
 
      async deleteStudent(student_id: number) {

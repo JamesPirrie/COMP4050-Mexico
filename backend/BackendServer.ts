@@ -300,7 +300,23 @@ app.post('/api/classesStudents', upload.none(), async (req: Request, res: Respon
     const StudentID: number = Number(req.body.student_id);
     const ClassID: number = Number(req.body.class_id);
     try{
-        //TODO ADD STUDENTS TO CLASS
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await sqlDB.addStudentToClass(userID, StudentID, ClassID);
+            if(success){
+                console.log("Add student to class successful");
+                res.json({
+                    success: true,
+                    details: "Add student to class successful"
+                });
+            }
+            else{
+                console.log("Add student to class failed");
+                res.json({
+                    success: false,
+                    details: "Could not add student to class"
+                });
+            }
+        }
     }
     catch(error){
         console.log('Error within POST classesStudents: ' + error);
@@ -318,6 +334,23 @@ app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Resp
     const ClassID: number = Number(req.body.class_id);
     try{
         //TODO REMOVE STUDENTS FROM CLASS
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await sqlDB.removeStudentFromClass(userID, StudentID, ClassID);
+            if(success){
+                console.log("Remove student from class successful");
+                res.json({
+                    success: true,
+                    details: "Remove student from class successful"
+                });
+            }
+            else{
+                console.log("Remove student from class failed");
+                res.json({
+                    success: false,
+                    details: "Remove student from class failed"
+                });
+            }
+        }
     }
     catch(error){
         console.log('Error within DELETE classesStudents: ' + error);
@@ -939,7 +972,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         });
 	}	
 });
-
+/*
 //AI Rubric Generate and Return
 app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => {
     //What we receive
@@ -1125,7 +1158,7 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
         });
 	}	
 });
-
+*/
 //viva endpoints
 app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{//list viva for a specific submission
     //What we receive
