@@ -3,6 +3,7 @@ This file contains all details relating to the expected inputs and outputs relat
 `This is the Post-MVP version of this file.`
 # Request Headers
 The backend server will read requests with `content-type: application/json` or `content-type: multipart/formdata` in their headers.
+However POST and PUT submissions which require a submission_PDF file can only used correctly in multipart/formdata.
 
 # Response Headers
 Most Responses are sent back using `content-type: application/json`.
@@ -148,39 +149,106 @@ Many endpoints are the same however:
 # Assignment endpoints
 `GET  /api/assignments - Getting assignments from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, class_id: number
 - Output parameters : {
-    
+    data: [
+        {
+            assignment_id: number,
+            class_id: number,
+            name: string
+            description: string,
+            generic_questions: json object ~ string[]
+        },
+        ...
+    ]
+    details: string
 }
-- Description:
+- Description: Get all assignments for a specified class
+
 `POST  /api/assignments - Adding assignments to the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, class_id: number, name: string, description: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: Add an assignment to a specified class
+
 `PUT  /api/assignments - Editing assignments in the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, class_id: number, assignment_id: string, name: string, description: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: edit an assignment of assignment_id
+
 `DELETE  /api/assignments - Deleting assignments from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, assignment_id: number
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: delete assignment at assignment_id
+
+# Submission endpoints
+`GET  /api/submissions - getting submissions from the database`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, class_id: number, assignment_id: number
+- Output parameters : {
+    data: [
+        {
+            submission_id: number,
+            assignment_id: number,
+            student_id: number,
+            submission_date: string,
+            submission_filepath: string
+        },
+        ...
+    ]
+    details: string
+}
+- Description: get all submissions for a specific assignment (excludes the files see GET /api/submissionFile)
+
+`POST  /api/submissions - adding submissions to the database`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, assignment_id: number, student_id: number, submission_pdf: FILE
+- Output parameters : {
+    success: boolean,
+    details: string
+}
+- Description: adds a students submission file to the system
+
+`PUT  /api/submissions - editing submissions in the database`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number,
+- Output parameters : {
+    success: boolean,
+    details: string
+}
+- Description: edit a submission
+
+`DELETE  /api/submissions - deleting submissions from the database`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, submission_id: number
+- Output parameters : {
+    success: boolean,
+    details: string
+}
+- Description: deletes a submission from the database
+
+`GET  /api/submissionFile - get the file of a submission from server storage`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, submission_id: number
+- Output parameters : FILE
+- Description: returns the file stored for that specific submission_id
+
 # AI Question endpoints
 `GET  /api/qgen - Getting generated questions from the database`
 - Token in Authentication Header: Required
 - Input parameters:
-- Output parameters : {
-    
-}
+- Output parameters :
 - Description:
 `POST  /api/qgen - Generating and then adding questions to the database`
 - Token in Authentication Header: Required
@@ -189,6 +257,8 @@ Many endpoints are the same however:
     
 }
 - Description:
+# AI Rubric endpoints
+
 # Viva endpoints
 `GET  /api/vivas - Getting vivas from the database`
 - Token in Authentication Header: Required

@@ -752,6 +752,7 @@ app.put('/api/students', upload.none(), async (req, res) => {
     }
 });
 //AI endpoints
+//AI Question Generation 
 app.get('/api/qgen', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
@@ -805,7 +806,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             catch (error) {
                 console.log('Error: Get Submission Path from Sub ID Failed', error);
             }
-            //Construct Mock AI
+            //Construct AI
             let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
             //Writes questions/answers file to "./ServerStorage" specified in constructor
             let doc_id;
@@ -859,6 +860,169 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
                 res.json({
                     success: false,
                     details: "failed to generate questions"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+//AI Rubric Generate and Return
+app.get('/api/rubricgen', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
+    const ProjectOverview = String(req.query.project_overview);
+    const Criteria = req.query.criteria;
+    const Topics = req.query.topics;
+    const Goals = req.query.goals;
+    try {
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env');
+            }
+            let pdfPath; //Refers to file name not full path.
+            pdfPath = String(req.headers.ProjectOverview);
+            //Construct AI
+            let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id;
+            let rubric;
+            try {
+                rubric = await ai.createRubric(ProjectOverview, Criteria, Topics, Goals);
+            }
+            catch (error) {
+                console.log('Error: AI Rubric Generation Failed', error);
+            }
+            if (rubric != undefined) {
+                if (rubric?.length > 0) {
+                    console.log('GET Rubric successful');
+                    res.json({
+                        data: rubric,
+                        details: "Rubric generation/get successfully"
+                    });
+                }
+            }
+            else {
+                console.log('Error: Generated Rubric not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Rubric not found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+//AI Summary Generate and Return
+app.get('/api/summarygen', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
+    try {
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env');
+            }
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+            //Construct AI
+            let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            //Writes summary file to Promise<string>
+            let summary;
+            try {
+                let summary = await ai.summarizeSubmission(pdfPath);
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+            if (summary != undefined) {
+                console.log('GET Summary successful');
+                res.json({
+                    data: summary,
+                    details: "Summary generation/get successfully"
+                });
+            }
+            else {
+                console.log('Error: Generated Summary not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Summary not found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+// TODO Clarify with AI team about the nature of "Rubric" input
+//AI Feedback Generate and Return
+app.get('/api/feedbackgen', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
+    const Rubric = String(req.query.rubric);
+    try {
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env');
+            }
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+            //Construct AI
+            let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            //Writes feedback file to Promise<string>
+            let feedback;
+            try {
+                let feedback = await ai.generateFeedback("sample.pdf", Rubric);
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+            if (feedback != undefined) {
+                console.log('GET Feedback successful');
+                res.json({
+                    data: feedback,
+                    details: "Feedback generation/get successfully"
+                });
+            }
+            else {
+                console.log('Error: Generated Feedback not Found');
+                res.json({
+                    data: {},
+                    details: "Generated Feedback not found"
                 });
             }
         }

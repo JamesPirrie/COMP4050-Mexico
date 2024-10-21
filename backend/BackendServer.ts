@@ -535,12 +535,10 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
         const userID: number = Number(req.body.user_id);
         const AssignmentID: number = Number(req.body.assignment_id);
         const StudentID: number = Number(req.body.student_id);
-        const SubmissionDate: string = String(req.body.submission_date);        //this isnt being used because we just set it internally anyway
-        const SubmissionFilePath: string = String(req.body.submission_filepath);//and this may be a security vulnerability as u can overwrite if the file has the same name
-    try {                                                                       //so i will rework this but for the rewrite of all these endpoints they can stay for now
+    try {                                                                       
         console.log('Received POST to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await createSubmission(userID, AssignmentID, StudentID, SubmissionDate, TEMPFILENAME);
+            const success = await createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
             if (success) {
                 console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
                 res.json({
@@ -605,11 +603,10 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
-    const SubmissionID: number = Number(req.body.submission_id);
-    const AssignmentID: number = Number(req.body.assignment_id);
+    const SubmissionID: number = Number(req.body.submission_id);// i dont think they should be able to edit these
+    const AssignmentID: number = Number(req.body.assignment_id);// i dont think they should be able to edit these
     const StudentID: number = Number(req.body.student_id);
-    const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here?
-    const SubmissionFilePath: string = String(req.body.submission_filepath);//once we fix it lets use the previous filepath 
+    const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here? TODO: I think we should give option to edit date but also option to keep same
     try{
         console.log('Received PUT to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
