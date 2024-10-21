@@ -222,7 +222,7 @@ export async function getSubmissionsForAssignments(user_id: number, specificClas
 }
 
 // post submissions with document, class, placeholder student
-export async function createSubmission(user_id: number, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string) {
+export async function createSubmission(user_id: number, assignment_id: number, student_id: number, submission_filepath: string) {
     try {
         const users = user_id;//not used, but will be used for verification
         await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
