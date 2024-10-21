@@ -23,7 +23,7 @@ class dbUtils {
     async getEmailbyUserID(user_id) {
         try {
             const users = await sql `SELECT * FROM users WHERE user_id = ${user_id};`;
-            return users.length ? users[0]['email'] : null;
+            return users.length ? users[0]['email'] : undefined;
         }
         catch (error) {
             throw error;
@@ -61,7 +61,7 @@ class dbUtils {
     async signupUser(email, hashedPassword, user_name, first_name, last_name) {
         try {
             if (await this.loginUserCheck(email) != true) { //if name isnt already present
-                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, ${email}, ${hashedPassword}, false)`;
+                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
                 return true;
             }
             else {
@@ -83,10 +83,10 @@ class dbUtils {
         }
     }
     /* Signup User via POST request with email
-     async signup(email: string, hashedPassword: string) {
+    async signup(email: string, hashedPassword: string, firstName: string, lastName: string): Promise<Boolean> {
         try {
             if (!await this.getUser(email)) {
-                return await this.signupUser(email,hashedPassword);
+                return await this.signupUser(email,hashedPassword,firstName,lastName);
             }
             return false;
         }
@@ -103,8 +103,7 @@ class dbUtils {
                 return results;
             }
             else {
-                //throw new Error('User not found');
-                return null;
+                return undefined;
             }
         }
         catch (error) {
@@ -137,7 +136,7 @@ class dbUtils {
                 const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
                 if (verifyUser[0]['author_id'] === users) {
                     const results = await sql `SELECT * FROM assignments WHERE class_id = ${specificClass};`;
-                    return results.length ? results : null;
+                    return results.length ? results : undefined;
                 }
             }
             else {
@@ -196,7 +195,7 @@ class dbUtils {
                     const verifyClass = await sql `SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`;
                     if (verifyClass[0]['class_id'] === specificClass) { //if the class we have verified the user has control over is the same as the one that corresponds to the assignments
                         const results = await sql `SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
-                        return results.length ? results : null;
+                        return results.length ? results : undefined;
                     }
                 }
             }
@@ -247,7 +246,7 @@ class dbUtils {
     async getQuestions(submission_id) {
         try {
             const result = await sql `SELECT * FROM ai_output WHERE submission_id = ${submission_id} ORDER BY generation_date DESC;`;
-            return result.length ? result : null;
+            return result.length ? result : undefined;
         }
         catch (error) {
             throw error;
@@ -257,7 +256,7 @@ class dbUtils {
     async getExams(submission_id) {
         try {
             const result = await sql `SELECT * FROM exams WHERE submission_id = ${submission_id};`;
-            return result.length ? result : null;
+            return result.length ? result : undefined;
         }
         catch (error) {
             throw error;
@@ -476,3 +475,14 @@ class dbUtils {
     }
 }
 exports.dbUtils = dbUtils;
+/* RUBRIC FUNCTIONS */
+// create user
+// edit user
+// delete user
+// create class
+// edit class
+// remove class
+// create assignment
+// edit assignment
+// delete assignment
+// 

@@ -875,8 +875,10 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             //Writes questions/answers file to "./ServerStorage" specified in constructor
             let doc_id;
             try {
-                const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
-                doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
+                if (pdfPath != undefined) {
+                    const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
+                    doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
+                }
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);
@@ -912,7 +914,7 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
             //verify any questions exist for submission
             // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
             const foundAIQs = sqlDB.getQuestions(SubmissionID);
-            if (foundAIQs != null) {
+            if (foundAIQs != undefined) {
                 console.log('AI question generation successful');
                 res.json({
                     success: true,

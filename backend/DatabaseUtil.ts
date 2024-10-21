@@ -6,7 +6,7 @@ const sql = postgres(`postgres://${process.env.DB_USER}:${process.env.PASS}@${pr
 /* --------------------------------------------------------------------------- */
 export class dbUtils {
     // Convert email to user_id. Returns integer if found, null otherwise.
-     async getUserIDbyEmail(email: string){
+     async getUserIDbyEmail(email: string): Promise<number> {
         try {
             const users = await sql`SELECT user_id FROM users WHERE email LIKE ${email};`;
             return users.length ? users[0]['user_id'] : null;
@@ -17,10 +17,10 @@ export class dbUtils {
     }
 
     // Convert email to user_id. Returns string if found, null otherwise.
-     async getEmailbyUserID(user_id: number){
+     async getEmailbyUserID(user_id: number): Promise<String> {
         try {
             const users = await sql`SELECT * FROM users WHERE user_id = ${user_id};`;
-            return users.length ? users[0]['email'] : null;
+            return users.length ? users[0]['email'] : undefined;
         }
         catch (error) {
             throw error;
@@ -28,7 +28,7 @@ export class dbUtils {
     }
 
     // Check if user email exists. Return false otherwise.
-     async loginUserCheck(email: string) {
+     async loginUserCheck(email: string): Promise<Boolean> {
         try {
             const users = await sql`SELECT * FROM users WHERE email LIKE ${email};`;
             return users.length ? true : false;
@@ -38,7 +38,7 @@ export class dbUtils {
         }
     }
 
-     async updateLastLoggedIn(userID: number){
+     async updateLastLoggedIn(userID: number): Promise<void> {
         try{
             await sql`UPDATE users SET last_login_date = NOW() WHERE user_id = ${userID};`;
         }
@@ -48,7 +48,7 @@ export class dbUtils {
     }
 
     //get hashed password for a user
-     async getHashedPasswordFromDatabase(email: string) {
+     async getHashedPasswordFromDatabase(email: string): Promise<string> {
         try {
             const password = await sql`SELECT pass FROM users WHERE email LIKE ${email};`;
             return password[0]['pass'];//return the password string
@@ -59,10 +59,10 @@ export class dbUtils {
     }
 
     // Add user into users table based on placeholder values and the email parameter.
-     async signupUser(email: string, hashedPassword: string, user_name: string , first_name: string, last_name: string) {
+     async signupUser(email: string, hashedPassword: string, user_name: string, first_name: string, last_name: string): Promise<Boolean> {
         try {
             if(await this.loginUserCheck(email) != true){//if name isnt already present
-                await sql`INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, ${email}, ${hashedPassword}, false)`;
+                await sql`INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
                 return true;
             }
             else{
@@ -76,7 +76,7 @@ export class dbUtils {
     }
 
     // Login User via GET request
-     async getUser(email: string) {
+     async getUser(email: string): Promise<Boolean> {
         try {
             return this.loginUserCheck(email);
         }
@@ -86,10 +86,10 @@ export class dbUtils {
     }
 
     /* Signup User via POST request with email
-     async signup(email: string, hashedPassword: string) {
+    async signup(email: string, hashedPassword: string, firstName: string, lastName: string): Promise<Boolean> {
         try {
             if (!await this.getUser(email)) {
-                return await this.signupUser(email,hashedPassword);
+                return await this.signupUser(email,hashedPassword,firstName,lastName);
             }
             return false;
         }
@@ -99,7 +99,7 @@ export class dbUtils {
     }*/
 
     // get classes by user from email.
-     async getClasses(user_id: number) {
+     async getClasses(user_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
             const users = user_id;
             if (users) {
@@ -107,9 +107,7 @@ export class dbUtils {
                 return results;
             }
             else {
-                
-                //throw new Error('User not found');
-                return null;
+                return undefined;
             }
         }
         catch (error) {
@@ -118,7 +116,7 @@ export class dbUtils {
     }
 
     // post classes by user from email. Input: email, class code
-     async createClass(user_id: number, session: number, year: number, title: string, code: string) {
+     async createClass(user_id: number, session: number, year: number, title: string, code: string): Promise<Boolean> {
         try {
             const users = user_id;
             //we should probably add some sort of class already exists protection in future
@@ -138,14 +136,14 @@ export class dbUtils {
     }
 
     // get assignments based on class.
-     async getAssignments(user_id: number, specificClass: number) {
+     async getAssignments(user_id: number, specificClass: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
             const users = user_id;
             if (users) {
                 const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
                 if (verifyUser[0]['author_id'] === users) {
                     const results = await sql`SELECT * FROM assignments WHERE class_id = ${specificClass};`;
-                    return results.length ? results : null;
+                    return results.length ? results : undefined;
                 }
             }
             else {
@@ -158,7 +156,7 @@ export class dbUtils {
     }
 
     // post assignments based on class.
-     async createAssignment(user_id: number, class_id: number, name: string, description: string) {
+     async createAssignment(user_id: number, class_id: number, name: string, description: string): Promise<Boolean> {
         try {
             const users = user_id;
             await sql`INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, ${name}, ${description});`;
@@ -187,7 +185,7 @@ export class dbUtils {
     }
 
     // get specific submissions with submission_id
-     async getSubmissionFilePathForSubID(specificSubmission: number){
+     async getSubmissionFilePathForSubID(specificSubmission: number): Promise<string>{
         try {
             const submission = await sql`SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
             const sPath = submission[0]['submission_filepath'];
@@ -199,7 +197,7 @@ export class dbUtils {
     }
 
     // get submissions with user, class, and assignment
-     async getSubmissionsForAssignments(user_id: number, specificClass: number, specificAssignment: number){
+     async getSubmissionsForAssignments(user_id: number, specificClass: number, specificAssignment: number): Promise<postgres.RowList<postgres.Row[]> | undefined>{
         try {
             const users = user_id;
             if (users) {
@@ -208,7 +206,7 @@ export class dbUtils {
                     const verifyClass = await sql`SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`
                     if (verifyClass[0]['class_id'] === specificClass) {//if the class we have verified the user has control over is the same as the one that corresponds to the assignments
                         const results = await sql`SELECT * FROM submissions WHERE assignment_id = ${specificAssignment};`;
-                        return results.length ? results : null;
+                        return results.length ? results : undefined;
                     }
                 }
             }
@@ -222,7 +220,7 @@ export class dbUtils {
     }
 
     // post submissions with document, class, placeholder student
-     async createSubmission(user_id: number, assignment_id: number, student_id: number, submission_filepath: string) {
+     async createSubmission(user_id: number, assignment_id: number, student_id: number, submission_filepath: string): Promise<Boolean> {
         try {
             const users = user_id;//not used, but will be used for verification
             await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
@@ -235,7 +233,7 @@ export class dbUtils {
     }
 
     // internal query to  PDF file filepath
-     async getPDFFile(student_id: number, assignment_id: number) {
+     async getPDFFile(student_id: number, assignment_id: number): Promise<string | undefined> {
         try {
             const result = await sql`SELECT submission_filepath FROM submissions 
                                         WHERE student_id = ${student_id}
@@ -248,7 +246,7 @@ export class dbUtils {
     }
 
     // internal query to receive generated questions in jsonb into ai_output table
-     async postAIOutputForSubmission(submission_id: number, generated_questions: string) {
+     async postAIOutputForSubmission(submission_id: number, generated_questions: string): Promise<Boolean> {
         try {
             await sql`INSERT INTO ai_output (submission_id, generated_questions, generation_date)
                                     VALUES (${submission_id}, ${JSON.parse(generated_questions)}, CURRENT_TIMESTAMP);`;
@@ -260,10 +258,10 @@ export class dbUtils {
     }
 
     // get AI Gen Questions based on submission id.
-     async getQuestions(submission_id: number) {
+     async getQuestions(submission_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
             const result = await sql`SELECT * FROM ai_output WHERE submission_id = ${submission_id} ORDER BY generation_date DESC;`;
-            return result.length ? result : null;
+            return result.length ? result : undefined;
         }
         catch (error) {
             throw error;
@@ -271,10 +269,10 @@ export class dbUtils {
     }
 
     // get exams
-     async getExams(submission_id: number) {
+     async getExams(submission_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
             const result = await sql`SELECT * FROM exams WHERE submission_id = ${submission_id};`;
-            return result.length ? result : null;
+            return result.length ? result : undefined;
         }
         catch (error) {
             throw error;
@@ -282,7 +280,7 @@ export class dbUtils {
     }
 
     // post exams
-     async createExams(user_id: number, submission_id: number, student_id: number) {
+     async createExams(user_id: number, submission_id: number, student_id: number): Promise<Boolean> {
         try {
             const users = user_id;
             await sql`INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
@@ -294,7 +292,7 @@ export class dbUtils {
         }
     }
 
-     async addStudent(email: string, student_id: number, first_name: string, last_name: string) {
+     async addStudent(email: string, student_id: number, first_name: string, last_name: string): Promise<Boolean> {
         try {
             await sql`INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                         (${student_id}, ${first_name}, ${last_name}, ${email});`;
@@ -316,7 +314,7 @@ export class dbUtils {
     }
 
     // get students based on class.
-     async getStudentsByClass(user_id: number, specificClass: number) {
+     async getStudentsByClass(user_id: number, specificClass: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
             const users = user_id;
             if (users) {
@@ -349,7 +347,7 @@ export class dbUtils {
         }
     }
 
-    async addStudentToClass(user_id: number, student_id: number, specificClass: number){
+    async addStudentToClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
             //add verifications
             await sql`UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
@@ -360,7 +358,7 @@ export class dbUtils {
         }
     }
 
-    async removeStudentFromClass(user_id: number, student_id: number, specificClass: number){
+    async removeStudentFromClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
             //add verifications
             await sql`UPDATE class SET students = array_remove(students, ${student_id} WHERE class_id = ${specificClass};`;
@@ -373,7 +371,7 @@ export class dbUtils {
 
     //DELETE FUNCTIONS
 
-     async deleteStudent(student_id: number) {
+     async deleteStudent(student_id: number): Promise<Boolean> {
         try{
             //may add a check that the student exists because currently returns true even if the thing doesnt exist
             await sql`DELETE FROM students WHERE student_id = ${student_id};`;
@@ -384,7 +382,7 @@ export class dbUtils {
         }
     }
 
-     async deleteSubmission(user_id: number, submission_id: number) {
+     async deleteSubmission(user_id: number, submission_id: number): Promise<Boolean> {
         try{
             //may add a check that the submission exists
             //may add a check that the author is the one sending the request
@@ -396,7 +394,7 @@ export class dbUtils {
         }
     }
 
-     async deleteClass(user_id: number, class_id: number) {
+     async deleteClass(user_id: number, class_id: number): Promise<Boolean> {
         try{
             //may add a check that the class exists
             //may add a check that the author is the one sending the request
@@ -408,7 +406,7 @@ export class dbUtils {
         }
     }
 
-     async deleteAssignment(user_id: number, assignment_id: number) {
+     async deleteAssignment(user_id: number, assignment_id: number): Promise<Boolean> {
         try{
             //may add a check that the assignment exists
             //may add a check that the author is the one sending the request
@@ -420,7 +418,7 @@ export class dbUtils {
         }
     }
 
-     async deleteExam(user_id: number, exam_id: number) {
+     async deleteExam(user_id: number, exam_id: number): Promise<Boolean> {
         try{
             //may add a check that the exam exists
             //may add a check that the author is the one sending the request
@@ -433,7 +431,7 @@ export class dbUtils {
     }
 
     //EDIT FUNCTIONS
-     async editStudent(email: string, student_id: number, first_name: string, last_name: string) {
+     async editStudent(email: string, student_id: number, first_name: string, last_name: string): Promise<Boolean> {
         try{
             //add a check that the student exists
             await sql`UPDATE students SET first_name = ${first_name}, last_name = ${last_name}, email = ${email} WHERE student_id = ${student_id};`;
@@ -443,7 +441,7 @@ export class dbUtils {
             throw error;
         }
     }
-     async editSubmission(user_id: number, submission_id: number, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string) {
+     async editSubmission(user_id: number, submission_id: number, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string): Promise<Boolean> {
         try{
             //add a check that the submission exists
             //add a check that the author is the one sending the request 
@@ -454,7 +452,7 @@ export class dbUtils {
             throw error;
         }
     }
-     async editClass(user_id: number, class_id: number, session: number, year: number, code: string, title: string) {
+     async editClass(user_id: number, class_id: number, session: number, year: number, code: string, title: string): Promise<Boolean> {
         try{
             //add a check that the author is the one sending the request 
             //add a check that the class exists
@@ -465,7 +463,7 @@ export class dbUtils {
             throw error;
         }
     }
-     async editAssignment(user_id: number, assignment_id: number, class_id: number, name: string, description: string) {
+     async editAssignment(user_id: number, assignment_id: number, class_id: number, name: string, description: string): Promise<Boolean> {
         try{
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
@@ -476,7 +474,7 @@ export class dbUtils {
             throw error;
         }
     }
-     async editExam(user_id: number, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string) {
+     async editExam(user_id: number, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string): Promise<Boolean> {
         try{
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
@@ -488,7 +486,7 @@ export class dbUtils {
         }
     }
     //NAME GETTERS
-     async getNameOfClass(user_id: number, classID: number){
+     async getNameOfClass(user_id: number, classID: number): Promise<string> {
         try{
             const users = user_id;
             if (users) {
@@ -504,7 +502,5 @@ export class dbUtils {
         }
     }
 }
-
-
 
 
