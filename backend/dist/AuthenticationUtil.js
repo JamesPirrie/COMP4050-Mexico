@@ -37,6 +37,8 @@ const DatabaseUtil_1 = require("./DatabaseUtil");
 //global variables
 const tokenLifetime = "1h"; //how long a created token will stay valid for
 const SALT_ROUNDS = 10; //how many times(rounds) bcrypt runs salt hashing
+//initialise DB functions
+const sqlDB = new DatabaseUtil_1.dbUtils();
 // JWT Token Verification Authenticaiton
 async function verifyJWT(AuthHeader, userID) {
     try {
@@ -61,7 +63,7 @@ async function verifyJWT(AuthHeader, userID) {
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
         }
-        const EmailFromID = await (0, DatabaseUtil_1.getEmailbyUserID)(userID);
+        const EmailFromID = await sqlDB.getEmailbyUserID(userID);
         if (email != EmailFromID) {
             throw new Error('Token not matched to email associated to userID');
         }

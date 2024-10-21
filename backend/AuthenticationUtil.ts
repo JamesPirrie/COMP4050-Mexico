@@ -1,11 +1,14 @@
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import * as bcrypt from 'bcrypt';
-import { getEmailbyUserID } from './DatabaseUtil';
+import {dbUtils} from "./DatabaseUtil";
 
 //global variables
 const tokenLifetime: string = "1h";//how long a created token will stay valid for
 const SALT_ROUNDS = 10; //how many times(rounds) bcrypt runs salt hashing
+
+//initialise DB functions
+const sqlDB = new dbUtils();
 
 // Defining the interface for the JWT payload
 interface JwtPayload {
@@ -37,7 +40,7 @@ export async function verifyJWT(AuthHeader: string, userID: number): Promise<boo
         if (!emailRegex.test(email)) {
             throw new Error('Invalid email format in token');
         }
-        const EmailFromID = await getEmailbyUserID(userID);
+        const EmailFromID = await sqlDB.getEmailbyUserID(userID);
         if (email != EmailFromID){
             throw new Error('Token not matched to email associated to userID');
         }
