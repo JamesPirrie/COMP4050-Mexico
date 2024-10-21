@@ -117,8 +117,8 @@ class dbUtils {
             const users = user_id;
             //we should probably add some sort of class already exists protection in future
             if (users) {
-                await sql `INSERT INTO class (author_id, session, year, title, code, creation_date) VALUES
-                                            (${users}, ${session}, ${year}, TRIM(both '"' from ${title}), TRIM(both '"' from ${code}), NOW());`; //the TRIM bit is because this has "" on it because typescript/javascript
+                await sql `INSERT INTO class (author_id, session, year, title, code, creation_date, expiry_date) VALUES
+                                            (${users}, ${session}, ${year}, TRIM(both '"' from ${title}), TRIM(both '"' from ${code}), NOW(), NOW() + '1 year');`; //the TRIM bit is because this has "" on it because typescript/javascript
                 return true;
             }
             else
