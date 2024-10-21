@@ -100,10 +100,13 @@ app.post('/api/login', upload.none(), async (req, res) => {
 app.post('/api/signup', upload.none(), async (req, res) => {
     //What we receive
     const Email = String(req.body.email);
-    const Password = req.body.password;
+    const Password = String(req.body.password);
+    const Username = String(req.body.user_name);
+    const FirstName = String(req.body.first_name);
+    const LastName = String(req.body.last_name);
     try {
         console.log('Received POST to /api/signup');
-        if (await sqlDB.signupUser(Email, await (0, AuthenticationUtil_1.hashPassword)(Password)) === true) { //TODO: ADD THE REST OF THE FIELDS
+        if (await sqlDB.signupUser(Email, await (0, AuthenticationUtil_1.hashPassword)(Password), Username, FirstName, LastName) === true) { //TODO: ADD THE REST OF THE FIELDS
             console.log('signup with: ' + Email + ' successful');
             res.json({
                 success: true,

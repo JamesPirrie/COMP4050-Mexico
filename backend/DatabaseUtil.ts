@@ -352,7 +352,7 @@ export class dbUtils {
     async addStudentToClass(user_id: number, student_id: number, specificClass: number){
         try{
             //add verifications
-            await sql`UPDATE class SET students = (students || ${student_id}) WHERE class_id = ${specificClass};`;
+            await sql`UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
             return true;
         }
         catch(error){

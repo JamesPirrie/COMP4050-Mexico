@@ -58,10 +58,10 @@ class dbUtils {
         }
     }
     // Add user into users table based on placeholder values and the email parameter.
-    async signupUser(email, hashedPassword) {
+    async signupUser(email, hashedPassword, user_name, first_name, last_name) {
         try {
             if (await this.loginUserCheck(email) != true) { //if name isnt already present
-                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
+                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
                 return true;
             }
             else {
@@ -82,18 +82,18 @@ class dbUtils {
             throw error;
         }
     }
-    // Signup User via POST request with email
-    async signup(email, hashedPassword) {
+    /* Signup User via POST request with email
+     async signup(email: string, hashedPassword: string) {
         try {
             if (!await this.getUser(email)) {
-                return await this.signupUser(email, hashedPassword);
+                return await this.signupUser(email,hashedPassword);
             }
             return false;
         }
         catch (error) {
-            throw error;
+            throw error
         }
-    }
+    }*/
     // get classes by user from email.
     async getClasses(user_id) {
         try {
@@ -331,7 +331,7 @@ class dbUtils {
     async addStudentToClass(user_id, student_id, specificClass) {
         try {
             //add verifications
-            await sql `UPDATE class SET students = (students || ${student_id}) WHERE class_id = ${specificClass};`;
+            await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
             return true;
         }
         catch (error) {
