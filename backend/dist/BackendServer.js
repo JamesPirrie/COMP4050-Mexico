@@ -318,11 +318,17 @@ app.get('/api/assignments', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userClassAssignments = await sqlDB.getAssignments(userID, ClassID);
             if (userClassAssignments != undefined) {
-                if (userClassAssignments?.length > 0) {
+                if (userClassAssignments.length > 0) {
                     console.log('GET assignments successful');
                     res.json({
                         data: userClassAssignments,
                         details: "Assignments successfully found"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "No Assignments found"
                     });
                 }
             }
@@ -459,11 +465,17 @@ app.get('/api/submissions', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userSubmissions = await sqlDB.getSubmissionsForAssignments(userID, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
             if (userSubmissions != undefined) { //query later (proper error handling)
-                if (userSubmissions?.length > 0) {
+                if (userSubmissions.length > 0) {
                     console.log('GET submissions successful');
                     res.json({
                         data: userSubmissions,
                         details: "Submissions successfully found"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "No Submissions found"
                     });
                 }
             }
@@ -625,11 +637,17 @@ app.get('/api/students', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const studentsList = await sqlDB.getStudentsByClass(userID, classID);
             if (studentsList != undefined) {
-                if (studentsList?.length > 0) {
+                if (studentsList.length > 0) {
                     console.log('GET Students successful');
                     res.json({
                         data: studentsList,
                         details: "Students successfully found"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "No Students found"
                     });
                 }
             }
@@ -767,11 +785,17 @@ app.get('/api/qgen', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const questions = await sqlDB.getQuestions(SubmissionID);
             if (questions != undefined) {
-                if (questions?.length > 0) {
+                if (questions.length > 0) {
                     console.log('GET questions successful');
                     res.json({
                         data: questions,
                         details: "Questions successfully found"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "no Questions found"
                     });
                 }
             }
@@ -906,11 +930,17 @@ app.get('/api/rubricgen', upload.none(), async (req, res) => {
                 console.log('Error: AI Rubric Generation Failed', error);
             }
             if (rubric != undefined) {
-                if (rubric?.length > 0) {
+                if (rubric.length > 0) {
                     console.log('GET Rubric successful');
                     res.json({
                         data: rubric,
                         details: "Rubric generation/get successfully"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "Generated Rubric not found"
                     });
                 }
             }
@@ -1050,11 +1080,17 @@ app.get('/api/vivas', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const foundVivas = await sqlDB.getExams(SubmissionID);
             if (foundVivas != undefined) {
-                if (foundVivas?.length > 0) {
+                if (foundVivas.length > 0) {
                     console.log('GET vivas successful');
                     res.json({
                         data: foundVivas,
                         details: "Vivas successfully found"
+                    });
+                }
+                else {
+                    res.json({
+                        data: {},
+                        details: "Failed to find Vivas"
                     });
                 }
             }
