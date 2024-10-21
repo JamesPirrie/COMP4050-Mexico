@@ -85,19 +85,6 @@ export class dbUtils {
         }
     }
 
-    /* Signup User via POST request with email
-    async signup(email: string, hashedPassword: string, firstName: string, lastName: string): Promise<Boolean> {
-        try {
-            if (!await this.getUser(email)) {
-                return await this.signupUser(email,hashedPassword,firstName,lastName);
-            }
-            return false;
-        }
-        catch (error) {
-            throw error
-        }
-    }*/
-
     // get classes by user from email.
      async getClasses(user_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined> {
         try {
@@ -161,23 +148,6 @@ export class dbUtils {
             const users = user_id;
             await sql`INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, ${name}, ${description});`;
             return true;
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    // get viva based on submissions JOIN viva_output
-    // TO DO
-     async getVivaForSubmission(user_id: number, specificSubmission: number, specificGenQ: number){
-        try {
-            const users = user_id;
-            if (users) {
-                //TO DO
-            }
-            else {
-                throw new Error('User not found');
-            }
         }
         catch (error) {
             throw error;
