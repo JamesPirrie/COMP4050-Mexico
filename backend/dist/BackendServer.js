@@ -136,12 +136,19 @@ app.get('/api/classes', upload.none(), async (req, res) => {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const userClasses = await sqlDB.getClasses(userID); //get the classes for the user assigned to that email
             if (userClasses != undefined) { //because userClasses.length only works here not != null and because userClasses is optional
-                if (userClasses?.length > 0) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
+                if (userClasses.length > 0) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                     console.log('GET classes successful' + userClasses);
                     res.json({
                         data: userClasses,
                         details: "Classes successfully found"
                     }); //send them
+                }
+                else {
+                    console.log('Error: No Classes Found');
+                    res.json({
+                        data: {},
+                        details: "No Classes found"
+                    });
                 }
             }
             else {

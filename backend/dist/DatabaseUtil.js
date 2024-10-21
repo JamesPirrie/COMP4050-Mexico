@@ -456,4 +456,3 @@ class dbUtils {
     }
 }
 exports.dbUtils = dbUtils;
-/*  RUBRIC FUNCTIONS */
