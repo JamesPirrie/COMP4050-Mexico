@@ -59,10 +59,10 @@ export class dbUtils {
     }
 
     // Add user into users table based on placeholder values and the email parameter.
-     async signupUser(email: string, hashedPassword: string) {
+     async signupUser(email: string, hashedPassword: string, user_name: string , first_name: string, last_name: string) {
         try {
             if(await this.loginUserCheck(email) != true){//if name isnt already present
-                await sql`INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES ('placeholder', 'John', 'Appleseed', TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
+                await sql`INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
                 return true;
             }
             else{
@@ -85,7 +85,7 @@ export class dbUtils {
         }
     }
 
-    // Signup User via POST request with email
+    /* Signup User via POST request with email
      async signup(email: string, hashedPassword: string) {
         try {
             if (!await this.getUser(email)) {
@@ -96,7 +96,7 @@ export class dbUtils {
         catch (error) {
             throw error
         }
-    }
+    }*/
 
     // get classes by user from email.
      async getClasses(user_id: number) {
@@ -352,8 +352,7 @@ export class dbUtils {
     async addStudentToClass(user_id: number, student_id: number, specificClass: number){
         try{
             //add verifications
-            const studentBuffer: ArrayBuffer = new ArrayBuffer(student_id);
-            await sql`UPDATE class SET students = students || ${student_id} WHERE class_id = ${specificClass};`;
+            await sql`UPDATE class SET students = (students || ${student_id}) WHERE class_id = ${specificClass};`;
             return true;
         }
         catch(error){
@@ -364,7 +363,7 @@ export class dbUtils {
     async removeStudentFromClass(user_id: number, student_id: number, specificClass: number){
         try{
             //add verifications
-            await sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await sql`UPDATE class SET students = array_remove(students, ${student_id} WHERE class_id = ${specificClass};`;
             return true;
         }
         catch(error){
