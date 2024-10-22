@@ -13,6 +13,7 @@ app.secret_key = 'SUPERSECRETKEY'
 
 class User:
     userAuthenticated = False
+    userID = 0
     email = ""
 
 user = User()
@@ -70,9 +71,13 @@ def loginDirect():
     if request.method == 'POST':
         email=request.form['email']
         auth = requests.post(f'{backend}login', json = {'email': email})
+        resp = json.loads(auth.content)
+        print(resp)
         if auth.text == 'true':
             user.email = email
             user.userAuthenticated = True
+            #user.userID = json.loads(resp)['user_id']
+            print(user)
             return redirect(url_for('dashboard'))
     return render_template('loginDirect.html')
 
@@ -167,7 +172,12 @@ def new_student():
     return render_template('newStudent.html')
 
 #-----------------------------------
-#Viva Routes
+#Viva and Rubric Routes
+
+
+
+
+
 
 #fix to recieve viva submission_id as query
 @app.route('/vivas')
@@ -182,6 +192,15 @@ def settings():
 
 @app.route('/new_project', methods = ['GET', 'POST'])
 def new_project():
+    if request.method == 'POST':
+        pdf = request.files['pdf_file']
+        files = {'submission_PDF': pdf}
+        student_id = request.form['student']
+        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': str(date.today()), 'submission_filepath': pdf.filename}
+        print(jsons)
+        postSubmission(files, jsons)
+        return redirect(url_for('unit'))
+    
     students = getStudents(session['last_class_id'])
     assignment_name = ""
     assignments = getAssignments(session['last_class_id'])
@@ -189,13 +208,6 @@ def new_project():
         if a['assignment_id'] == session['last_assignment_id']:
             assignment_name = a['name']
 
-    if request.method == 'POST':
-        pdf = request.files['pdf_file']
-        files = {'submission_PDF': pdf}
-        student_id = request.form['student']
-        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': date.today(), 'submission_filepath': pdf.filename}
-        postSubmission(files, jsons)
-        return redirect(url_for('unit'))
     return render_template('newProject.html', students=students, assignment_name=assignment_name)
 
 @app.route('/logout')
@@ -205,14 +217,15 @@ def logout():
 
 @app.route('/submission')
 def submission():
-    questions = requests.get(f'{backend}qgen?submission_id={request.args.get("submission_id", "")}').content
+    questions = getSubmissions(session['last_assignment_id'], session['last_class_id'])
     return render_template('submission.html', questions = questions)
 
 @app.route('/generate')
 def generate():
     submission_id = request.args.get('submission_id', '')
     print(submission_id)
-    requests.post(f'{backend}qgen', json = {'email': user.email, 'submission_id': submission_id, 'result_id': 0})
+    json = {'email': user.email, 'submission_id': submission_id, 'result_id': 0}
+    postQuestion(json)
     return redirect(url_for('submission'))
 
 #-----------------------------------
@@ -383,16 +396,17 @@ def getSubmissions(assignmentid, classid):
     """
     return json.loads(requests.get(f'{backend}submissions?email={user.email}&assignment_id={assignmentid}&class_id={classid}').content)
 
-def postSubmission(data, json):
+def postSubmission(files, json):
     """
-    Posts a submission to the backend server.
+    Posts a submission to the backend server. IMPORTANT note that the files parameter must contain the file, and json must be sent to data (due to MULTIPART)
     Args:
         data (bytes): The binary data of the submission document
         json (dict): A json object containing the assignment id, student id and submission date
     Returns:
         response: The response from the server
     """
-    return requests.post(f'{backend}submissions', data = data, json = json)
+    print('posting submission')
+    return requests.post(f'{backend}submissions', files = files, data = json)
 
 def deleteSubmission(submissionid):
     """
@@ -474,6 +488,24 @@ def postQuestion(json):
     """
     return requests.post(f'{backend}qgen', json = json)
 
+#Rubric functions
+def getRubrics(userid, submissionid, projectoverview, criteria, topics, goals):
+    """
+    Gets a list of rubrics from the backend server.
+    Args:
+        userid (int): The id of the user to get rubrics for
+        submissionid (int): The id of the submission to get rubrics for
+        projectoverview (string): The project overview
+        criteria (string): The criteria
+        topics (string): The Topics
+        goals (string): The Goals
+    Returns:
+        list: A list of rubrics
+    """
+    return json.loads(requests.get(f'{backend}rubricgen?user_id={userid}&submission_id={submissionid}&project_overview={projectoverview}&criteria={criteria}&topics={topics}&goals={goals}').content)
+
+def getSummary(userid, submissionid):
+    return json.loads(requests.get(f'{backend}summarygen?user_id={userid}&submission_id={submissionid}').content)
 
 if __name__ == '__main__':
     app.run(debug=True)

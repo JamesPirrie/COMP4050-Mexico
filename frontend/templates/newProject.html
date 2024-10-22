@@ -5,18 +5,8 @@
 {% block content %}
     <div class="welcome-box">
         <h2>Viva for {{ assignment_name }}</h2>
-        
-        <form method="POST" enctype="multipart/form-data">
-            <label for="student">Assign a Student:</label>
-            <select name="student" id="student" required>
-                <option value="">Select a student</option>
-                {% for student in students %}
-                    <option value="{{ student.student_id }}">{{ student.first_name }} {{ student.last_name }}</option>
-                {% endfor %}
-            </select>
-        </form>
     </div>
-            
+    <form action="{{ url_for('new_project') }}" enctype="multipart/form-data" method="post" class="create-form">
     <div class="columns-container">
         <div class="column">
             <h3>Viva Questions</h3>
@@ -27,18 +17,18 @@
         <div class="column">
             <h3>Use our AI Tool</h3>
             <p>Upload a document and generate some questions below.</p>
-            <input type="file" name="pdf_file" accept=".pdf" style="padding: 10px;">
+            <input type="file" name="pdf_file" accept=".pdf" required>
+            <label for="student">Assign a Student:</label>
+            <select name="student" id="student" required>
+                <option value="">Select a student</option>
+                {% for student in students %}
+                    <option value="{{ student.student_id }}">{{ student.first_name }} {{ student.last_name }}</option>
+                {% endfor %}
+            </select>
             <button type="submit" class="small-button">Generate/Regenerate</button>
         </div>
     </div>
-
-    <div class = "content-box">
-        <form method="post" id="createViva" class="create-form">
-            <button type="submit">Create</button>
-        </form>
-    </div>
-
-
+    </form>
 
 <!-- Darkmode  -->
 <script>
