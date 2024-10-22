@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}VivaMQ Dashboard{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -12,6 +11,7 @@
         <div class="header">
             <img src="{{ url_for('static', filename='icons/MqLogo.png') }}" alt="MQ Logo" class="logo">
             <a href="{{ url_for('dashboard') }}" class="heading">VivaMQ</a>
+
             <div class="user-controls">
                 <div class="user-icon">
                     <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Icon">
@@ -33,11 +33,21 @@
             </div>
 
             <div class="content">
-                {% block content %}
-                <!-- Content for different pages will be inserted here -->
-                {% endblock %}
+                {% block content %}{% endblock %}
             </div>
         </div>
     </div>
+
+    <script>
+        // Check for dark mode preference when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+    </script>
 </body>
 </html>
