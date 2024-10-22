@@ -40,15 +40,17 @@ const upload = multer({storage : storageEngine});
 
 //GET requests
 app.get('/', (req: Request, res: Response) => {
-    console.log('GET request received');
-    res.status(200).send('GET request received');//this is how to do codes
+    console.log('GET request received');//this is how to do codes
+    res.status(204).json({ 
+        details: "GET request received" 
+    });
 });
 
 //POST requests
 app.post('/',  upload.none(), (req: Request, res: Response) => {//this upload.any() and the later used upload.single/upload.array can parse request.body in multipart/formdata
     console.log('POST request received');                       //upload.none works for text only (no file submission) 
     res.status(200).send('POST Request received');              //with the way this is now implemented we can parse application/json AND multipart/formdata
-
+    
     console.log('headers:');
     console.log(req.headers);
 
@@ -83,7 +85,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
                 const token: string = generateTokenForLogin(Email, userID);//then generate a token
                 sqlDB.updateLastLoggedIn(userID);
                 console.log('login with: ' + Email + ' successful.');
-                res.send({//and send it
+                res.status(200).json({//and send it
                     success: true,
                     token: token,
                     userID: userID,
@@ -92,7 +94,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
         }
         else{
             console.log('Error: Login with ' + Email + 'Failed');//otherwise return success: false with no token
-            res.json({
+            res.status(401).json({
                 success: false,
                 token: "",
                 userID: "",
@@ -102,7 +104,7 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
     }
     catch (error) {
         console.log('Error within Login: ' + error);
-        res.send({
+        res.status(400).send({
             success: false,
             token: "",
             userID: "",
@@ -123,14 +125,14 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
         console.log('Received POST to /api/signup');
         if (await sqlDB.signupUser(Email, await hashPassword(Password), Username, FirstName, LastName) === true) {//TODO: ADD THE REST OF THE FIELDS
             console.log('signup with: ' + Email + ' successful');
-            res.json({
+            res.status(200).json({
                 success: true,
                 details: `Signup for ${Email} successful`
             });
         }
         else{//only taken when signupuser returns false which is only is email is taken
             console.log('Error: Sign Up with ' + Email + 'Failed');
-            res.json({
+            res.status(401).json({
                 success: false,
                 details: `Signup for ${Email} failed: email is already taken`
             });
@@ -138,7 +140,7 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
     }
     catch (error) {
         console.log('Error within signup: ' + error);
-        res.send({
+        res.status(400).send({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -157,14 +159,14 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             if(userClasses != undefined){                               //because userClasses.length only works here not != null and because userClasses is optional
                 if (userClasses.length > 0) {                          //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
                     console.log('GET classes successful' + userClasses);
-                    res.json({
+                    res.status(200).json({
                         data: userClasses,
                         details: "Classes successfully found"
                     });//send them
                 }
                 else{
                     console.log('Error: No Classes Found');
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "No Classes found"
                     });
@@ -172,7 +174,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             }
             else{
                 console.log('Error: No Classes Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "No Classes found"
                 });
@@ -181,7 +183,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error within GET classes: ', error);
-        res.send({
+        res.status(400).send({
             data: {},
             details: `Server encountered error: ${error}`
         });
@@ -203,14 +205,14 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             const success = await sqlDB.createClass(userID, Session, Year, Title, Code);
             if (success) {
                 console.log('Create class successful');
-                res.send({
+                res.status(201).json({
                     success: true,
                     details: `Class: ${Code} successfully created`
                 });
             }
             else{
                 console.log('Error: Classes Creation Failed');
-                res.send({
+                res.status(400).json({
                     success: false,
                     details: `Class creation failed`
                 });
@@ -219,7 +221,7 @@ app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch (error) {
         console.log('Error within post classes: ' + error);
-        res.send({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -237,14 +239,14 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
             const success = await sqlDB.deleteClass(userID, ClassID);//email is placeholder for now
             if (success) {
                 console.log(`Delete class successful`);
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: `Delete class successful`
                 });
             }
             else{
                 console.log('Error: class Deletion Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: 'Delete class failed'
                 });
@@ -253,7 +255,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
     }
     catch(error) {
         console.log('Error within delete classes: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -275,14 +277,14 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             const success = await sqlDB.editClass(userID, ClassID, Session, Year, Code, Title);
             if (success) {
                 console.log('Edit class successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: `Edit class successful`
                 });
             }
             else{
                 console.log('Error: class edit Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Edit class failed"
                 });
@@ -291,7 +293,7 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error within PUT classes: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -308,14 +310,14 @@ app.post('/api/classesStudents', upload.none(), async (req: Request, res: Respon
             const success = await sqlDB.addStudentToClass(userID, StudentID, ClassID);
             if(success){
                 console.log("Add student to class successful");
-                res.json({
+                res.status(201).json({
                     success: true,
                     details: "Add student to class successful"
                 });
             }
             else{
                 console.log("Add student to class failed");
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Could not add student to class"
                 });
@@ -324,7 +326,7 @@ app.post('/api/classesStudents', upload.none(), async (req: Request, res: Respon
     }
     catch(error){
         console.log('Error within POST classesStudents: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -342,14 +344,14 @@ app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Resp
             const success = await sqlDB.removeStudentFromClass(userID, StudentID, ClassID);
             if(success){
                 console.log("Remove student from class successful");
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Remove student from class successful"
                 });
             }
             else{
                 console.log("Remove student from class failed");
-                res.json({
+                res.status((400)).json({
                     success: false,
                     details: "Remove student from class failed"
                 });
@@ -358,7 +360,7 @@ app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Resp
     }
     catch(error){
         console.log('Error within DELETE classesStudents: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -378,13 +380,13 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
             if (userClassAssignments != undefined) {
                 if(userClassAssignments.length > 0){         
                     console.log('GET assignments successful');
-                    res.json({
+                    res.status(200).json({
                         data: userClassAssignments,
                         details: "Assignments successfully found"
                     });
                 }
                 else{
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "No Assignments found"
                     });
@@ -392,7 +394,7 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
             }
             else{
                 console.log('Error: No Assignments Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "No Assignments found"
                 });
@@ -401,7 +403,7 @@ app.get('/api/assignments', upload.none(), async (req: Request, res: Response) =
     }
     catch (error) {
         console.log('Error within GET assignments: ' + error);
-        res.json({
+        res.status(400).json({
             data: {},
             details: `Server encountered error: ${error}`
         });
@@ -421,14 +423,14 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
             const success = await sqlDB.createAssignment(userID, ClassID, Name, Description); // more fields added post MVP
             if (success) {
                 console.log('Create Assignment successful');
-                res.json({
+                res.status(201).json({
                     success: true,
                     details: `Assignment ${Name} successfully created`
                 });
             }
             else{
                 console.log('Error: Assignment Creation Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: `Assignment Creation Failed`
                 });
@@ -437,7 +439,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
     }
     catch (error) {
         console.log('Error within POST assignments:' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -455,14 +457,14 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
             const success = await sqlDB.deleteAssignment(userID, AssignmentID);//email is placeholder for now
             if (success) {
                 console.log('Delete Assignment successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: `Assignment successfully deleted`
                 });
             }
             else{
                 console.log('Error: Assignment Deletion Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: `Assignment deletion failed`
                 });
@@ -471,7 +473,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
     }
     catch(error) {
         console.log('Error within DELETE assignments: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -492,14 +494,14 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
             const success = await sqlDB.editAssignment(userID, AssignmentID, ClassID, Name, Description);
             if (success) {
                 console.log('Edit Assignment successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: `Assignment successfully edited`
                 });
             }
             else{
                 console.log('Error: Assignment edit Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: `Assignment editing failed`
                 });
@@ -508,7 +510,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
     }
     catch(error){
         console.log('Error within PUT Assignments: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -529,13 +531,13 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
             if (userSubmissions != undefined) {                                                      //query later (proper error handling)
                 if(userSubmissions.length > 0){                
                     console.log('GET submissions successful');
-                    res.json({
+                    res.status(200).json({
                         data: userSubmissions,
                         details: "Submissions successfully found"
                     });
                 }
                 else{
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "No Submissions found"
                     });
@@ -543,7 +545,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
             }
             else{
                 console.log('Error: No Submissions Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "No Submissions found"
                 });
@@ -552,7 +554,7 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
     }
     catch (error) {
         console.log('Error within GET Submissions: ' + error);
-        res.json({
+        res.status(400).json({
             data: {},
             details: `Server encountered error: ${error}`
         });
@@ -567,7 +569,7 @@ app.get('/api/submissionFile', upload.none(), async (req: Request, res: Response
         console.log('Received GET to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
             const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);//still need permissions check: is userID permitted to access this submissionID?
-            res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+            res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//status code defaults to 200 anyway
                 if(error){
                     throw error;
                 }
@@ -579,7 +581,7 @@ app.get('/api/submissionFile', upload.none(), async (req: Request, res: Response
     }
     catch(error){
         console.log('Error within GET SubmissionFile: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -598,14 +600,14 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
             const success = await sqlDB.createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
             if (success) {
                 console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
-                res.json({
+                res.status(201).json({
                     success: true,
                     details: "Submission successfully created"
                 });
             }
             else{
                 console.log('Error: submission Creation Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Submission creation failed"
                 });
@@ -614,7 +616,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
     }
     catch (error) {
         console.log('Error within POST submissions: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -633,14 +635,14 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
             const success = await sqlDB.deleteSubmission(userID, SubmissionID);//email is placeholder for now
             if (success){
                 console.log('Delete submission successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Submission successfully deleted"
                 });
             }
             else{
                 console.log('Error: submission Deletion Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Submission deletion failed"
                 });
@@ -649,7 +651,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     }
     catch(error){
         console.log('Error within DELETE Submissions: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -670,14 +672,14 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
             const success = await sqlDB.editSubmission(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, TEMPFILENAME);
             if(success){
                 console.log('Edit submission successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Submission successfully edited"
                 });
             }
             else{
                 console.log('Error: submission edit Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Editing Submission failed"
                 });
@@ -686,7 +688,7 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
     }
     catch(error){
         console.log('Error within PUT submissions: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -706,13 +708,13 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
             if (studentsList != undefined) {
                 if(studentsList.length > 0){
                     console.log('GET Students successful');
-                    res.json({
+                    res.status(200).json({
                         data: studentsList,
                         details: "Students successfully found"
                     });
                 }
                 else{
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "No Students found"
                     });
@@ -720,7 +722,7 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
             }
             else{
                 console.log('GET students failed');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "No Students found"
                 });
@@ -729,7 +731,7 @@ app.get('/api/students', upload.none(), async (req: Request, res: Response) =>{/
     }
     catch(error){
         console.log('Error within GET students: ' + error);
-        res.json({
+        res.status(400).json({
             data: {},
             details: `Server encountered error: ${error}`
         });
@@ -750,14 +752,14 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
             const success = await sqlDB.addStudent(Email, StudentID, FirstName, LastName);
             if (success) {
                 console.log('Create student successful');
-                res.json({
+                res.status(201).json({
                     success: true,
                     details: "Student successfully created"
                 });
             }
             else{
                 console.log('Error: student Creation Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Student creation failed"
                 });
@@ -766,7 +768,7 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error within POST students: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -784,14 +786,14 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
             const success = await sqlDB.deleteStudent(StudentID);
             if (success) {
                 console.log('Delete student successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Student successfully deleted"
                 });
             }
             else{
                 console.log('Error: student Deletion Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Student deletion failed"
                 });
@@ -800,7 +802,7 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
     }
     catch(error){
         console.log('Error within DELETE students: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -821,14 +823,14 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
             const success = await sqlDB.editStudent(Email, StudentID, FirstName, LastName);
             if (success) {
                 console.log('Edit student successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Student successfully edited"
                 });
             }
             else{
                 console.log('Error: student edit Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "Student editing failed"
                 });
@@ -837,7 +839,7 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error within PUT students: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -858,13 +860,13 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 if (questions != undefined) {
                     if(questions.length > 0){
                         console.log('GET questions successful');
-                        res.json({
+                        res.status(200).json({
                             data: questions,
                             details: "Questions successfully found"
                         });
                     }
                     else{
-                        res.json({
+                        res.status(200).json({
                             data: {},
                             details: "no Questions found"
                         });
@@ -872,7 +874,7 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 }
                 else{
                     console.log('Error: No questions Found');
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "no Questions found"
                     });
@@ -881,7 +883,7 @@ app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         }
     catch(error){
         console.log('Error within GET qgen: ', error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -938,14 +940,14 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     sqlDB.postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
                 } else {
                     console.log('Error within POST qgen: Assigning questions to location failed');
-                    res.json({
+                    res.status(500).json({
                         success: false,
                         details: "Could not assign questions to internal storage location"
                     });
                 }
             } else {
                 console.log('Error within POST qgen: AI Generation Failed');
-                res.json({
+                res.status(500).json({
                     success: false,
                     details: "AI generation failed"
                 });
@@ -956,14 +958,14 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
             const foundAIQs = sqlDB.getQuestions(SubmissionID);
             if (foundAIQs != undefined) {
                 console.log('AI question generation successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Questions successfully generated"
                 });
             }
             else {
                 console.log('Error: AI Question Generation Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "failed to generate questions"
                 });
@@ -972,7 +974,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
     }
 	catch (error) {
 	    console.log('Error within POST qgen: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1015,13 +1017,13 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
             if (rubric != undefined) {
                 if(rubric.length > 0){
                     console.log('GET Rubric successful');
-                    res.json({
+                    res.status(200).json({
                         data: rubric,
                         details: "Rubric generation/get successfully"
                     });
                 }
                 else{
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "Generated Rubric not found"
                     });
@@ -1029,7 +1031,7 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
             }
             else{
                 console.log('Error: Generated Rubric not Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "Generated Rubric not found"
                 });
@@ -1038,7 +1040,7 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
     }
 	catch (error) {
 	    console.log('Error within POST qgen: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1081,14 +1083,14 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
 
             if (summary != undefined) {
                 console.log('GET Summary successful');
-                    res.json({
+                    res.status(200).json({
                         data: summary,
                         details: "Summary generation/get successfully"
                 });
             }
             else{
                 console.log('Error: Generated Summary not Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "Generated Summary not found"
                 });
@@ -1097,7 +1099,7 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
     }
 	catch (error) {
 	    console.log('Error within POST qgen: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1142,14 +1144,14 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
 
             if (feedback != undefined) {
                 console.log('GET Feedback successful');
-                    res.json({
+                    res.status(200).json({
                         data: feedback,
                         details: "Feedback generation/get successfully"
                 });
             }
             else{
                 console.log('Error: Generated Feedback not Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "Generated Feedback not found"
                 });
@@ -1158,7 +1160,7 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
     }
 	catch (error) {
 	    console.log('Error within POST qgen: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1178,13 +1180,13 @@ app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{//li
             if (foundVivas != undefined) {
                 if(foundVivas.length > 0){
                     console.log('GET vivas successful');
-                    res.json({
+                    res.status(200).json({
                         data: foundVivas,
                         details: "Vivas successfully found"
                     });
                 }
                 else{
-                    res.json({
+                    res.status(200).json({
                         data: {},
                         details: "Failed to find Vivas"
                     }); 
@@ -1192,7 +1194,7 @@ app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{//li
             }
             else{
                 console.log('Error: No Vivas Found');
-                res.json({
+                res.status(200).json({
                     data: {},
                     details: "Failed to find Vivas"
                 });
@@ -1201,7 +1203,7 @@ app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{//li
     }
     catch (error) {
         console.log('Error within GET vivas: ' + error);
-        res.json({
+        res.status(400).json({
             data: {},
             details: `Server encountered error: ${error}`
         });
@@ -1220,14 +1222,14 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{ //
             const success = await sqlDB.createExams(userID, SubmissionID, StudentID); // more fields added post MVP
             if (success) {
                 console.log('Create Exam successful');
-                res.json({
+                res.status(201).json({
                     success: true,
                     details: "Viva successfully generated"
                 });
             }
             else{
                 console.log('Error: Exam Creation Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "failed to create Viva"
                 });
@@ -1236,7 +1238,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{ //
     }
     catch (error) {
         console.log('Error within POST vivas: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1254,14 +1256,14 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
             const success = await sqlDB.deleteExam(userID, ExamID);
             if (success) {
                 console.log('Delete exam successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Viva successfully deleted"
                 });
             }
             else{
                 console.log('Error: exam Deletion Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "failed to delete Viva"
                 });
@@ -1270,7 +1272,7 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
     }
     catch(error) {
         console.log('Error within DELETE vivas: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
@@ -1293,14 +1295,14 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
             const success = await sqlDB.editExam(userID, ExamID, SubmissionID, StudentID, ExaminerID, Marks, Comments);
             if (success) {
                 console.log('Edit exam successful');
-                res.json({
+                res.status(200).json({
                     success: true,
                     details: "Viva successfully edited"
                 });
             }
             else{
                 console.log('Error: exam Edit Failed');
-                res.json({
+                res.status(400).json({
                     success: false,
                     details: "failed to edit Viva"
                 });
@@ -1309,7 +1311,7 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
     }
     catch(error){
         console.log('Error within PUT vivas: ' + error);
-        res.json({
+        res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });

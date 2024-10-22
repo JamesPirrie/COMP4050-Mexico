@@ -31,16 +31,18 @@ Many endpoints are the same however:
     userID: number, 
     details: string
 }
+- Status codes: 200 success, 401 invalid credentials, 400 other error
 - Description: Used for logging in a user
 
 `POST  /api/signup - Signing up a user`
 - Token in Authentication Header: None
-- Input parameters: email: string, password: string
+- Input parameters: email: string, password: string, user_name:string, first_name: string, last_name: string
 
 - Output parameters : { 
     success: boolean, 
     details: string
 }
+- Status codes: 200 success, 401 email already taken, 400 other error
 - Description: Used for signing up a user
 
 # Class endpoints
