@@ -9,6 +9,9 @@ import {getQuestions, getVivaForSubmission, getSubmissionFilePathForSubID, creat
 import {AiFactory} from "comp4050ai";
 //import { PDFProcessor, PromptManager } from 'comp4050ai'; 
 import * as dotenv from 'dotenv';
+dotenv.config();
+console.log("Environment variables loaded:");
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
 import jwt from 'jsonwebtoken';
 
 const port = 3000;
@@ -455,80 +458,103 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
 
 //AI endpoints
 //AI Generate Questions request (qgen = questions generate)
-app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
-	//We will get Submission ID
-	try {
-        // THIS CODE Is Made of a mix of the current version of the AI for Mock Implementation and the unuploader halfbuilt newer version of that library
-        // NOTE Commented out code is for future use with post MVP Implementation of AI
-        // Load environment variables
-        dotenv.config();
-        //const apiKey = process.env.OPENAI_API_KEY || '';
-
-        // Setup PDFProcessor and PromptManager 
-        /*
-        const promptManager = new PromptManager(5, "Question: [Your question]", "Answer: [Your answer]");
-        const pdfProcessor = new PDFProcessor(apiKey, promptManager, 'gpt-4o-mini-2024-07-18');
-
-        const result = await pdfProcessor.processPDF(pdfPath, './temp', false)
-        */ 
-        let pdfPath; //Refers to file name not full path.
-        try {            
-            pdfPath = await getSubmissionFilePathForSubID(Number(req.body.submission_id));
-        }
-        catch (error) {
-            console.log('Error: Get Submission Path from Sub ID Failed', error)
-        }
+app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
+    try {
+        console.log('Received GET to /api/qgen');
+        const submission_id = req.query.submission_id;
+        console.log('Submission ID:', submission_id);
         
-        //Construct Mock AI
-        let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage','./ServerStorage/qGEN','');
+        const questions = await getQuestions(Number(submission_id));
+        res.json(questions || []);
+    } catch (error) {
+        console.log('Error: ', error);
+        res.status(500).json({ error: String(error) });
+    }
+});
 
-        //Writes questions/answers file to "./ServerStorage" specified in constructor
-        let doc_id;
+// Existing POST endpoint with mock data when IS_MOCK=YES
+app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
+    try {
+        console.log('Received POST to /api/qgen');
+        console.log('Request body:', req.body);
+
+        // Check if API key exists
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            console.error('OpenAI API key not found');
+            res.status(500).json({ error: 'OpenAI API key not configured' });
+            return;
+        }
+
+        const submission_id = parseInt(req.body.submission_id);
+        console.log('Processing submission_id:', submission_id);
+
+        if (isNaN(submission_id)) {
+            console.error('Invalid submission_id received');
+            res.status(400).json({ error: 'Invalid submission ID' });
+            return;
+        }
+
+        // Get the PDF path
+        let pdfPath;
         try {            
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //
-	        doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath+".json"); //
-        }
-        catch (error) {
-            console.log('Error: AI Generation Failed', error)
+            pdfPath = await getSubmissionFilePathForSubID(submission_id);
+            console.log('PDF Path:', pdfPath);
+            
+            if (!pdfPath) {
+                res.status(404).json({ error: 'PDF not found' });
+                return;
+            }
+        } catch (error) {
+            console.error('Error getting PDF path:', error);
+            res.status(500).json({ error: 'Failed to get PDF path' });
+            return;
         }
 
-        if(doc_id){
-            //Accesses the storage location specified in the contructor
-            let questions;
-            try {
-                questions = await ai.getQuestions(doc_id);
-            }
-            catch (error) {
-                console.log('Error: Assigning questions to location failed', error)
-            }
-            //Insert generated AI Questions into results table for submission_id
-            if (questions){
-                postAIOutputForSubmission(Number(req.body.submission_id), JSON.stringify((questions)));
-            } else {
-                res.send(JSON.stringify(false));
-                console.log('Error: Assigning questions to location failed', Error)
-            }
-        } else {            
-            res.send(JSON.stringify(false));
-            console.log('Error: AI Generation Failed', Error)
-        }        
+        // Create AI instance with verified API key
+        let ai = AiFactory.makeAi(
+            './ServerStorage/PDF_Storage',
+            './ServerStorage/qGEN',
+            apiKey  // Now TypeScript knows this is definitely a string
+        );
+
+        try {            
+            console.log('Generating questions for PDF:', pdfPath);
+            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
+            console.log('Generated questions:', q_and_a);
             
-        //verify any questions exist for submission
-        // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
-        const foundAIQs = getQuestions(Number(req.body.submission_id)); 
-        if (foundAIQs != null){
-            res.send(JSON.stringify(true));
-            console.log('AI question generation successful');
+            // Save questions
+            await postAIOutputForSubmission(submission_id, JSON.stringify(q_and_a));
+            
+            // Return success
+            res.json({ success: true, questions: q_and_a });
+        } catch (error) {
+            console.error('Error generating questions:', error);
+            res.status(500).json({ error: 'Failed to generate questions' });
         }
-        else{
-            res.send(JSON.stringify(false));
-            console.log('Error: AI Question Generation Failed', Error)
+    } catch (error) {
+        console.error('Error in qgen endpoint:', error);
+        res.status(500).json({ error: String(error) });
+    }
+});
+
+// Add GET endpoint for retrieving questions
+app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
+    try {
+        console.log('Received GET to /api/qgen');
+        const submission_id = Number(req.query.submission_id);
+        
+        if (isNaN(submission_id)) {
+            res.status(400).json({ error: 'Invalid submission ID' });
+            return;
         }
-	}
-	catch (error) {
-	    console.log('Error: ', error)
-	}	
-	//if AI function succeeds return true else return false
+
+        const questions = await getQuestions(submission_id);
+        res.json(questions || []);
+    } catch (error) {
+        console.log('Error: ', error);
+        res.status(500).json({ error: String(error) });
+    }
 });
 
 app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{

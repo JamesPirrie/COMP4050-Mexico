@@ -1,18 +1,55 @@
 {% extends 'base.html' %}
-
 {% block title %}Submission{% endblock %}
-
 {% block content %}
-<h2>Submission {{ request.args.get('name', '') }}</h2>
-<p>This is where we view a Submissions details and generated Questions</p>
-<ul>
-    {% if questions %}
-        {% for question in questions %}
-            <li>{{ question }}</li>
-        {% endfor %}
-    {% else %}
-        <li>No questions generated.</li>
+
+<div class="welcome-box">
+    <h2>Submission Details</h2>
+</div>
+
+<div class="content-box">
+    {% if submission %}
+    <div class="student-info">
+        <p><strong>Student ID:</strong> {{ submission.student_id }}</p>
+        <p><strong>Submission Date:</strong> {{ submission.submission_date }}</p>
+        <p><strong>File:</strong> {{ submission.submission_filepath }}</p>
+    </div>
     {% endif %}
-</ul>
-<a href="{{ url_for('generate', submission_id=request.args.get('name', ''))}}">GENERATE THE QUESTIONS!!!</a>
+
+    <div class="button-spacer"></div>
+
+    <h3>Generated Questions</h3>
+    {% if questions %}
+    {% for result in questions %}
+        <div class="link">
+            {% if result.generated_questions is mapping and result.generated_questions.content %}
+                {% for qa in result.generated_questions.content %}
+                    <div class="qa-pair">
+                        <div class="question"><strong>Q{{ loop.index }}:</strong> {{ qa.question }}</div>
+                        <div class="answer"><strong>A:</strong> {{ qa.answer }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                {% for qa in result.generated_questions %}
+                    <div class="qa-pair">
+                        <div class="question"><strong>Q{{ loop.index }}:</strong> {{ qa.question }}</div>
+                        <div class="answer"><strong>A:</strong> {{ qa.answer }}</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="button-spacer"></div>
+    {% endfor %}
+{% else %}
+    <div class="link">
+        <p>No questions have been generated yet.</p>
+    </div>
+{% endif %}
+
+    <div class="button-spacer"></div>
+
+    <div class="add-button">
+        <a href="{{ url_for('generate', submission_id=submission_id) }}">Generate Questions</a>
+    </div>
+</div>
+
 {% endblock %}

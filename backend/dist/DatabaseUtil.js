@@ -200,14 +200,22 @@ async function getVivaForSubmission(email, specificSubmission, specificGenQ) {
     }
 }
 // get specific submissions with submission_id
-async function getSubmissionFilePathForSubID(specificSubmission) {
+async function getSubmissionFilePathForSubID(submission_id) {
     try {
-        const submission = await sql `SELECT * FROM submissions WHERE submission_id = ${specificSubmission};`;
-        const sPath = submission[0].submission_filepath;
-        return sPath;
+        if (!submission_id || isNaN(submission_id)) {
+            console.error('Invalid submission_id:', submission_id);
+            return null;
+        }
+        console.log('Getting filepath for submission_id:', submission_id);
+        const submission = await sql `
+            SELECT submission_filepath 
+            FROM submissions 
+            WHERE submission_id = ${submission_id}::integer`;
+        return submission.length ? submission[0].submission_filepath : null;
     }
     catch (error) {
-        throw error;
+        console.error('Error in getSubmissionFilePathForSubID:', error);
+        return null;
     }
 }
 // get submissions with user, class, and assignment
@@ -259,11 +267,27 @@ async function getPDFFile(student_id, assignment_id) {
 // internal query to receive generated questions in jsonb into ai_output table
 async function postAIOutputForSubmission(submission_id, generated_questions) {
     try {
-        await sql `INSERT INTO ai_output (submission_id, generated_questions, generation_date)
-                                VALUES (${submission_id}, ${JSON.parse(generated_questions)}, CURRENT_TIMESTAMP);`; //TRIM might be weird here idk 
+        if (!submission_id || isNaN(submission_id)) {
+            throw new Error(`Invalid submission_id: ${submission_id}`);
+        }
+        console.log('Saving questions for submission_id:', submission_id);
+        const parsed_questions = JSON.parse(generated_questions);
+        console.log('Parsed questions:', parsed_questions);
+        await sql `
+            INSERT INTO ai_output (
+                submission_id, 
+                generated_questions, 
+                generation_date
+            ) VALUES (
+                ${submission_id}::integer,
+                ${parsed_questions}::jsonb,
+                CURRENT_TIMESTAMP
+            )
+        `;
         return true;
     }
     catch (error) {
+        console.error('Error in postAIOutputForSubmission:', error);
         throw error;
     }
 }

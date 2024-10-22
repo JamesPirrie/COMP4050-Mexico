@@ -112,6 +112,7 @@ body {
     margin-bottom: 20px;
     text-align: center;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .welcome-box p {
@@ -131,6 +132,8 @@ body {
     align-items: center;
     cursor: pointer;
     margin: auto;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .content-box p {
@@ -146,22 +149,33 @@ body {
 
 .content-box .link {
     position: relative;
-    height: 24px;
+    min-height: 24px;
     border-radius: 5px;
     background-color: #ffffff;
-    margin: 10px;
-    padding: 10px;
+    margin: 10px auto;  /* Center and match spacing */
+    padding: 15px;
+    width: calc(100% - 20px);  /* Match width of red buttons */
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    display: block;  /* Change from flex to block */
+    align-items: center; /* Added */
+    justify-content: center; /* Added */
 }
 
 .content-box .link a {
     position: absolute;
-    top: 8px;
-    left: 0px;
+    top: 0; /* Changed from 8px */
+    left: 0;
     width: 100%;
     height: 100%;
     color: #000;
     text-decoration: none;
     z-index: 10;
+    display: flex; /* Added */
+    align-items: center; /* Added */
+    justify-content: center; /* Added */
 }
 
 .content-box a {
@@ -181,8 +195,9 @@ body {
     height: 24px;
     border-radius: 5px;
     background-color: #A6192E;
-    margin: 5px;
+    margin: 5px 10px;  /* Match link margins */
     padding: 5px;
+    width: calc(100% - 20px);  /* Match link width */
 }
 
 .content-box .add-button a {
@@ -200,6 +215,29 @@ body {
     background-color: #8b0a1a;
 }
 
+/* Question and Answer Styling */
+.qa-pair {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    display: block;  /* Ensure vertical stacking */
+    width: 100%;
+}
+
+.qa-pair:last-child {
+    border-bottom: none;
+}
+
+.question, .answer {
+    margin: 5px 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.4;
+    display: block;  /* Ensure vertical stacking */
+    width: 100%;
+}
+
+/* Form Styling */
 .create-form {
     margin-top: 20px;
 }
@@ -227,7 +265,7 @@ body {
     background-color: #8b0a1a;
 }
 
-/* Global Column Design Boxes */
+/* Column Layout */
 .columns-container {
     display: flex;
     padding: 20px;
@@ -259,7 +297,7 @@ body {
     background-color: #8b0a1a;
 }
 
-/* Dark mode styles */
+/* Dark Mode Styles */
 body.dark-mode {
     background-color: #1e1e1e;
     color: #f4f4f4;
@@ -330,42 +368,25 @@ body.dark-mode .small-button:hover {
     background-color: #8b0a1a;
 }
 
-/* Fix assignment view in dark mode */
-body.dark-mode .assignments-list,
-body.dark-mode .students-list {
-    background-color: #333;
+body.dark-mode .qa-pair {
+    border-bottom-color: #444;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #2e2e2e;
     color: #f4f4f4;
+    border-color: #555;
 }
 
-body.dark-mode .assignments-list .link,
-body.dark-mode .students-list .link {
-    background-color: #444;
+body.dark-mode input::placeholder,
+body.dark-mode select::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #aaa;
 }
 
-body.dark-mode .assignments-list .link a,
-body.dark-mode .students-list .link a {
-    color: #f4f4f4;
-}
-
-/* Assignment page specific dark mode styles */
-body.dark-mode .assignment-container {
-    background-color: #1e1e1e;
-    color: #f4f4f4;
-}
-
-body.dark-mode .link {
-    background-color: #444;
-    margin: 10px;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-body.dark-mode .link a {
-    color: #f4f4f4;
-    text-decoration: none;
-}
-
-/* Settings specific buttons */
+/* Settings Specific Buttons */
 .settings-button {
     background-color: #A6192E;
     color: #ffffff;
@@ -388,38 +409,4 @@ body.dark-mode .settings-button {
 
 body.dark-mode .settings-button:hover {
     background-color: #8b0a1a;
-}
-
-/* Assignment page additional dark mode fixes */
-body.dark-mode .content-box .link {
-    background-color: #444;
-    color: #f4f4f4;
-}
-
-body.dark-mode .content-box .link a {
-    color: #f4f4f4;
-}
-
-body.dark-mode h2,
-body.dark-mode h3 {
-    color: #f4f4f4;
-}
-
-body.dark-mode .test-assignment-button {
-    color: #f4f4f4;
-}
-
-/* Form fields in dark mode */
-body.dark-mode input,
-body.dark-mode select,
-body.dark-mode textarea {
-    background-color: #2e2e2e;
-    color: #f4f4f4;
-    border-color: #555;
-}
-
-body.dark-mode input::placeholder,
-body.dark-mode select::placeholder,
-body.dark-mode textarea::placeholder {
-    color: #aaa;
 }

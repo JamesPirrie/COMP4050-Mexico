@@ -3,7 +3,10 @@ from datetime import date
 import requests
 import json
 import uuid
+import time
 import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 backend = "http://localhost:3000/api/"
@@ -22,6 +25,8 @@ def isAuthenticated():
     return user.userAuthenticated
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 # How to use this code
 # url requests from the user are detected using @app.route()
@@ -111,13 +116,23 @@ def new_class():
 
 @app.route('/unit')
 def unit():
+    class_id = None
     classes = getClasses()
+    current_class = request.args.get('class', '')
+    
     for item in classes:
-        if item['code'] == request.args.get('class', ''):
-            print(f'comparing {item["code"]} vs {request.args.get("class", "")}')
+        if item['code'] == current_class:
             class_id = item['class_id']
             session['last_class_id'] = class_id
-    return render_template('unit.html', assignments = getAssignments(class_id), students = getStudents(class_id))
+            break
+            
+    if not class_id:
+        return redirect(url_for('classes'))
+        
+    return render_template('unit.html', 
+                         assignments=getAssignments(class_id), 
+                         students=getStudents(class_id))
+    
 
 #-----------------------------------
 #Assignment Routes
@@ -190,15 +205,29 @@ def vivas():
 def settings():
     return render_template('settings.html')
 
-@app.route('/new_project', methods = ['GET', 'POST'])
+@app.route('/new_project', methods=['GET', 'POST'])
 def new_project():
     if request.method == 'POST':
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
-        jsons = {'email': user.email, 'assignment_id': session['last_assignment_id'], 'student_id': student_id, 'submission_date': str(date.today()), 'submission_filepath': pdf.filename}
-        print(jsons)
-        postSubmission(files, jsons)
+        jsons = {
+            'email': user.email,
+            'assignment_id': session['last_assignment_id'],
+            'student_id': student_id,
+            'submission_date': str(date.today()),
+            'submission_filepath': pdf.filename
+        }
+        
+        # Create submission and get submission ID
+        response = postSubmission(files, jsons)
+        if response.status_code == 200:
+            # Get the latest submission for this student/assignment
+            submissions = getSubmissions(session['last_assignment_id'], session['last_class_id'])
+            if submissions:
+                latest_submission = max(submissions, key=lambda x: x['submission_id'])
+                return redirect(url_for('submission', submission_id=latest_submission['submission_id']))
+            
         return redirect(url_for('unit'))
     
     students = getStudents(session['last_class_id'])
@@ -217,16 +246,72 @@ def logout():
 
 @app.route('/submission')
 def submission():
-    questions = getSubmissions(session['last_assignment_id'], session['last_class_id'])
-    return render_template('submission.html', questions = questions)
+    submission_id = request.args.get('submission_id')
+    logger.debug(f"Viewing submission {submission_id}")
+    
+    try:
+        # Get submission details
+        submissions = getSubmissions(session.get('last_assignment_id'), session.get('last_class_id'))
+        submission = next((s for s in submissions if str(s['submission_id']) == str(submission_id)), None)
+        
+        # Get questions
+        questions = getQuestions(submission_id)
+        logger.debug(f"Retrieved questions for submission {submission_id}: {questions}")
+        
+        # Sort questions by generation date (newest first)
+        if questions:
+            questions.sort(key=lambda x: x['generation_date'], reverse=True)
+        
+        return render_template('submission.html',
+                             submission=submission,
+                             questions=questions,
+                             submission_id=submission_id)
+    except Exception as e:
+        logger.error(f"Error in submission route: {e}")
+        return redirect(url_for('classes'))
 
 @app.route('/generate')
 def generate():
-    submission_id = request.args.get('submission_id', '')
-    print(submission_id)
-    json = {'email': user.email, 'submission_id': submission_id, 'result_id': 0}
-    postQuestion(json)
-    return redirect(url_for('submission'))
+    submission_id = request.args.get('submission_id')
+    logger.debug(f"Generate request received for submission_id: {submission_id}")
+    
+    if not submission_id:
+        logger.error("No submission_id provided")
+        return redirect(url_for('classes'))
+        
+    try:
+        # Convert to integer and validate
+        submission_id_int = int(submission_id)
+        if submission_id_int <= 0:
+            raise ValueError("Invalid submission ID")
+
+        # Generate questions
+        data = {
+            'submission_id': submission_id_int,
+            'email': user.email
+        }
+        
+        logger.debug(f"Sending question generation request with data: {data}")
+        response = requests.post(
+            f'{backend}qgen',
+            json=data,  # Use json parameter instead of data
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            logger.debug("Question generation successful")
+            logger.debug(f"Response: {response.text}")
+        else:
+            logger.error(f"Question generation failed: {response.status_code} - {response.text}")
+            
+        # Add small delay to allow backend processing
+        time.sleep(2)
+        
+        return redirect(url_for('submission', submission_id=submission_id))
+        
+    except Exception as e:
+        logger.error(f"Error in generate route: {e}")
+        return redirect(url_for('submission', submission_id=submission_id))
 
 #-----------------------------------
 #Helper Functions
@@ -470,24 +555,64 @@ def updateViva(json):
     return requests.put(f'{backend}vivas', json = json)
 
 #Question Gen functions
-def getQuestions():
+def getQuestions(submission_id=None):
     """
     Gets a list of AI questions from the backend server.
+    Args:
+        submission_id (int, optional): The submission ID to filter questions for
     Returns:
         list: A list of questions
     """
-    return json.loads(requests.get(f'{backend}qgen').content)
+    try:
+        if submission_id:
+            url = f'{backend}qgen?submission_id={int(submission_id)}'
+            logger.debug(f"Getting questions from URL: {url}")
+            
+            response = requests.get(url)
+            logger.debug(f"Response status: {response.status_code}")
+            logger.debug(f"Response content: {response.text}")
+            
+            if response.status_code == 200:
+                return json.loads(response.content)
+        return []
+    except Exception as e:
+        logger.error(f"Error getting questions: {e}")
+        return []
 
-def postQuestion(json):
-    """
-    Posts an AI question generation request to the backend server.
-    Args:
-        json (dict): A json object to be posted
-    Returns:
-        response: The response from the server
-    """
-    return requests.post(f'{backend}qgen', json = json)
-
+def postQuestion(json_data):
+    try:
+        submission_id = int(json_data.get('submission_id', 0))
+        if submission_id <= 0:
+            logger.error(f"Invalid submission_id: {submission_id}")
+            return None
+            
+        logger.debug(f"Sending question generation request for submission_id: {submission_id}")
+        
+        # Send as form data with string values
+        form_data = {
+            'submission_id': str(submission_id)
+        }
+        
+        logger.debug(f"Sending form data: {form_data}")
+        
+        response = requests.post(
+            f'{backend}qgen',
+            data=form_data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            logger.debug(f"Question generation response: {response.text}")
+            return response
+        else:
+            logger.error(f"Question generation failed: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error posting question: {e}")
+        return None
+    
+    
 #Rubric functions
 def getRubrics(userid, submissionid, projectoverview, criteria, topics, goals):
     """
