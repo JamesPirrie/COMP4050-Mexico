@@ -6,9 +6,11 @@
 
         "server": "tsc -p . & node ./dist/BackendServer.js",
 
-        "build_db": "docker-compose up --force-recreate --no-start",
+        "db-build": "docker stop pgsql-dev & docker-compose up --force-recreate --no-start & docker start pgsql-dev",
 
-        "db": "docker start pgsql-dev"
+        "db": "docker start pgsql-dev",
+
+        "db-stop": "docker stop pgsql-dev"
 
     },
 
