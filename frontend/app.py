@@ -169,7 +169,7 @@ def new_class():
 def unit():
     class_id = None
     classes = getClasses()
-    current_class = request.args.get('class', '')
+    current_class = request.args.get('class_id', '')
     
     for item in classes:
         if item['code'] == current_class:
@@ -196,7 +196,8 @@ def assignment():
         if a['name'] == request.args.get('name', ''):
             assignment_id = a['assignment_id']
             session['last_assignment_id'] = assignment_id
-    submissions = getSubmissions(assignment_id, session['last_class_id'])     #Changed to getSubmissions
+    submissions = getSubmissions(assignment_id, session['last_class_id'])
+    print(submissions)
     return render_template('assignment.html', submissions = submissions)
 
 @app.route('/newAssignment', methods = ['GET', 'POST'])
@@ -209,11 +210,12 @@ def newAssignment():
                 class_id = item['class_id']
             else:
                 print('no class id found')
+                redirect(url_for('classes' , error='No class id found'))
         name = request.form['name']
         desc = request.form['desc']
-        json = {'email': user.email, 'class_id': class_id, 'name': name, 'description': desc}
+        json = {'user_id': user.userID, 'class_id': class_id, 'name': name, 'description': desc}
         postAssignment(json)
-        return redirect(url_for('classes'))
+        return redirect(url_for('unit', class_id=session.get('last_class_id')))
     return render_template('newAssignment.html')
 
 #-----------------------------------
@@ -277,7 +279,7 @@ def new_project():
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
         jsons = {
-            'email': user.email,
+            'user_id': user.userID,
             'assignment_id': session['last_assignment_id'],
             'student_id': student_id,
             'submission_date': str(date.today()),
@@ -516,7 +518,10 @@ def postAssignment(json):
     Returns:
         response: The response from the server
     """
-    return requests.post(f'{backend}assignments', json = json)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    return requests.post(f'{backend}assignments', json = json, headers=headers)
 
 def deleteAssignment(assignmentid):
     """
@@ -577,9 +582,6 @@ def postStudent(json):
     headers = {
         'Authorization': f'Bearer {session.get("token")}'
     }
-    
-    # Add user_id to the request
-    json['user_id'] = user.userID
     
     print(f"Creating student with data: {json}")
     response = requests.post(f'{backend}students', json=json, headers=headers)
@@ -651,7 +653,10 @@ def getSubmissions(assignmentid, classid):
     Returns:
         list: A list of submissions
     """
-    return json.loads(requests.get(f'{backend}submissions?email={user.email}&assignment_id={assignmentid}&class_id={classid}').content)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    return json.loads(requests.get(f'{backend}submissions?user_id={user.userID}&assignment_id={assignmentid}&class_id={classid}', headers=headers).content)
 
 def postSubmission(files, json):
     """
@@ -663,7 +668,12 @@ def postSubmission(files, json):
         response: The response from the server
     """
     print('posting submission')
-    return requests.post(f'{backend}submissions', files = files, data = json)
+
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+
+    return requests.post(f'{backend}submissions', files = files, data = json, headers=headers)
 
 def deleteSubmission(submissionid):
     """
