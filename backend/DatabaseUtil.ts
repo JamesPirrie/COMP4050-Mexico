@@ -317,10 +317,12 @@ export class dbUtils {
         }
     }
 
+    // Add student ID to a class array. Then update the student with the class ID in the classes array.
     async addStudentToClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
             //add verifications
             await sql`UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await this.updateStudentClass(specificClass);
             return true;
         }
         catch(error){
@@ -328,13 +330,28 @@ export class dbUtils {
         }
     }
 
+    // Remove student ID to a class array. Then update the student with the class ID in the classes array.
     async removeStudentFromClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
             //add verifications
-            await sql`UPDATE class SET students = array_remove(students, ${student_id} WHERE class_id = ${specificClass};`;
+            await sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await this.updateStudentClass(specificClass);
             return true;
         }
         catch(error){
+            throw error;
+        }
+    }
+
+    // Update classes array in students based on (new) students array in class specificClass.
+    async updateStudentClass(specificClass: number): Promise<void> {
+        try {
+            console.log(`class: ${specificClass}`);
+            await sql`UPDATE students SET classes = array_remove(classes, ${specificClass});`;
+            await sql`WITH to_update AS (SELECT unnest(students) AS student FROM class WHERE class_id = ${specificClass})
+                      UPDATE students SET classes = array_append(classes, ${specificClass}) FROM to_update WHERE student_id = student;`;
+        }
+        catch(error) {
             throw error;
         }
     }
