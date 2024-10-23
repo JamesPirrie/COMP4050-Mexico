@@ -52,15 +52,33 @@ def default():
         return redirect(url_for('dashboard'))
     else:
         return redirect(url_for('login'))
+    
 @app.route('/signup', methods = ['GET', 'POST'])
 def signup():
     if request.method == 'GET':
         return render_template('signup.html')
     
     if request.method == 'POST':
-        email=request.form['email']
-        auth = requests.post(f'{backend}signup', json = {'email': email})
-        if auth.text == 'true':
+        email = request.form['email']
+        password = request.form['password']
+        user_name = request.form['user_name']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        
+        signup_data = {
+            'email': email,
+            'password': password,
+            'user_name': user_name,
+            'first_name': first_name,
+            'last_name': last_name
+        }
+        
+        print("Sending signup data:", signup_data)  # Debug print
+        auth = requests.post(f'{backend}signup', json=signup_data)
+        resp = json.loads(auth.content)
+        print("Signup response:", resp)  # Debug print
+        
+        if resp.get('success') == True:
             return redirect(url_for('login'))
         return redirect(url_for('signup'))
 
@@ -74,16 +92,36 @@ def login():
 @app.route('/loginDirect', methods = ['GET', 'POST'])
 def loginDirect():
     if request.method == 'POST':
-        email=request.form['email']
-        auth = requests.post(f'{backend}login', json = {'email': email})
+        # Ensure email is in a valid format that will pass backend validation
+        email = request.form['email'].strip()
+        if not '@' in email or not '.' in email.split('@')[1]:
+            print("Invalid email format")
+            return render_template('loginDirect.html', error="Please use a valid email format (e.g., user@domain.com)")
+            
+        password = request.form['password']
+        
+        login_data = {
+            'email': email,
+            'password': password
+        }
+        
+        print("Sending login data:", login_data)
+        auth = requests.post(f'{backend}login', json=login_data)
         resp = json.loads(auth.content)
-        print(resp)
-        if auth.text == 'true':
+        print("Auth response:", resp)
+        
+        if resp.get('success') == True:
             user.email = email
             user.userAuthenticated = True
-            #user.userID = json.loads(resp)['user_id']
-            print(user)
+            user.userID = resp.get('userID')
+            session['token'] = resp.get('token')
+            print(f"Login successful. UserID: {user.userID}")
+            print(f"Token: {session.get('token')}")
             return redirect(url_for('dashboard'))
+        else:
+            print(f"Login failed: {resp.get('details')}")
+            return render_template('loginDirect.html', error=resp.get('details'))
+            
     return render_template('loginDirect.html')
 
 #-----------------------------------
@@ -99,17 +137,30 @@ def dashboard():
 
 @app.route('/classes', methods = ['GET'])
 def classes():
-    classes = getClasses()
-    for item in classes:
-        print(item)
-    return render_template('classes.html', classes = classes)
+    if not isAuthenticated():
+        return redirect(url_for('login'))
+        
+    try:
+        classes_data = getClasses()
+        for item in classes_data:
+            print(item)
+        return render_template('classes.html', classes = classes_data)
+    except Exception as e:
+        print(f"Error fetching classes: {e}")
+        return redirect(url_for('login'))
 
 @app.route('/new_class', methods = ['GET', 'POST'])
 def new_class():
     if request.method == 'POST':
         name = request.form['name']
         code = request.form['code']
-        json = {'email': user.email, 'session': 1, 'year': 2024, 'title': name, 'code': code}
+        json = {
+            'user_id': user.userID,
+            'session': 1,
+            'year': 2024,
+            'title': name,
+            'code': code
+        }
         postClass(json)
         return redirect(url_for('classes'))
     return render_template('newclass.html')
@@ -124,6 +175,7 @@ def unit():
         if item['code'] == current_class:
             class_id = item['class_id']
             session['last_class_id'] = class_id
+            session['last_class_code'] = current_class  # Store the class code
             break
             
     if not class_id:
@@ -177,13 +229,26 @@ def student():
 @app.route('/new_student', methods=['GET', 'POST'])
 def new_student():
     if request.method == 'POST':
-        email = user.email
+        email = user.email  # Get from the form if you want student's email
         fname = request.form['fname']
         lname = request.form['lname']
         id = request.form['id']
-        json = {'email': user.email, 'student_id': id, 'first_name': fname, 'last_name': lname}
-        postStudent(json)
-        return redirect(url_for('classes'))
+        
+        json = {
+            'user_id': user.userID,
+            'student_id': id,
+            'first_name': fname,
+            'last_name': lname,
+            'email': f"{fname}.{lname}@students.mq.edu.au"  # Generate a default email or get from form
+        }
+        
+        if postStudent(json):
+            print("Student created and added to class successfully")
+            return redirect(url_for('unit', class_code=session.get('last_class_code')))
+        else:
+            print("Failed to create student or add to class")
+            return redirect(url_for('classes'))
+            
     return render_template('newStudent.html')
 
 #-----------------------------------
@@ -320,13 +385,13 @@ def getStudentSingle(classid, id):
     """
     Gets a single student for the current user.
     Returns:
-        dict: A single student
+        dict: A single student or None if not found
     """
     students = getStudents(classid)
     for s in students:
-        if s['student_id'] == int(id):
+        if s.get('student_id') == int(id):
             return s
-    return ''
+    return None
 
 #-----------------------------------
 #Login functions
@@ -354,7 +419,28 @@ def getClasses():
     Returns:
         list: a list of classes
     """
-    return json.loads(requests.get(f'{backend}classes?email={user.email}').content)
+    if not session.get('token'):
+        print("No token found in session")
+        return []
+        
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    # Only send user_id as query parameter
+    url = f"{backend}classes?user_id={user.userID}"
+    print(f"Making request to: {url}")
+    print(f"With headers: {headers}")
+    
+    response = requests.get(url, headers=headers)
+    
+    if response.ok:
+        print("Success response:", response.json())
+        resp_data = response.json()
+        return resp_data.get('data', [])
+    else:
+        print(f"Error response {response.status_code}:", response.text)
+        return []
 
 def postClass(json):
     """
@@ -364,7 +450,16 @@ def postClass(json):
     Returns:
         response: The response from the server
     """
-    return requests.post(f'{backend}classes', json = json)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    # Ensure the JSON contains user_id but not email
+    if 'email' in json:
+        del json['email']
+    json['user_id'] = user.userID
+    
+    return requests.post(f'{backend}classes', json=json, headers=headers)
 
 def deleteClass(classid):
     """
@@ -387,7 +482,7 @@ def updateClass(json):
     return requests.put(f'{backend}classes', json = json)
 
 #Assignment functions
-def getAssignments(classid):
+def getAssignments(class_id):
     """
     Gets a list of assignments for the given class or for the current user's last class if classid is not provided.
     Args:
@@ -395,7 +490,23 @@ def getAssignments(classid):
     Returns:
         list: A list of assignments
     """
-    return json.loads(requests.get(f'{backend}assignments?email={user.email}&class_id={classid}').content)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    params = {
+        'user_id': user.userID,
+        'class_id': class_id
+    }
+    
+    print(f"Getting assignments for class_id: {class_id}")
+    response = requests.get(f'{backend}assignments', headers=headers, params=params)
+    
+    if response.ok:
+        resp_data = response.json()
+        return resp_data.get('data', [])
+    print(f"Error getting assignments: {response.text}")
+    return []
 
 def postAssignment(json):
     """
@@ -428,7 +539,7 @@ def updateAssignment(json):
     return requests.put(f'{backend}assignments', json = json)
 
 #Student functions
-def getStudents(classid):
+def getStudents(class_id):
     """
     Gets a list of students for the given class or for the current user's last class if classid is not provided.
     Args:
@@ -436,7 +547,24 @@ def getStudents(classid):
     Returns:
         list: A list of students
     """
-    return json.loads(requests.get(f'{backend}students?email={user.email}&class_id={classid}').content)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    params = {
+        'user_id': user.userID,
+        'class_id': class_id
+    }
+    
+    print(f"Getting students for class_id: {class_id}")
+    response = requests.get(f'{backend}students', headers=headers, params=params)
+    
+    if response.ok:
+        resp_data = response.json()
+        return resp_data.get('data', [])
+    print(f"Error getting students: {response.text}")
+    return []
+
 
 def postStudent(json):
     """
@@ -446,7 +574,51 @@ def postStudent(json):
     Returns:
         response: The response from the server
     """
-    return requests.post(f'{backend}students', json = json)
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    # Add user_id to the request
+    json['user_id'] = user.userID
+    
+    print(f"Creating student with data: {json}")
+    response = requests.post(f'{backend}students', json=json, headers=headers)
+    
+    if response.ok:
+        print("Student creation successful")
+        # After creating the student, we need to add them to the class
+        return addStudentToClass(json['student_id'])
+    else:
+        print(f"Error creating student: {response.text}")
+        return False
+    
+def addStudentToClass(student_id):
+    """
+    Adds a student to the current class.
+    """
+    if not session.get('last_class_id'):
+        print("No class ID found in session")
+        return False
+        
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    json_data = {
+        'user_id': user.userID,
+        'student_id': student_id,
+        'class_id': session.get('last_class_id')
+    }
+    
+    print(f"Adding student to class with data: {json_data}")
+    response = requests.post(f'{backend}classesStudents', json=json_data, headers=headers)
+    
+    if response.ok:
+        print("Student added to class successfully")
+        return True
+    else:
+        print(f"Error adding student to class: {response.text}")
+        return False   
 
 def deleteStudent(studentid):
     """

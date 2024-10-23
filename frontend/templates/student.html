@@ -1,41 +1,40 @@
-{% extends 'base.html' %}
-{% block title %}Student Details - VivaMQ{% endblock %}
+{% extends 'base.html' %} 
+{% block title %}Student Details - VivaMQ{% endblock %} 
 {% block content %}
 
 <div class="welcome-box">
     <h2>Student Details</h2>
     <p>View and manage student information for {{ student.first_name }} {{ student.last_name }}</p>
-</div>
-
-<div class="content-box">
+  </div>
+  
+  <div class="content-box">
     <h3>Student Information</h3>
     <div class="student-info">
-        <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
-        <p><strong>Student ID:</strong> {{ student.student_id }}</p>
-        <!-- Add more student details as needed -->
+      <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+      <p><strong>Student ID:</strong> {{ student.student_id }}</p>
     </div>
-
+  
     <h3>Assignments</h3>
     <div class="assignments-list">
-        {% if assignments %}
-            {% for assignment in assignments %}
-                <div class="link">
-                    <a href="{{ url_for('assignment', name=assignment.name) }}" class="test-assignment-button">
-                        {{ assignment.name }}
-                    </a>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p class="placeholder-text">No assignments for this student.</p>
-        {% endif %}
+      {% if assignments %}
+        {% for assignment in assignments %}
+          <div class="link">
+            <a href="{{ url_for('assignment', name=assignment.name) }}" class="test-assignment-button">
+              {{ assignment.name }}
+            </a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No assignments for this student.</p>
+      {% endif %}
     </div>
-
+  
     <div class="button-spacer"></div>
-
+  
     <div class="add-button">
-        <a href="{{ url_for('newAssignment', student_id=student.student_id) }}">Add New Assignment</a>
+      <a href="{{ url_for('newAssignment', student_id=student.student_id) }}">Add New Assignment</a>
     </div>
-</div>
+  </div>
 
 <!-- Darkmode  -->
 <script>

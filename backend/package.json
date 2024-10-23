@@ -4,11 +4,17 @@
 
         "build": "tsc -p .",
 
-        "server": "tsc -p . & node ./dist/BackendServer.js"
+        "server": "tsc -p . & node ./dist/BackendServer.js",
+
+        "build_db": "docker-compose up --force-recreate --no-start",
+
+        "db": "docker start pgsql-dev"
 
     },
 
     "dependencies": {
+
+        "bcrypt": "^5.1.1",
 
         "comp4050ai": "github:stroogle/COMP4050AI",
 
@@ -20,13 +26,19 @@
 
         "multer": "^1.4.5-lts.1",
 
+        "package.json": "^2.0.1",
+
         "postgres": "^3.4.4"
 
     },
 
     "devDependencies": {
 
+        "@types/bcrypt": "^5.0.2",
+
         "@types/express": "^4.17.21",
+
+        "@types/jsonwebtoken": "^9.0.7",
 
         "@types/multer": "^1.4.12"
 

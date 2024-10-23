@@ -1,62 +1,44 @@
 "use strict";
 //https://expressjs.com/en/5x/api.html  
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//Package Imports
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
-const DatabaseUtil_1 = require("./DatabaseUtil");
-const DatabaseUtil_2 = require("./DatabaseUtil");
+require("dotenv/config");
+//AI Imports
 const comp4050ai_1 = require("comp4050ai");
-//import { PDFProcessor, PromptManager } from 'comp4050ai'; 
-const dotenv = __importStar(require("dotenv"));
-dotenv.config();
-console.log("Environment variables loaded:");
-console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const port = 3000;
-//express
+//Local Imports
+const DatabaseUtil_1 = require("./DatabaseUtil");
+const AuthenticationUtil_1 = require("./AuthenticationUtil");
+//Globals
+const PORT = 3000;
+const ROOTDIR = __dirname.slice(0, __dirname.length - 5); //get rid of /dist at the end
+var TEMPFILENAME; //memory to store StorageEngine's generated name
+//Initialisaion
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); //without this req.body is undefined and works if and only if the content-type header is application/json
+const sqlDB = new DatabaseUtil_1.dbUtils();
 //multer middleware
 const storageEngine = multer_1.default.diskStorage({
     destination: (req, file, callBack) => {
-        callBack(null, './ServerStorage/PDF_Storage');
+        callBack(null, './ServerStorage/PDF_Storage'); //where the file is saved
     },
-    filename: (req, file, callBack) => {
-        console.log('Received file: ' + JSON.stringify(file));
-        callBack(null, JSON.stringify(req.body.submission_filepath).replace(/"/g, '')); //notes for now: we are nulling the errors well fix that later
-    } //there is an assumption here that the submission_filepath already has                                                                
-}); //the .PDF in it if not we gotta add path.extname(file.originalname) and import 'path'
-const upload = (0, multer_1.default)({ storage: storageEngine }); //-later note looks like it does we good
+    filename: async (req, file, callBack) => {
+        TEMPFILENAME = await sqlDB.getEmailbyUserID(req.body.user_id) + '_' + Date.now() + '.PDF'; //construct a name from the email of the user + unix time
+        console.log('Received file: ' + file);
+        callBack(null, TEMPFILENAME); //notes for now: we are nulling the errors well fix that later
+    }
+});
+const upload = (0, multer_1.default)({ storage: storageEngine });
 //GET requests
 app.get('/', (req, res) => {
-    console.log('GET request received');
-    res.status(200).send('GET request received'); //this is how to do codes
+    console.log('GET request received'); //this is how to do codes
+    res.status(204).json({
+        details: "GET request received"
+    });
 });
 //POST requests
 app.post('/', upload.none(), (req, res) => {
@@ -77,530 +59,1222 @@ app.put('/', (req, res) => {
     console.log('PUT request received');
     res.send('PUT Request received');
 });
-// JWT Token Verification Authenticaiton
-function verifyJWT(token, claimedEmail) {
-    try {
-        // Retrieve the secret key from the environment variables
-        const secretKey = process.env.SECRET_KEY;
-        if (!secretKey) {
-            throw new Error('Missing SECRET_KEY in environment variables');
-            return false;
-        }
-        // Decode the JWT
-        const decodedToken = jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY);
-        // Extracting the email from the decoded token
-        const email = decodedToken.email;
-        if (!email) {
-            throw new Error('Email not found in token');
-            return false;
-        }
-        // Validating that the email is in the correct format using regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format in token');
-            return false;
-        }
-        if (email != claimedEmail) {
-            throw new Error('Token not matched to claimed email');
-            return false;
-        }
-        return true;
-    }
-    catch (error) {
-        console.error('Error decoding token or interacting with database:', error);
-        return false;
-    }
-}
 //actual endpoints 
 //login/signup
 app.post('/api/login', upload.none(), async (req, res) => {
-    //we will receive email and password
+    //What we receive
+    const Email = String(req.body.email);
+    const Password = String(req.body.password);
     try {
         console.log('Received POST to /api/login');
-        if (await (0, DatabaseUtil_1.loginUserCheck)(JSON.stringify(req.body.email)) === true) {
-            console.log('login with: ' + JSON.stringify(req.body.email) + ' successful');
-            res.send(JSON.stringify(true));
+        if (await sqlDB.loginUserCheck(Email) === true && await (0, AuthenticationUtil_1.comparePassword)(Password, await sqlDB.getHashedPasswordFromDatabase(Email))) { //if the email and password match a user in our database
+            const userID = await sqlDB.getUserIDbyEmail(Email);
+            const token = (0, AuthenticationUtil_1.generateTokenForLogin)(Email, userID); //then generate a token
+            sqlDB.updateLastLoggedIn(userID);
+            console.log('login with: ' + Email + ' successful.');
+            res.status(200).json({
+                success: true,
+                token: token,
+                userID: userID,
+                details: "Login Successful"
+            });
         }
         else {
-            console.log('Error: Login Failed', Error);
-            res.send(JSON.stringify(false));
+            console.log('Error: Login with ' + Email + 'Failed'); //otherwise return success: false with no token
+            res.status(401).json({
+                success: false,
+                token: "",
+                userID: "",
+                details: "Login Failed: Credentials do not match user in system"
+            });
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within Login: ' + error);
+        res.status(400).send({
+            success: false,
+            token: "",
+            userID: "",
+            details: `Server encountered error: ${error}` //this method of sending back the error object could be a security concern so we should look into this later
+        }); //but for now it will give them some information about the problem
     }
 });
 app.post('/api/signup', upload.none(), async (req, res) => {
-    //we will receive email and password
+    //What we receive
+    const Email = String(req.body.email);
+    const Password = String(req.body.password);
+    const Username = String(req.body.user_name);
+    const FirstName = String(req.body.first_name);
+    const LastName = String(req.body.last_name);
     try {
         console.log('Received POST to /api/signup');
-        if (await (0, DatabaseUtil_1.signupUser)(JSON.stringify(req.body.email)) === true) {
-            console.log('signup with: ' + req.body.email + ' successful');
-            res.send(JSON.stringify(true));
+        if (await sqlDB.signupUser(Email, await (0, AuthenticationUtil_1.hashPassword)(Password), Username, FirstName, LastName) === true) { //TODO: ADD THE REST OF THE FIELDS
+            console.log('signup with: ' + Email + ' successful');
+            res.status(200).json({
+                success: true,
+                details: `Signup for ${Email} successful`
+            });
         }
-        else {
-            console.log('Error: Sign Up with ' + req.body.email + 'Failed', Error);
-            res.send(JSON.stringify(false));
+        else { //only taken when signupuser returns false which is only is email is taken
+            console.log('Error: Sign Up with ' + Email + 'Failed');
+            res.status(401).json({
+                success: false,
+                details: `Signup for ${Email} failed: email is already taken`
+            });
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within signup: ' + error);
+        res.status(400).send({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //class endpoints
 app.get('/api/classes', upload.none(), async (req, res) => {
-    //for MVP (listing classes)
-    // get list of classes of the user (how we are doing sessions though)
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
     try {
-        /*        if(req.headers.authorization){
-                    let token;
-                    if (req.headers.authorization.startsWith('Bearer ')){
-                        token = req.headers.authorization.split(" ")[1]
-                    } else {
-                        token = req.headers.authorization;
-                    }
-                    if (verifyJWT(token, JSON.stringify(req.query.email)) == true){*/
         console.log('Received GET to /api/classes');
-        const userClasses = await (0, DatabaseUtil_1.getClasses)(JSON.stringify(req.query.email)); //get the classes for the user assigned to that email
-        if (userClasses != null) { //if something has returned
-            console.log('GET classes successful');
-            res.json(userClasses); //send them
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userClasses = await sqlDB.getClasses(userID); //get the classes for the user assigned to that email
+            if (userClasses != undefined) { //because userClasses.length only works here not != null and because userClasses is optional
+                if (userClasses.length > 0) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
+                    console.log('GET classes successful' + userClasses);
+                    res.status(200).json({
+                        data: userClasses,
+                        details: "Classes successfully found"
+                    }); //send them
+                }
+                else {
+                    console.log('Error: No Classes Found');
+                    res.status(200).json({
+                        data: {},
+                        details: "No Classes found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Classes Found');
+                res.status(200).json({
+                    data: {},
+                    details: "No Classes found"
+                });
+            }
         }
-        else {
-            console.log('Error: No Classes Found', Error);
-            res.json({});
-        }
-        /*}
-    }*/
     }
     catch (error) {
-        console.log('Error: Classes Check Failed', error);
+        console.log('Error within GET classes: ', error);
+        res.status(400).send({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
 app.post('/api/classes', upload.none(), async (req, res) => {
-    //for MVP adding classes, add removal in later (should be simple)
-    //adding classes for that user
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const Session = Number(req.body.session);
+    const Year = Number(req.body.year);
+    const Title = String(req.body.title);
+    const Code = String(req.body.code);
     try {
         console.log('Received POST to /api/classes');
-        const success = await (0, DatabaseUtil_2.createClass)(JSON.stringify(req.body.email), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.title), JSON.stringify(req.body.code)); // more fields added post MVP
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Create class successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: Classes Creation Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.createClass(userID, Session, Year, Title, Code);
+            if (success) {
+                console.log('Create class successful');
+                res.status(201).json({
+                    success: true,
+                    details: `Class: ${Code} successfully created`
+                });
+            }
+            else {
+                console.log('Error: Classes Creation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: `Class creation failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within post classes: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/classes', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ClassID = Number(req.body.class_id);
     try {
         console.log('Received DELETE to /api/classes');
-        const success = await (0, DatabaseUtil_1.deleteClass)('', Number(req.body.class_id)); //email is placeholder for now
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Delete class successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: class Deletion Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.deleteClass(userID, ClassID); //email is placeholder for now
+            if (success) {
+                console.log(`Delete class successful`);
+                res.status(200).json({
+                    success: true,
+                    details: `Delete class successful`
+                });
+            }
+            else {
+                console.log('Error: class Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: 'Delete class failed'
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within delete classes: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/classes', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const Session = Number(req.body.session);
+    const Year = Number(req.body.year);
+    const Title = String(req.body.title);
+    const Code = String(req.body.code);
+    const ClassID = Number(req.body.class_id);
     try {
         console.log('Received PUT to /api/classes');
-        const success = await (0, DatabaseUtil_1.editClass)(JSON.stringify(req.body.email), Number(req.body.class_id), Number(req.body.session), Number(req.body.year), JSON.stringify(req.body.code), JSON.stringify(req.body.title));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Edit class successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: class edit Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.editClass(userID, ClassID, Session, Year, Code, Title);
+            if (success) {
+                console.log('Edit class successful');
+                res.status(200).json({
+                    success: true,
+                    details: `Edit class successful`
+                });
+            }
+            else {
+                console.log('Error: class edit Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Edit class failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within PUT classes: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+app.post('/api/classesStudents', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const StudentID = Number(req.body.student_id);
+    const ClassID = Number(req.body.class_id);
+    try {
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.addStudentToClass(userID, StudentID, ClassID);
+            if (success) {
+                console.log("Add student to class successful");
+                res.status(201).json({
+                    success: true,
+                    details: "Add student to class successful"
+                });
+            }
+            else {
+                console.log("Add student to class failed");
+                res.status(400).json({
+                    success: false,
+                    details: "Could not add student to class"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST classesStudents: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+app.delete('/api/classesStudents', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const StudentID = Number(req.body.student_id);
+    const ClassID = Number(req.body.class_id);
+    try {
+        //TODO REMOVE STUDENTS FROM CLASS
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.removeStudentFromClass(userID, StudentID, ClassID);
+            if (success) {
+                console.log("Remove student from class successful");
+                res.status(200).json({
+                    success: true,
+                    details: "Remove student from class successful"
+                });
+            }
+            else {
+                console.log("Remove student from class failed");
+                res.status((400)).json({
+                    success: false,
+                    details: "Remove student from class failed"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within DELETE classesStudents: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //assignment endpoints
 app.get('/api/assignments', upload.none(), async (req, res) => {
-    //list assignments for a specific class
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const ClassID = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/assignments');
-        const userClassAssignments = await (0, DatabaseUtil_1.getAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id));
-        if (userClassAssignments != null) {
-            res.json(userClassAssignments);
-            console.log('GET assignments successful');
-        }
-        else {
-            res.json({});
-            console.log('Error: No Assignments Found', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userClassAssignments = await sqlDB.getAssignments(userID, ClassID);
+            if (userClassAssignments != undefined) {
+                if (userClassAssignments.length > 0) {
+                    console.log('GET assignments successful');
+                    res.status(200).json({
+                        data: userClassAssignments,
+                        details: "Assignments successfully found"
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        data: {},
+                        details: "No Assignments found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Assignments Found');
+                res.status(200).json({
+                    data: {},
+                    details: "No Assignments found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Assignment Check Failed', error);
+        console.log('Error within GET assignments: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/assignments', upload.none(), async (req, res) => {
-    //adding assignments to that class
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ClassID = Number(req.body.class_id);
+    const Name = String(req.body.name);
+    const Description = String(req.body.description);
     try {
         console.log('Received POST to /api/assignments');
-        const success = await (0, DatabaseUtil_2.createAssignment)(JSON.stringify(req.body.email), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description)); // more fields added post MVP
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Create class successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: Assignment Creation Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.createAssignment(userID, ClassID, Name, Description); // more fields added post MVP
+            if (success) {
+                console.log('Create Assignment successful');
+                res.status(201).json({
+                    success: true,
+                    details: `Assignment ${Name} successfully created`
+                });
+            }
+            else {
+                console.log('Error: Assignment Creation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: `Assignment Creation Failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within POST assignments:' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/assignments', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const AssignmentID = Number(req.body.assignment_id);
     try {
         console.log('Received DELETE to /api/assignments');
-        const success = await (0, DatabaseUtil_1.deleteAssignment)('', Number(req.body.assignment_id)); //email is placeholder for now
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Delete assignment successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: assignment Deletion Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.deleteAssignment(userID, AssignmentID); //email is placeholder for now
+            if (success) {
+                console.log('Delete Assignment successful');
+                res.status(200).json({
+                    success: true,
+                    details: `Assignment successfully deleted`
+                });
+            }
+            else {
+                console.log('Error: Assignment Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: `Assignment deletion failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within DELETE assignments: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/assignments', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const AssignmentID = Number(req.body.assignment_id);
+    const ClassID = Number(req.body.class_id);
+    const Name = String(req.body.name);
+    const Description = String(req.body.description);
     try {
         console.log('Received PUT to /api/assignments');
-        const success = await (0, DatabaseUtil_1.editAssignment)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.class_id), JSON.stringify(req.body.name), JSON.stringify(req.body.description));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Edit assignment successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: Assignment edit Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.editAssignment(userID, AssignmentID, ClassID, Name, Description);
+            if (success) {
+                console.log('Edit Assignment successful');
+                res.status(200).json({
+                    success: true,
+                    details: `Assignment successfully edited`
+                });
+            }
+            else {
+                console.log('Error: Assignment edit Failed');
+                res.status(400).json({
+                    success: false,
+                    details: `Assignment editing failed`
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within PUT Assignments: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //submission endpoints
 app.get('/api/submissions', upload.none(), async (req, res) => {
-    //list submissions for a specific assignment
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const ClassID = Number(req.query.class_id);
+    const AssignmentID = Number(req.query.assignment_id);
     try {
         console.log('Received GET to /api/submissions');
-        const userSubmissions = await (0, DatabaseUtil_1.getSubmissionsForAssignments)(JSON.stringify(req.query.email), Number(req.query.class_id), Number(req.query.assignment_id));
-        if (userSubmissions != null) {
-            res.json(userSubmissions);
-            console.log('GET submissions successful');
-        }
-        else {
-            res.json({});
-            console.log('Error: No Submissions Found', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const userSubmissions = await sqlDB.getSubmissionsForAssignments(userID, ClassID, AssignmentID); //sending this an assignmentID that doesnt exist results incorrect error fix inside
+            if (userSubmissions != undefined) { //query later (proper error handling)
+                if (userSubmissions.length > 0) {
+                    console.log('GET submissions successful');
+                    res.status(200).json({
+                        data: userSubmissions,
+                        details: "Submissions successfully found"
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        data: {},
+                        details: "No Submissions found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Submissions Found');
+                res.status(200).json({
+                    data: {},
+                    details: "No Submissions found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Submission Check Failed', error);
+        console.log('Error within GET Submissions: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+app.get('/api/submissionFile', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
+    try {
+        console.log('Received GET to /api/submissions');
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const filePath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID); //still need permissions check: is userID permitted to access this submissionID?
+            res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                if (error) {
+                    throw error;
+                }
+                else {
+                    console.log('Sent file successfully');
+                }
+            });
+        }
+    }
+    catch (error) {
+        console.log('Error within GET SubmissionFile: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
-    //adding submissions to an assignment
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const AssignmentID = Number(req.body.assignment_id);
+    const StudentID = Number(req.body.student_id);
     try {
         console.log('Received POST to /api/submissions');
-        const success = await (0, DatabaseUtil_2.createSubmission)(JSON.stringify(req.body.email), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Create submission successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: submission Creation Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
+            if (success) {
+                console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here
+                res.status(201).json({
+                    success: true,
+                    details: "Submission successfully created"
+                });
+            }
+            else {
+                console.log('Error: submission Creation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Submission creation failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within POST submissions: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
 app.delete('/api/submissions', upload.none(), async (req, res) => {
+    //what we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id);
     try {
         console.log('Received DELETE to /api/submissions');
-        const success = await (0, DatabaseUtil_1.deleteSubmission)('', Number(req.body.submission_id)); //email is placeholder for now
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Delete submission successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: submission Deletion Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.deleteSubmission(userID, SubmissionID); //email is placeholder for now
+            if (success) {
+                console.log('Delete submission successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Submission successfully deleted"
+                });
+            }
+            else {
+                console.log('Error: submission Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Submission deletion failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within DELETE Submissions: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) => {
+    //what we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id); // i dont think they should be able to edit these
+    const AssignmentID = Number(req.body.assignment_id); // i dont think they should be able to edit these
+    const StudentID = Number(req.body.student_id);
+    const SubmissionDate = String(req.body.submission_date); //do we update the submission date here? TODO: I think we should give option to edit date but also option to keep same
     try {
         console.log('Received PUT to /api/submissions');
-        const success = await (0, DatabaseUtil_1.editSubmission)('', Number(req.body.submission_id), Number(req.body.assignment_id), Number(req.body.student_id), JSON.stringify(req.body.submission_date), JSON.stringify(req.body.submission_filepath));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Edit submission successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: submission edit Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.editSubmission(userID, SubmissionID, AssignmentID, StudentID, SubmissionDate, TEMPFILENAME);
+            if (success) {
+                console.log('Edit submission successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Submission successfully edited"
+                });
+            }
+            else {
+                console.log('Error: submission edit Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Editing Submission failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within PUT submissions: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //student endpoints
 app.get('/api/students', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const classID = Number(req.query.class_id);
     try {
         console.log('Received GET to /api/students');
-        const studentsList = await (0, DatabaseUtil_1.getAllStudents)();
-        if (studentsList != null) {
-            res.json(studentsList);
-            console.log('GET Students successful');
-        }
-        else {
-            res.json({});
-            console.log('GET students failed');
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const studentsList = await sqlDB.getStudentsByClass(userID, classID);
+            if (studentsList != undefined) {
+                if (studentsList.length > 0) {
+                    console.log('GET Students successful');
+                    res.status(200).json({
+                        data: studentsList,
+                        details: "Students successfully found"
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        data: {},
+                        details: "No Students found"
+                    });
+                }
+            }
+            else {
+                console.log('GET students failed');
+                res.status(200).json({
+                    data: {},
+                    details: "No Students found"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within GET students: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/students', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const Email = String(req.body.email); //this is the student email not the user email
+    const StudentID = Number(req.body.student_id);
+    const FirstName = String(req.body.first_name);
+    const LastName = String(req.body.last_name);
     try {
         console.log('Received POST to /api/students');
-        const success = await (0, DatabaseUtil_1.addStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Create student successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: student Creation Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.addStudent(Email, StudentID, FirstName, LastName);
+            if (success) {
+                console.log('Create student successful');
+                res.status(201).json({
+                    success: true,
+                    details: "Student successfully created"
+                });
+            }
+            else {
+                console.log('Error: student Creation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Student creation failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within POST students: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/students', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const StudentID = Number(req.body.student_id);
     try {
         console.log('Received DELETE to /api/students');
-        const success = await (0, DatabaseUtil_1.deleteStudent)(Number(req.body.student_id));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Delete student successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: student Deletion Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.deleteStudent(StudentID);
+            if (success) {
+                console.log('Delete student successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Student successfully deleted"
+                });
+            }
+            else {
+                console.log('Error: student Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Student deletion failed"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: ', error);
+        console.log('Error within DELETE students: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/students', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const Email = String(req.query.email); //this is the student email not the user email
+    const StudentID = Number(req.body.student_id);
+    const FirstName = String(req.body.first_name);
+    const LastName = String(req.body.last_name);
     try {
         console.log('Received PUT to /api/students');
-        const success = await (0, DatabaseUtil_1.editStudent)(JSON.stringify(req.body.email), Number(req.body.student_id), JSON.stringify(req.body.first_name), JSON.stringify(req.body.last_name));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Edit student successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: student edit Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.editStudent(Email, StudentID, FirstName, LastName);
+            if (success) {
+                console.log('Edit student successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Student successfully edited"
+                });
+            }
+            else {
+                console.log('Error: student edit Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Student editing failed"
+                });
+            }
         }
     }
     catch (error) {
+        console.log('Error within PUT students: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //AI endpoints
-//AI Generate Questions request (qgen = questions generate)
+//AI Question Generation 
 app.get('/api/qgen', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
     try {
         console.log('Received GET to /api/qgen');
-        const submission_id = req.query.submission_id;
-        console.log('Submission ID:', submission_id);
-        const questions = await (0, DatabaseUtil_2.getQuestions)(Number(submission_id));
-        res.json(questions || []);
-    }
-    catch (error) {
-        console.log('Error: ', error);
-        res.status(500).json({ error: String(error) });
-    }
-});
-// Existing POST endpoint with mock data when IS_MOCK=YES
-app.post('/api/qgen', upload.none(), async (req, res) => {
-    try {
-        console.log('Received POST to /api/qgen');
-        console.log('Request body:', req.body);
-        // Check if API key exists
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-            console.error('OpenAI API key not found');
-            res.status(500).json({ error: 'OpenAI API key not configured' });
-            return;
-        }
-        const submission_id = parseInt(req.body.submission_id);
-        console.log('Processing submission_id:', submission_id);
-        if (isNaN(submission_id)) {
-            console.error('Invalid submission_id received');
-            res.status(400).json({ error: 'Invalid submission ID' });
-            return;
-        }
-        // Get the PDF path
-        let pdfPath;
-        try {
-            pdfPath = await (0, DatabaseUtil_2.getSubmissionFilePathForSubID)(submission_id);
-            console.log('PDF Path:', pdfPath);
-            if (!pdfPath) {
-                res.status(404).json({ error: 'PDF not found' });
-                return;
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const questions = await sqlDB.getQuestions(SubmissionID);
+            if (questions != undefined) {
+                if (questions.length > 0) {
+                    console.log('GET questions successful');
+                    res.status(200).json({
+                        data: questions,
+                        details: "Questions successfully found"
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        data: {},
+                        details: "no Questions found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No questions Found');
+                res.status(200).json({
+                    data: {},
+                    details: "no Questions found"
+                });
             }
         }
-        catch (error) {
-            console.error('Error getting PDF path:', error);
-            res.status(500).json({ error: 'Failed to get PDF path' });
-            return;
-        }
-        // Create AI instance with verified API key
-        let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey // Now TypeScript knows this is definitely a string
-        );
-        try {
-            console.log('Generating questions for PDF:', pdfPath);
-            const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);
-            console.log('Generated questions:', q_and_a);
-            // Save questions
-            await (0, DatabaseUtil_2.postAIOutputForSubmission)(submission_id, JSON.stringify(q_and_a));
-            // Return success
-            res.json({ success: true, questions: q_and_a });
-        }
-        catch (error) {
-            console.error('Error generating questions:', error);
-            res.status(500).json({ error: 'Failed to generate questions' });
-        }
     }
     catch (error) {
-        console.error('Error in qgen endpoint:', error);
-        res.status(500).json({ error: String(error) });
+        console.log('Error within GET qgen: ', error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
-// Add GET endpoint for retrieving questions
-app.get('/api/qgen', upload.none(), async (req, res) => {
+app.post('/api/qgen', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id);
     try {
-        console.log('Received GET to /api/qgen');
-        const submission_id = Number(req.query.submission_id);
-        if (isNaN(submission_id)) {
-            res.status(400).json({ error: 'Invalid submission ID' });
-            return;
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env');
+            }
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+            //Construct AI
+            let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id;
+            try {
+                if (pdfPath != undefined) {
+                    const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6); //currently generating 6 questions
+                    doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
+                }
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+            if (doc_id) {
+                //Accesses the storage location specified in the contructor
+                let questions;
+                try {
+                    questions = await ai.getQuestions(doc_id);
+                }
+                catch (error) {
+                    console.log('Error: Assigning questions to location failed', error);
+                }
+                //Insert generated AI Questions into results table for submission_id
+                if (questions) {
+                    sqlDB.postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
+                }
+                else {
+                    console.log('Error within POST qgen: Assigning questions to location failed');
+                    res.status(500).json({
+                        success: false,
+                        details: "Could not assign questions to internal storage location"
+                    });
+                }
+            }
+            else {
+                console.log('Error within POST qgen: AI Generation Failed');
+                res.status(500).json({
+                    success: false,
+                    details: "AI generation failed"
+                });
+            }
+            //verify any questions exist for submission
+            // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
+            const foundAIQs = sqlDB.getQuestions(SubmissionID);
+            if (foundAIQs != undefined) {
+                console.log('AI question generation successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Questions successfully generated"
+                });
+            }
+            else {
+                console.log('Error: AI Question Generation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "failed to generate questions"
+                });
+            }
         }
-        const questions = await (0, DatabaseUtil_2.getQuestions)(submission_id);
-        res.json(questions || []);
     }
     catch (error) {
-        console.log('Error: ', error);
-        res.status(500).json({ error: String(error) });
+        console.log('Error within POST qgen: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
+/*
+//AI Rubric Generate and Return
+app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    const ProjectOverview: string = String(req.query.project_overview);
+    const Criteria: string[] = req.query.criteria;
+    const Topics: string[] = req.query.topics;
+    const Goals: string[] = req.query.goals;
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            pdfPath = String(req.headers.ProjectOverview);
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes questions/answers file to "./ServerStorage" specified in constructor
+            let doc_id;
+            let rubric;
+            try {
+                rubric = await ai.createRubric(ProjectOverview,Criteria,Topics,Goals);
+            }
+            catch (error) {
+                console.log('Error: AI Rubric Generation Failed', error);
+            }
+            if (rubric != undefined) {
+                if(rubric.length > 0){
+                    console.log('GET Rubric successful');
+                    res.status(200).json({
+                        data: rubric,
+                        details: "Rubric generation/get successfully"
+                    });
+                }
+                else{
+                    res.status(200).json({
+                        data: {},
+                        details: "Generated Rubric not found"
+                    });
+                }
+            }
+            else{
+                console.log('Error: Generated Rubric not Found');
+                res.status(200).json({
+                    data: {},
+                    details: "Generated Rubric not found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+//AI Summary Generate and Return
+app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes summary file to Promise<string>
+            let summary;
+            try {
+                let summary = await ai.summarizeSubmission(pdfPath)
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+
+            if (summary != undefined) {
+                console.log('GET Summary successful');
+                    res.status(200).json({
+                        data: summary,
+                        details: "Summary generation/get successfully"
+                });
+            }
+            else{
+                console.log('Error: Generated Summary not Found');
+                res.status(200).json({
+                    data: {},
+                    details: "Generated Summary not found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+// TODO Clarify with AI team about the nature of "Rubric" input
+//AI Feedback Generate and Return
+app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const SubmissionID: number = Number(req.query.submission_id);
+    const Rubric: string = String(req.query.rubric);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            let pdfPath; //Refers to file name not full path.
+            try {
+                pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
+            }
+            catch (error) {
+                console.log('Error: Get Submission Path from Sub ID Failed', error);
+            }
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Writes feedback file to Promise<string>
+            let feedback;
+            try {
+                let feedback = await ai.generateFeedback("sample.pdf", Rubric);
+            }
+            catch (error) {
+                console.log('Error: AI Generation Failed', error);
+            }
+
+            if (feedback != undefined) {
+                console.log('GET Feedback successful');
+                    res.status(200).json({
+                        data: feedback,
+                        details: "Feedback generation/get successfully"
+                });
+            }
+            else{
+                console.log('Error: Generated Feedback not Found');
+                res.status(200).json({
+                    data: {},
+                    details: "Generated Feedback not found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within POST qgen: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+*/
+//viva endpoints
 app.get('/api/vivas', upload.none(), async (req, res) => {
-    //list viva for a specific submission
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.query.user_id);
+    const SubmissionID = Number(req.query.submission_id);
     try {
         console.log('Received GET to /api/vivas');
-        const foundVivas = await (0, DatabaseUtil_2.getExams)(Number(req.query.submission_id));
-        if (foundVivas != null) {
-            res.json(foundVivas);
-            console.log('GET vivas successful');
-        }
-        else {
-            res.json({});
-            console.log('Error: No Vivas Found', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const foundVivas = await sqlDB.getExams(SubmissionID);
+            if (foundVivas != undefined) {
+                if (foundVivas.length > 0) {
+                    console.log('GET vivas successful');
+                    res.status(200).json({
+                        data: foundVivas,
+                        details: "Vivas successfully found"
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        data: {},
+                        details: "Failed to find Vivas"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Vivas Found');
+                res.status(200).json({
+                    data: {},
+                    details: "Failed to find Vivas"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Viva Check Failed', error);
+        console.log('Error within GET vivas: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.post('/api/vivas', upload.none(), async (req, res) => {
-    //adding viva to submission
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const SubmissionID = Number(req.body.submission_id);
+    const StudentID = Number(req.body.student_id);
     try {
         console.log('Received POST to /api/vivas');
-        const success = await (0, DatabaseUtil_2.createExams)(JSON.stringify(req.body.email), Number(req.body.submission_id), Number(req.body.student_id)); // more fields added post MVP
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Create Exam successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: Exam Creation Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.createExams(userID, SubmissionID, StudentID); // more fields added post MVP
+            if (success) {
+                console.log('Create Exam successful');
+                res.status(201).json({
+                    success: true,
+                    details: "Viva successfully generated"
+                });
+            }
+            else {
+                console.log('Error: Exam Creation Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "failed to create Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: Exam Creation Attempt Failed', error);
+        console.log('Error within POST vivas: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.delete('/api/vivas', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ExamID = Number(req.body.exam_id);
     try {
         console.log('Received DELETE to /api/vivas');
-        const success = await (0, DatabaseUtil_2.deleteExam)(JSON.stringify(req.body.email), Number(req.body.exam_id));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Delete exam successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: exam Deletion Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.deleteExam(userID, ExamID);
+            if (success) {
+                console.log('Delete exam successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Viva successfully deleted"
+                });
+            }
+            else {
+                console.log('Error: exam Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "failed to delete Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: exam Deletion Attempt Failed', error);
+        console.log('Error within DELETE vivas: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 app.put('/api/vivas', upload.none(), async (req, res) => {
+    //What we receive
+    const AuthHeader = String(req.headers.authorization);
+    const userID = Number(req.body.user_id);
+    const ExamID = Number(req.body.exam_id);
+    const SubmissionID = Number(req.body.submission_id);
+    const StudentID = Number(req.body.student_id);
+    const ExaminerID = Number(req.body.examiner_id);
+    const Marks = Number(req.body.marks);
+    const Comments = String(req.body.comments);
     try {
         console.log('Received PUT to /api/vivas');
-        const success = await (0, DatabaseUtil_2.editExam)(JSON.stringify(req.body.email), Number(req.body.exam_id), Number(req.body.submission_id), Number(req.body.student_id), Number(req.body.examiner_id), Number(req.query.marks), JSON.stringify(req.query.comments));
-        if (success) {
-            res.send(JSON.stringify(true));
-            console.log('Edit exam successful');
-        }
-        else {
-            res.send(JSON.stringify(false));
-            console.log('Error: exam Edit Failed', Error);
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const success = await sqlDB.editExam(userID, ExamID, SubmissionID, StudentID, ExaminerID, Marks, Comments);
+            if (success) {
+                console.log('Edit exam successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Viva successfully edited"
+                });
+            }
+            else {
+                console.log('Error: exam Edit Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "failed to edit Viva"
+                });
+            }
         }
     }
     catch (error) {
-        console.log('Error: exam Edit Attempt Failed', error);
+        console.log('Error within PUT vivas: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
     }
 });
 //start the server
-app.listen(port, () => {
-    console.log('listening at port:', port);
+app.listen(PORT, () => {
+    console.log('listening at port:', PORT);
 });
