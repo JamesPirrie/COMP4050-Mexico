@@ -21,7 +21,7 @@ To run the backend:
         - **User**: postgres
         - **Password**: default
     - To stop the database, run `npm run db-stop`. To start the database again, run `npm run db`
-    - To rebuild the database, delete the `viva-db` folder and run `npm run db-build`
+    - To rebuild the database, stop the container using `npm run db-stop`, delete the `viva-db` folder and run `npm run db-build`
 3. Run the backend server
     - Install the dependencies in package.json using `npm install "package"@"version"`
         - Install the AI library using `npm install git+https://github.com/stroogle/COMP4050AI.git`
