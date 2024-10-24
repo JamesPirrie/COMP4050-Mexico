@@ -647,9 +647,8 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
         console.log('Received DELETE to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
             const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
-            console.log('filePath: ' + filePath);
-            if(fs.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`)){//if theres an ai entry file for this submission
-                fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`, (error) => {//delete it
+            if(fs.existsSync(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`)){//if theres an ai entry file for this submission
+                fs.unlink(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {//delete it
                     if(error){
                         throw error;
                     }
@@ -659,7 +658,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
                 });
             }
             fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
-                if(error){//
+                if(error){
                     throw error;
                 }
                 else{

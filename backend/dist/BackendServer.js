@@ -37,6 +37,16 @@ const upload = (0, multer_1.default)({ storage: storageEngine });
 //GET requests
 app.get('/', (req, res) => {
     console.log('GET request received'); //this is how to do codes
+    if (fs_1.default.existsSync(`${ROOTDIR}/ServerStorage/qGen/JOHN@USER.COM_1729774440808.PDF.json`)) { //if theres an ai entry file for this submission
+        fs_1.default.unlink(`${ROOTDIR}/ServerStorage/qGen/JOHN@USER.COM_1729774440808.PDF.json`, (error) => {
+            if (error) {
+                throw error;
+            }
+            else {
+                console.log("File Deleted");
+            }
+        });
+    }
     res.status(204).json({
         details: "GET request received"
     });
@@ -606,7 +616,6 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
         });
     }
 });
-//TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
 app.delete('/api/submissions', upload.none(), async (req, res) => {
     //what we receive
     const AuthHeader = String(req.headers.authorization);
@@ -616,7 +625,16 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const filePath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
-            console.log('filePath: ' + filePath);
+            if (fs_1.default.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`)) { //if theres an ai entry file for this submission
+                fs_1.default.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`, (error) => {
+                    if (error) {
+                        throw error;
+                    }
+                    else {
+                        console.log("File Deleted");
+                    }
+                });
+            }
             fs_1.default.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
                 if (error) {
                     throw error;
@@ -625,7 +643,7 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
                     console.log("File Deleted");
                 }
             });
-            const success = await sqlDB.deleteSubmission(userID, SubmissionID); //email is placeholder for now
+            const success = await sqlDB.deleteSubmission(userID, SubmissionID);
             if (success) {
                 console.log('Delete submission successful');
                 res.status(200).json({
