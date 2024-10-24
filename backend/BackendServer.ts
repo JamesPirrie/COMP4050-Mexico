@@ -840,7 +840,7 @@ app.delete('/api/students', upload.none(), async (req: Request, res: Response) =
     try{
         console.log('Received DELETE to /api/students');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.deleteStudent(StudentID);
+            const success = await sqlDB.deleteStudent(userID, StudentID);
             if (success) {
                 console.log('Delete student successful');
                 res.status(200).json({

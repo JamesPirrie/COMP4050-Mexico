@@ -305,12 +305,14 @@ class dbUtils {
             const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${specificClass};`;
             const verifyStudent = await sql `SELECT * FROM students WHERE student_id = ${student_id};`;
             if (verifyUser[0]['author_id'] == user_id) {
-                if (verifyStudent.length < 1) {
+                if (verifyStudent.length) { //if there is such a student
+                    await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
+                    await this.updateStudentClass(specificClass);
+                    return true;
+                }
+                else {
                     throw new Error('No such student found');
                 }
-                await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
-                await this.updateStudentClass(specificClass);
-                return true;
             }
             return false;
         }
@@ -325,7 +327,7 @@ class dbUtils {
             const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${specificClass};`;
             const verifyStudent = await sql `SELECT * FROM students WHERE student_id = ${student_id};`;
             if (verifyUser[0]['author_id'] == user_id) {
-                if (verifyStudent.length < 1) {
+                if (!verifyStudent.length) { //if there isnt such a student
                     throw new Error('No such student found');
                 }
                 await sql `UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
@@ -342,7 +344,7 @@ class dbUtils {
     async updateStudentClass(specificClass) {
         try {
             console.log(`class: ${specificClass}`);
-            await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`;
+            await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`; //we might need to get rid of duplicates a little annoying
             await sql `WITH to_update AS (SELECT unnest(students) AS student FROM class WHERE class_id = ${specificClass})
                       UPDATE students SET classes = array_append(classes, ${specificClass}) FROM to_update WHERE student_id = student;`;
         }
@@ -351,10 +353,23 @@ class dbUtils {
         }
     }
     //DELETE FUNCTIONS
-    async deleteStudent(student_id) {
+    async deleteStudent(user_id, student_id) {
         try {
-            //may add a check that the student exists because currently returns true even if the thing doesnt exist
+            //may add a check that the student exists because currently returns true even if the thing doesnt exist     
+            //delete all the ai_outputs
+            const submissions = await sql `SELECT * FROM submissions WHERE student_id = ${student_id};`;
+            for (var i = 0; i < submissions.length; i++) {
+                await sql `DELETE FROM ai_output where submission_id = ${submissions[i]['submission_id']};`;
+                //delete the file too
+            }
+            //delete all them from the classes
+            const classes = await sql `SELECT * FROM class WHERE ${student_id} = ANY(students);`;
+            for (var i = 0; i < classes.length; i++) {
+                await this.removeStudentFromClass(user_id, student_id, classes[i]['class_id']);
+            }
             await sql `DELETE FROM students WHERE student_id = ${student_id};`;
+            await sql `DELETE FROM submissions WHERE student_id = ${student_id};`;
+            await sql `DELETE FROM exams WHERE student_id = ${student_id};`;
             return true;
         }
         catch (error) {
@@ -366,6 +381,7 @@ class dbUtils {
             //may add a check that the submission exists
             //may add a check that the author is the one sending the request
             await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+            //delete the file too
             return true;
         }
         catch (error) {

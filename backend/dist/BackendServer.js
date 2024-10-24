@@ -803,7 +803,7 @@ app.delete('/api/students', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/students');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            const success = await sqlDB.deleteStudent(StudentID);
+            const success = await sqlDB.deleteStudent(userID, StudentID);
             if (success) {
                 console.log('Delete student successful');
                 res.status(200).json({
