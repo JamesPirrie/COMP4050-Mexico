@@ -11,12 +11,16 @@
     {% endif %}
 </div>
 <div class="content-box">
+    {% if classes %}
     {% for class in classes %}
     <div class="link">
         <a class="button" href="{{ url_for('unit', class_id=class['code']) }}">{{ class['code'] }}</a>
         <a class="del-link" href="{{ url_for('delete_class', class_id=class['code']) }}">x</a>
     </div>
     {% endfor %}
+    {% else %}
+    <p class="placeholder-text">There are no classes for this user.</p>
+    {% endif %}
     <div class="button-spacer"></div>
     <div class="add-button">
         <a href="{{ url_for('new_class')}}">Add New Class</a>

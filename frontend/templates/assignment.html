@@ -12,9 +12,10 @@
             <div class="link">
                 {% for student in students %}
                     {% if student.student_id == submission.student_id %}
-                        <a href="{{ url_for('submission', submission_id=submission.submission_id) }}">
+                        <a class = "button" href="{{ url_for('submission', submission_id=submission.submission_id) }}">
                             Viva for {{ student.first_name }} {{ student.last_name }}
                         </a>
+                        <a class="del-link">x</a>
                     {% endif %}
                 {% endfor %}
             </div>

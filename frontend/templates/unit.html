@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="welcome-box">
-    <h2>{{ request.args.get('class', '') }}</h2>
+    <h2>{{ request.args.get('class_id', '') }}</h2>
   </div>
   
   <div class="content-box">
@@ -13,7 +13,8 @@
         {% if assignments %}
           {% for assignment in assignments %}
             <div class="link">
-              <a href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
+              <a class="button" href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
+              <a  class="del-link" href="{{ url_for('delete_assignment', name=assignment['name'], class_code=request.args.get('class_id', '')) }}">x</a>
             </div>
           {% endfor %}
         {% else %}
@@ -32,9 +33,10 @@
         {% if students %}
           {% for student in students %}
             <div class="link">
-              <a href="{{ url_for('student', student_id=student.student_id) }}">
+              <a class="button" href="{{ url_for('student', student_id=student.student_id) }}">
                 {{ student.first_name }} {{ student.last_name }}
               </a>
+              <a class="del-link" href="{{ url_for('delete_student', student_id=student.student_id, class_id=request.args.get('class_id', ''))}}">x</a>
             </div>
           {% endfor %}
         {% else %}

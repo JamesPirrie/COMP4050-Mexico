@@ -237,6 +237,13 @@ def newAssignment():
         return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
     return render_template('newAssignment.html')
 
+@app.route('/delete_assignment', methods = ['GET'])
+def delete_assignment():
+    assignment_id = getAssignmentId(request.args.get('name', ''), request.args.get('class_code', ''))
+    print('deleting ' + str(assignment_id))
+    deleteAssignment(assignment_id)
+    return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
+
 #-----------------------------------
 #Student Routes
 
@@ -271,6 +278,11 @@ def new_student():
             return redirect(url_for('classes'))
             
     return render_template('newStudent.html')
+
+@app.route('/delete_student', methods = ['GET'])
+def delete_student():
+    deleteStudent(request.args.get('student_id', ''))
+    return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
 
 #-----------------------------------
 #Viva and Rubric Routes
@@ -407,9 +419,7 @@ def generate():
             'submission_id': int(submission_id)
         }
         
-        headers = {
-            'Authorization': f'Bearer {session.get("token")}'
-        }
+        headers = getHeaders()
         
         logger.debug(f"Sending question generation request with data: {data}")
         response = requests.post(
@@ -450,6 +460,13 @@ def getStudentSingle(classid, id):
             return s
     return None
 
+def getAssignmentId(name, class_code):
+    assignments = getAssignments(getClassId(class_code))
+    for a in assignments:
+        if a['name'] == name:
+            return a['assignment_id']
+    return None
+
 def getHeaders():
     return {'Authorization': f'Bearer {session.get("token")}'}
 
@@ -475,7 +492,6 @@ def getClasses():
     response = requests.get(url, headers=getHeaders())
     
     if response.ok:
-        print("Success:", response.json())
         resp_data = response.json()
         return resp_data.get('data', [])
     else:
@@ -518,7 +534,8 @@ def postAssignment(json):
     return requests.post(f'{backend}assignments', json = json, headers=getHeaders())
 
 def deleteAssignment(assignmentid):
-    return requests.delete(f'{backend}assignments', json = {'email': user.email, 'assignment_id': assignmentid})
+    json = {'user_id': user.userID, 'assignment_id': assignmentid}
+    return requests.delete(f'{backend}assignments', json = json, headers=getHeaders())
 
 def updateAssignment(json):
     return requests.put(f'{backend}assignments', json = json)
@@ -578,7 +595,8 @@ def addStudentToClass(student_id):
         return False   
 
 def deleteStudent(studentid):
-    return requests.delete(f'{backend}students', json = {'student_id': studentid})
+    json = {'user_id': user.userID, 'student_id': studentid}
+    return requests.delete(f'{backend}students', json = json, headers=getHeaders())
 
 def updateStudent(json):
     return requests.put(f'{backend}students', json = json)
