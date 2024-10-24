@@ -659,7 +659,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
                 });
             }
             fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
-                if(error){
+                if(error){//
                     throw error;
                 }
                 else{
