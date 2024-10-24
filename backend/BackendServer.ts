@@ -931,6 +931,7 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 let questions;
                 try {
                     questions = await ai.getQuestions(doc_id);
+                    console.log('questions: '+questions);
                 }
                 catch (error) {
                     console.log('Error: Assigning questions to location failed', error);

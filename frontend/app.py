@@ -304,12 +304,14 @@ def new_project():
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
+        generic_questions = request.form['questions']
         jsons = {
             'user_id': user.userID,
             'assignment_id': session['last_assignment_id'],
             'student_id': student_id,
             'submission_date': str(date.today()),
-            'submission_filepath': pdf.filename
+            'submission_filepath': pdf.filename,
+            'generic_ questions': generic_questions
         }
         
         # Create submission and get submission ID
@@ -321,7 +323,7 @@ def new_project():
                 latest_submission = max(submissions, key=lambda x: x['submission_id'])
                 return redirect(url_for('submission', submission_id=latest_submission['submission_id']))
             
-        return redirect(url_for('unit'))
+        return redirect(url_for('generate', submission_id=submissions[submission_id]))
     
     students = getStudents(session['last_class_id'])
     assignment_name = ""
