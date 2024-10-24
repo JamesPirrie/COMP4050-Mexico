@@ -18,6 +18,7 @@ Many endpoints are the same however:
 - The Server will read `all GET request elements from the querys`.
 - The Server will read `all other requests from the body`. 
 - All endpoints except signup and login require an authentication `bearer token` inside the Authentication header, and a `user_id` field. This token: string will be provided upon log in along with the user_id.
+- All dates are sent and expected to be received in ISO-8601 format eg. (2024-9-24T08:18:20.437Z)
 
 # Account endpoints 
 
@@ -31,7 +32,6 @@ Many endpoints are the same however:
     userID: number, 
     details: string
 }
-- Status codes: 200 success, 401 invalid credentials, 400 other error
 - Description: Used for logging in a user
 
 `POST  /api/signup - Signing up a user`
@@ -42,7 +42,6 @@ Many endpoints are the same however:
     success: boolean, 
     details: string
 }
-- Status codes: 200 success, 401 email already taken, 400 other error
 - Description: Used for signing up a user
 
 # Class endpoints
@@ -116,13 +115,40 @@ Many endpoints are the same however:
 - TODO: STILL NEED TO IMPLEMENT
 
 # Student endpoints
-`GET  /api/students - Getting students from the database`
+`GET  /api/allStudents - Getting students of a class from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number
 - Output parameters : {
-    
+    data : [
+        {
+            student_id: number,
+            first_name: string,
+            last_name: string,
+            email: string,
+            classes: number[]
+        },
+        ...
+    ],
+    details: string
 }
-- Description: Gets a list of all students in database
+- Description: Get all students in the database
+`GET  /api/students - Getting students of a class from the database`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, class_id: number
+- Output parameters : {
+    data : [
+        {
+            student_id: number,
+            first_name: string,
+            last_name: string,
+            email: string,
+            classes: number[]
+        },
+        ...
+    ],
+    details: string
+}
+- Description: Gets a list of all students in the class provided
 
 `POST  /api/students - Adding students to the database`
 - Token in Authentication Header: Required
@@ -231,7 +257,7 @@ Many endpoints are the same however:
 
 `PUT  /api/submissions - editing submissions in the database`
 - Token in Authentication Header: Required
-- Input parameters: user_id: number,
+- Input parameters: user_id: number, submission_id: number, assignment_id: number, student_id: number, submission_date: string 
 - Output parameters : {
     success: boolean,
     details: string
@@ -256,16 +282,32 @@ Many endpoints are the same however:
 # AI Question endpoints
 `GET  /api/qgen - Getting generated questions from the database`
 - Token in Authentication Header: Required
-- Input parameters:
-- Output parameters :
-- Description:
+- Input parameters: user_id: number, submission_id: number
+- Output parameters : {
+    data: [
+        result_id: number,
+        submission_id: number,
+        generated_question: {
+            content: {
+                answer: string,
+                question: string
+            },
+            ...
+        },
+        generation_date: string,
+        score: number
+    ],
+    details: string
+}
+- Description: Gets AI generated questions for a submission
 `POST  /api/qgen - Generating and then adding questions to the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: string, submission_id: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: generates AI questions for an existing submission in the database and stores it
 # AI Rubric endpoints
 
 # Viva endpoints
