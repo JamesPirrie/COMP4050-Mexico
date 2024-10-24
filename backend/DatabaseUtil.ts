@@ -1,5 +1,6 @@
 import postgres from 'postgres';
 import 'dotenv/config';
+import { TokenExpiredError } from 'jsonwebtoken';
 
 const sql = postgres(`postgres://${process.env.DB_USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(<string>process.env.PORT, 10)}/${process.env.DB}`);
 
@@ -320,9 +321,12 @@ export class dbUtils {
     // Add student ID to a class array. Then update the student with the class ID in the classes array.
     async addStudentToClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
-            //add verifications
-            const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            const verifyUser = await sql`SELECT * FROM class WHERE class_id = ${specificClass};`;
+            const verifyStudent = await sql`SELECT * FROM students WHERE student_id = ${student_id};`;
             if(verifyUser[0]['author_id'] == user_id){
+                if(verifyStudent.length < 1){
+                    throw new Error('No such student found')
+                }
                 await sql`UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
                 await this.updateStudentClass(specificClass);
                 return true;
@@ -338,8 +342,12 @@ export class dbUtils {
     async removeStudentFromClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean> {
         try{
             //add verifications
-            const verifyUser = await sql`SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            const verifyUser = await sql`SELECT * FROM class WHERE class_id = ${specificClass};`;
+            const verifyStudent = await sql`SELECT * FROM students WHERE student_id = ${student_id};`;
             if(verifyUser[0]['author_id'] == user_id){
+                if(verifyStudent.length < 1){
+                    throw new Error('No such student found')
+                }
                 await sql`UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
                 await this.updateStudentClass(specificClass);
                 return true;

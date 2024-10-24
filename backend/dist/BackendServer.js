@@ -676,6 +676,46 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req, res) =>
     }
 });
 //student endpoints
+app.get('/api/allStudents', upload.none(), async (req, res) => {
+    const AuthHeader = String(req.headers.authorization); //my preference would be to have each user have their own list of students
+    const userID = Number(req.query.user_id);
+    try {
+        console.log('Received GET to /api/allStudents');
+        if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const studentsList = await sqlDB.getAllStudents();
+            if (studentsList != undefined) {
+                if (studentsList.length > 0) {
+                    console.log('GET allStudents successful');
+                    res.status(200).json({
+                        data: studentsList,
+                        details: "Students successfully found"
+                    });
+                }
+                else {
+                    console.log('Error: No Students found');
+                    res.status(400).json({
+                        data: {},
+                        details: "No Students found"
+                    });
+                }
+            }
+            else {
+                console.log('Error: No Students found');
+                res.status(400).json({
+                    data: {},
+                    details: "No Students found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within GET allStudents: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
 app.get('/api/students', upload.none(), async (req, res) => {
     //What we receive
     const AuthHeader = String(req.headers.authorization);
@@ -694,6 +734,7 @@ app.get('/api/students', upload.none(), async (req, res) => {
                     });
                 }
                 else {
+                    console.log('Error: No Students found');
                     res.status(200).json({
                         data: {},
                         details: "No Students found"
@@ -701,6 +742,7 @@ app.get('/api/students', upload.none(), async (req, res) => {
                 }
             }
             else {
+                console.log('Error: No Students found');
                 console.log('GET students failed');
                 res.status(200).json({
                     data: {},
