@@ -43,7 +43,7 @@
       </div>
   
       <div class="add-button">
-        <a href="{{ url_for('new_student') }}" id="add-student-button">Add Student</a>
+        <a href="{{ url_for('new_student', class_id=request.args.get('class_id', '')) }}" id="add-student-button">Add Student</a>
       </div>
     </div>
   </div>

@@ -234,7 +234,7 @@ def newAssignment():
         desc = request.form['desc']
         json = {'user_id': user.userID, 'class_id': class_id, 'name': name, 'description': desc}
         postAssignment(json)
-        return redirect(url_for('unit', class_id=session.get('last_class_id')))
+        return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
     return render_template('newAssignment.html')
 
 #-----------------------------------
@@ -265,7 +265,7 @@ def new_student():
         
         if postStudent(json):
             print("Student created and added to class successfully")
-            return redirect(url_for('unit', class_code=session.get('last_class_code')))
+            return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
         else:
             print("Failed to create student or add to class")
             return redirect(url_for('classes'))
