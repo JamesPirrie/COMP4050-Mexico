@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, url_for, redirect, session
+from flask import Flask, flash, request, render_template, url_for, redirect, session
 from datetime import date
 import requests
 import json
@@ -332,6 +332,11 @@ def new_project():
 
     return render_template('newProject.html', students=students, assignment_name=assignment_name)
 
+@app.route('/delete_submission', methods = ['GET'])
+def delete_submission():
+    deleteSubmission(request.args.get('submission_id', ''))
+    return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
+
 @app.route('/logout')
 def logout():
     user.userAuthenticated = False
@@ -617,7 +622,8 @@ def postSubmission(files, json):
     return requests.post(f'{backend}submissions', files = files, data = json, headers=getHeaders())
 
 def deleteSubmission(submissionid):
-    return requests.delete(f'{backend}submissions', json = {'email': user.email, 'submission_id': submissionid})
+    json = {'user_id': user.userID, 'submission_id': submissionid}
+    return requests.delete(f'{backend}submissions', json = json, headers=getHeaders())
 
 def updateSubmission(json):
     return requests.put(f'{backend}submissions', json = json)

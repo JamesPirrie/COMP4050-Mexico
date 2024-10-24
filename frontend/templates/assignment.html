@@ -15,7 +15,7 @@
                         <a class = "button" href="{{ url_for('submission', submission_id=submission.submission_id) }}">
                             Viva for {{ student.first_name }} {{ student.last_name }}
                         </a>
-                        <a class="del-link">x</a>
+                        <a  class="del-link" href="{{ url_for('delete_submission', submission_id=submission.submission_id, class_code=request.args.get('class_id', '')) }}">x</a>
                     {% endif %}
                 {% endfor %}
             </div>
