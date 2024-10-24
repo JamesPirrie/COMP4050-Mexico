@@ -1,7 +1,5 @@
 import postgres from 'postgres';
 import 'dotenv/config';
-import { TokenExpiredError } from 'jsonwebtoken';
-import { File } from 'buffer';
 
 const sql = postgres(`postgres://${process.env.DB_USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(<string>process.env.PORT, 10)}/${process.env.DB}`);
 

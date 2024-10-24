@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 require("dotenv/config");
+const fs_1 = __importDefault(require("fs"));
 //AI Imports
 const comp4050ai_1 = require("comp4050ai");
 //Local Imports
@@ -582,7 +583,7 @@ app.post('/api/submissions', upload.single('submission_PDF'), async (req, res) =
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const success = await sqlDB.createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
             if (success) {
-                console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here
+                console.log('Create submission successful'); //we need a mechanism to actually know if theres an actual file here or if the request fails we dont still add the file
                 res.status(201).json({
                     success: true,
                     details: "Submission successfully created"
@@ -614,6 +615,16 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
     try {
         console.log('Received DELETE to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
+            const filePath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
+            console.log('filePath: ' + filePath);
+            fs_1.default.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                if (error) {
+                    throw error;
+                }
+                else {
+                    console.log("File Deleted");
+                }
+            });
             const success = await sqlDB.deleteSubmission(userID, SubmissionID); //email is placeholder for now
             if (success) {
                 console.log('Delete submission successful');

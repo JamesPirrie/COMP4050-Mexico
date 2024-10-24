@@ -5,6 +5,7 @@ import express from 'express';
 import {Response, Request} from 'express';
 import multer from 'multer';
 import 'dotenv/config';
+import fs from 'fs';
 
 //AI Imports
 import {AiFactory} from "comp4050ai";
@@ -613,7 +614,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
         if (await verifyJWT(AuthHeader, userID) == true){
             const success = await sqlDB.createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
             if (success) {
-                console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here
+                console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here or if the request fails we dont still add the file
                 res.status(201).json({
                     success: true,
                     details: "Submission successfully created"
@@ -637,7 +638,6 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
     }  
 });
 
-//TODO NEED TO ADD ACTUAL FILE DELETION INSIDE PDF_STORAGE
 app.delete('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
@@ -646,7 +646,17 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     try{
         console.log('Received DELETE to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.deleteSubmission(userID, SubmissionID);//email is placeholder for now
+            const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
+            console.log('filePath: ' + filePath);
+            fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                if(error){
+                    throw error;
+                }
+                else{
+                    console.log("File Deleted");
+                }
+            });
+            const success = await sqlDB.deleteSubmission(userID, SubmissionID);
             if (success){
                 console.log('Delete submission successful');
                 res.status(200).json({
