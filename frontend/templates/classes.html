@@ -5,7 +5,7 @@
 {% block content %}
 <div class="welcome-box">
     <h2>Classes</h2>
-    <p>This is where we display a list of classes, based on user email and backend DB results.</p>
+    <p>This is where we display a list of classes, based on userID and backend DB results.</p>
     {% if error %}
         <p class="error">{{ error }}</p>
     {% endif %}
@@ -13,7 +13,8 @@
 <div class="content-box">
     {% for class in classes %}
     <div class="link">
-        <a class="test-assignment-button" href="{{ url_for('unit', class_id=class['code']) }}">{{ class['code'] }}</a>
+        <a class="button" href="{{ url_for('unit', class_id=class['code']) }}">{{ class['code'] }}</a>
+        <a class="del-link" href="{{ url_for('delete_class', class_id=class['code']) }}">x</a>
     </div>
     {% endfor %}
     <div class="button-spacer"></div>
