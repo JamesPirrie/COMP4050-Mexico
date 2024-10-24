@@ -493,16 +493,13 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
         if (await verifyJWT(AuthHeader, userID) == true){
 
             //generic questions stuff
-            var tempValidCheck = GenericQuestions.replace('{','');
+            var tempValidCheck: string = GenericQuestions.replace('{','');
             tempValidCheck = tempValidCheck.replace('}','');
-            var tempValidCheckArr = tempValidCheck.split(',');//get the individual pairs
-    
-            var tempValidCheckFinalArr: string[][] = Array.from({length: tempValidCheckArr.length}, () => new Array(2).fill(' '));//make another array with size[length][2]
+            var tempValidCheckArr: string[] = tempValidCheck.split(',');//get the individual pairs
     
             for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
-                tempValidCheckFinalArr[i] =  tempValidCheckArr[i].split(':');//separate the pair
-                if(!tempValidCheckFinalArr[i][0].includes(`Question${i+1}`)){//is the format not Question : Text
-                    throw new Error("generic_questions must be in format QuestionN : Text, See BackendEndpoint.md for more details");
+                if(!tempValidCheckArr[i].split(':')[0].includes(`Question${i+1}`)){//is the format not Question : Text
+                    throw new Error("generic_questions must be in format QuestionN : Text");//, See BackendEndpoint.md for more details
                 }
             }
             const GenericQuestionsJSON = JSON.parse(GenericQuestions);//if its fine then parse into JSON and use later, this throws the errors for incorrect formatting etc

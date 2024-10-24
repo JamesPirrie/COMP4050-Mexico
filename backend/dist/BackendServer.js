@@ -470,10 +470,10 @@ app.put('/api/assignments', upload.none(), async (req, res) => {
             var tempValidCheck = GenericQuestions.replace('{', '');
             tempValidCheck = tempValidCheck.replace('}', '');
             var tempValidCheckArr = tempValidCheck.split(','); //get the individual pairs
-            var tempValidCheckFinalArr = Array.from({ length: tempValidCheckArr.length }, () => new Array(2).fill(' ')); //make another array with size[length][2]
+            //var tempValidCheckFinalArr: string[][] = Array.from({length: tempValidCheckArr.length}, () => new Array(2).fill(' '));//make another array with size[length][2]
             for (var i = 0; i < tempValidCheckArr.length; i++) { //for each pair
-                tempValidCheckFinalArr[i] = tempValidCheckArr[i].split(':'); //separate the pair
-                if (!tempValidCheckFinalArr[i][0].includes(`Question${i + 1}`)) { //is the format not Question : Text
+                //tempValidCheckFinalArr[i] =  tempValidCheckArr[i].split(':');//separate the pair
+                if (!tempValidCheckArr[i].split(':')[0].includes(`Question${i + 1}`)) { //is the format not Question : Text
                     throw new Error("generic_questions must be in format QuestionN : Text, See BackendEndpoint.md for more details");
                 }
             }
