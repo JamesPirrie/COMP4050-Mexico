@@ -102,7 +102,6 @@ Many endpoints are the same however:
     details: string
 }
 - Adds a student to a class
-- TODO: STILL NEED TO IMPLEMENT
 
 `DELETE  /api/classesStudents - Deleting students from a class`
 - Token in Authentication Header: Required
@@ -112,7 +111,6 @@ Many endpoints are the same however:
     details: string
 }
 - Removes a student from a class
-- TODO: STILL NEED TO IMPLEMENT
 
 # Student endpoints
 `GET  /api/allStudents - Getting students of a class from the database`
@@ -132,6 +130,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: Get all students in the database
+
 `GET  /api/students - Getting students of a class from the database`
 - Token in Authentication Header: Required
 - Input parameters: user_id: number, class_id: number
@@ -158,6 +157,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: Creates a new student in database
+
 `PUT  /api/students - Editing students in the database`
 - Token in Authentication Header: Required
 - Input parameters: user_id: number, student_id: number, first_name: string, last_name: string, email: string
@@ -166,6 +166,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: Edits student in database
+
 `DELETE  /api/students - Deleting students from the database`
 - Token in Authentication Header: Required
 - Input parameters: user_id: number, student_id: number
@@ -174,6 +175,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: Deletes student at student_id from the whole database
+
 # Assignment endpoints
 `GET  /api/assignments - Getting assignments from the database`
 - Token in Authentication Header: Required
@@ -300,6 +302,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: Gets AI generated questions for a submission
+
 `POST  /api/qgen - Generating and then adding questions to the database`
 - Token in Authentication Header: Required
 - Input parameters: user_id: string, submission_id: string
@@ -308,6 +311,7 @@ Many endpoints are the same however:
     details: string
 }
 - Description: generates AI questions for an existing submission in the database and stores it
+
 # AI Rubric endpoints
 
 # Viva endpoints
@@ -318,6 +322,7 @@ Many endpoints are the same however:
     
 }
 - Description:
+
 `POST  /api/vivas - Adding vivas to the database`
 - Token in Authentication Header: Required
 - Input parameters:
@@ -325,6 +330,7 @@ Many endpoints are the same however:
     
 }
 - Description:
+
 `PUT  /api/vivas - Editing vivas in the database`
 - Token in Authentication Header: Required
 - Input parameters:
@@ -332,6 +338,7 @@ Many endpoints are the same however:
     
 }
 - Description:
+
 `DELETE  /api/vivas - Deleting vivas from the database`
 - Token in Authentication Header: Required
 - Input parameters:
