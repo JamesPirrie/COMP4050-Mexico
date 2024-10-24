@@ -1,32 +1,32 @@
-{% extends 'base.html' %}
-
-{% block title %}Assignment{% endblock %}
-
+{% extends 'base.html' %} 
+{% block title %}Assignment{% endblock %} 
 {% block content %}
-<div class ="welcome-box">
+
+<div class="welcome-box">
     <h2>{{ request.args.get('name', '') }}</h2>
 </div>
-<div class="content-box">
-<!-- {% for submission in submissions %}
-    <p>assignment id: {{ submission.assignment_id }}</p>
-    <p>class id: {{ submission.class_id }}</p>
-    <p>name: {{ submission.name }}</p>
-    <p>description: {{ submission.description }}</p>
-    <p>generic questions: {{ submission.generic_questions }}</p>
-{% endfor %} -->
 
-{% if submissions.data %}
-    {% for submission in submissions.data %}
-        <div class="link">
-            <a href="{{ url_for('submission', submission_id=submission['submission_id']) }}">{{ submission }}</a>
-        </div>
-    {% endfor %}
-{% else %}
-    <p>There are no submissions for this assignment.</p>
-{% endif %}
+<div class="content-box">
+    {% if submissions.data %} 
+        {% for submission in submissions.data %}
+            <div class="link">
+                {% for student in students %}
+                    {% if student.student_id == submission.student_id %}
+                        <a href="{{ url_for('submission', submission_id=submission.submission_id) }}">
+                            Viva for {{ student.first_name }} {{ student.last_name }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %} 
+    {% else %}
+        <p>There are no submissions for this assignment.</p>
+    {% endif %}
 
     <div class="add-button">
-        <a href="{{ url_for('new_project', class_id=request.args.get('class', '')) }}" id="add-submission-button">Add Viva</a>
+        <a href="{{ url_for('new_project', class_id=request.args.get('class', '')) }}" id="add-submission-button">
+            Add Viva
+        </a>
     </div>
 </div>
 {% endblock %}

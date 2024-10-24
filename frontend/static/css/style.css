@@ -220,8 +220,6 @@ body {
     padding: 10px 0;
     border-bottom: 1px solid #eee;
     text-align: left;
-    display: block;  /* Ensure vertical stacking */
-    width: 100%;
 }
 
 .qa-pair:last-child {
@@ -230,11 +228,12 @@ body {
 
 .question, .answer {
     margin: 5px 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
     line-height: 1.4;
-    display: block;  /* Ensure vertical stacking */
-    width: 100%;
+}
+
+.question strong, .answer strong {
+    display: inline-block;
+    width: 30px;  /* Adjust this value to ensure consistent alignment */
 }
 
 /* Form Styling */

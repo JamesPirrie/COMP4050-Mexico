@@ -191,14 +191,26 @@ def unit():
 
 @app.route('/assignment')
 def assignment():
-    assignments = getAssignments(session['last_class_id'])
-    for a in assignments:
-        if a['name'] == request.args.get('name', ''):
-            assignment_id = a['assignment_id']
-            session['last_assignment_id'] = assignment_id
-    submissions = getSubmissions(assignment_id, session['last_class_id'])
-    print(submissions)
-    return render_template('assignment.html', submissions = submissions)
+    if not isAuthenticated():
+        return redirect(url_for('login'))
+        
+    try:
+        assignments = getAssignments(session['last_class_id'])
+        for a in assignments:
+            if a['name'] == request.args.get('name', ''):
+                assignment_id = a['assignment_id']
+                session['last_assignment_id'] = assignment_id
+                
+        # Get submissions and students
+        submissions = getSubmissions(assignment_id, session['last_class_id'])
+        students = getStudents(session['last_class_id'])
+        
+        return render_template('assignment.html', 
+                             submissions=submissions,
+                             students=students)
+    except Exception as e:
+        logger.error(f"Error in assignment route: {e}")
+        return redirect(url_for('classes'))
 
 @app.route('/newAssignment', methods = ['GET', 'POST'])
 def newAssignment():
@@ -313,32 +325,73 @@ def logout():
 
 @app.route('/submission')
 def submission():
+    if not isAuthenticated():
+        return redirect(url_for('login'))
+        
     submission_id = request.args.get('submission_id')
     logger.debug(f"Viewing submission {submission_id}")
     
     try:
         # Get submission details
-        submissions = getSubmissions(session.get('last_assignment_id'), session.get('last_class_id'))
-        submission = next((s for s in submissions if str(s['submission_id']) == str(submission_id)), None)
+        submissions_response = getSubmissions(session.get('last_assignment_id'), session.get('last_class_id'))
         
+        # Find the specific submission
+        if isinstance(submissions_response, dict) and 'data' in submissions_response:
+            submissions_list = submissions_response['data']
+            submission = next((s for s in submissions_list 
+                             if str(s['submission_id']) == str(submission_id)), None)
+        else:
+            logger.error("Invalid submissions response format")
+            return redirect(url_for('classes'))
+            
+        if not submission:
+            logger.error("Submission not found")
+            return redirect(url_for('classes'))
+            
+        # Get student information
+        students_response = getStudents(session['last_class_id'])
+        if isinstance(students_response, dict) and 'data' in students_response:
+            students = students_response['data']
+            student = next((s for s in students 
+                          if s['student_id'] == submission['student_id']), None)
+        else:
+            student = None
+            
         # Get questions
-        questions = getQuestions(submission_id)
-        logger.debug(f"Retrieved questions for submission {submission_id}: {questions}")
+        headers = {
+            'Authorization': f'Bearer {session.get("token")}'
+        }
         
-        # Sort questions by generation date (newest first)
-        if questions:
-            questions.sort(key=lambda x: x['generation_date'], reverse=True)
+        questions_url = f'{backend}qgen?user_id={user.userID}&submission_id={submission_id}'
+        questions_response = requests.get(questions_url, headers=headers)
         
+        if questions_response.status_code == 200:
+            questions_data = questions_response.json()
+            if isinstance(questions_data, dict) and 'data' in questions_data:
+                questions = questions_data['data']
+            else:
+                questions = questions_data if isinstance(questions_data, list) else []
+        else:
+            questions = []
+            
+        logger.debug(f"Retrieved questions: {questions}")
+            
         return render_template('submission.html',
                              submission=submission,
+                             student=student,
                              questions=questions,
                              submission_id=submission_id)
+                             
     except Exception as e:
         logger.error(f"Error in submission route: {e}")
+        logger.error(f"Submissions response: {submissions_response}")
         return redirect(url_for('classes'))
 
 @app.route('/generate')
 def generate():
+    if not isAuthenticated():
+        return redirect(url_for('login'))
+        
     submission_id = request.args.get('submission_id')
     logger.debug(f"Generate request received for submission_id: {submission_id}")
     
@@ -347,21 +400,20 @@ def generate():
         return redirect(url_for('classes'))
         
     try:
-        # Convert to integer and validate
-        submission_id_int = int(submission_id)
-        if submission_id_int <= 0:
-            raise ValueError("Invalid submission ID")
-
-        # Generate questions
         data = {
-            'submission_id': submission_id_int,
-            'email': user.email
+            'user_id': user.userID,
+            'submission_id': int(submission_id)
+        }
+        
+        headers = {
+            'Authorization': f'Bearer {session.get("token")}'
         }
         
         logger.debug(f"Sending question generation request with data: {data}")
         response = requests.post(
             f'{backend}qgen',
-            json=data,  # Use json parameter instead of data
+            json=data,
+            headers=headers,
             timeout=30
         )
         
@@ -649,14 +701,23 @@ def getSubmissions(assignmentid, classid):
     Gets a list of submissions for the given assignment and class.
     Args:
         assignmentid (int): The id of the assignment to get submissions for
-        classid (int): The id of the class to get submissions for; defaults to the current user's last class
+        classid (int): The id of the class to get submissions for
     Returns:
-        list: A list of submissions
+        dict: Response containing data array and details
     """
     headers = {
         'Authorization': f'Bearer {session.get("token")}'
     }
-    return json.loads(requests.get(f'{backend}submissions?user_id={user.userID}&assignment_id={assignmentid}&class_id={classid}', headers=headers).content)
+    
+    response = requests.get(
+        f'{backend}submissions?user_id={user.userID}&assignment_id={assignmentid}&class_id={classid}', 
+        headers=headers
+    )
+    
+    if response.status_code == 200:
+        return response.json()  # Returns the entire response including data and details
+    return {'data': [], 'details': 'Failed to get submissions'}
+
 
 def postSubmission(files, json):
     """
@@ -737,29 +798,29 @@ def updateViva(json):
     return requests.put(f'{backend}vivas', json = json)
 
 #Question Gen functions
-def getQuestions(submission_id=None):
+def getQuestions(submission_id):
     """
     Gets a list of AI questions from the backend server.
     Args:
-        submission_id (int, optional): The submission ID to filter questions for
+        submission_id (int): The submission ID to filter questions for
     Returns:
-        list: A list of questions
+        dict: Response containing data array and details
     """
-    try:
-        if submission_id:
-            url = f'{backend}qgen?submission_id={int(submission_id)}'
-            logger.debug(f"Getting questions from URL: {url}")
-            
-            response = requests.get(url)
-            logger.debug(f"Response status: {response.status_code}")
-            logger.debug(f"Response content: {response.text}")
-            
-            if response.status_code == 200:
-                return json.loads(response.content)
-        return []
-    except Exception as e:
-        logger.error(f"Error getting questions: {e}")
-        return []
+    if not submission_id:
+        return {'data': [], 'details': 'No submission ID provided'}
+        
+    headers = {
+        'Authorization': f'Bearer {session.get("token")}'
+    }
+    
+    response = requests.get(
+        f'{backend}qgen?user_id={user.userID}&submission_id={submission_id}',
+        headers=headers
+    )
+    
+    if response.status_code == 200:
+        return response.json()
+    return {'data': [], 'details': 'Failed to get questions'}
 
 def postQuestion(json_data):
     try:
