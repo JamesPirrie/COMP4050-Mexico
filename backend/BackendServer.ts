@@ -648,7 +648,17 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
         if (await verifyJWT(AuthHeader, userID) == true){
             const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             console.log('filePath: ' + filePath);
-            fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+            if(fs.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`)){//if theres an ai entry file for this submission
+                fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}.json`, (error) => {//delete it
+                    if(error){
+                        throw error;
+                    }
+                    else{
+                        console.log("File Deleted");
+                    }
+                });
+            }
+            fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
                 if(error){
                     throw error;
                 }
