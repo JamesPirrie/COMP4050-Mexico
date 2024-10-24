@@ -493,13 +493,14 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
         if (await verifyJWT(AuthHeader, userID) == true){
 
             //generic questions stuff
-            var tempValidCheck: string = GenericQuestions.replace('{','');
-            tempValidCheck = tempValidCheck.replace('}','');
+            var tempValidCheck: string = GenericQuestions.replace(/{/g,'');//to make them all the same
+            tempValidCheck = tempValidCheck.replace(/}/g,'');
             var tempValidCheckArr: string[] = tempValidCheck.split(',');//get the individual pairs
-    
+
             for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
-                if(!tempValidCheckArr[i].split(':')[0].includes(`Question${i+1}`)){//is the format not Question : Text
-                    throw new Error("generic_questions must be in format QuestionN : Text");//, See BackendEndpoint.md for more details
+                tempValidCheckArr[i] = tempValidCheckArr[i].replace(/"/g,'').replace(/ /g,'');//get rid of all "" and spaces
+                if(!(tempValidCheckArr[i].split(':')[0] === `Question${i+1}`)){//is the format not Question : Text
+                    throw new Error("generic_questions must be in correct format");//, See BackendEndpoint.md for more details
                 }
             }
             const GenericQuestionsJSON = JSON.parse(GenericQuestions);//if its fine then parse into JSON and use later, this throws the errors for incorrect formatting etc
