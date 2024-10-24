@@ -6,7 +6,7 @@
     <h2>{{ request.args.get('class_id', '') }}</h2>
   </div>
   
-  <div class="content-box">
+  <!-- <div class="content-box">
     <div class="assignments-section">
       <h3>Assignments</h3>
       <div id="assignments-list" class="assignments-list">
@@ -28,6 +28,50 @@
     </div>
   
     <div class="students-section">
+      <h3>Students</h3>
+      <div id="students-list" class="students-list">
+        {% if students %}
+          {% for student in students %}
+            <div class="link">
+              <a class="button" href="{{ url_for('student', student_id=student.student_id) }}">
+                {{ student.first_name }} {{ student.last_name }}
+              </a>
+              <a class="del-link" href="{{ url_for('delete_student', student_id=student.student_id, class_id=request.args.get('class_id', ''))}}">x</a>
+            </div>
+          {% endfor %}
+        {% else %}
+        <p class="placeholder-text">There are no students for this class.</p>
+        {% endif %}
+      </div>
+  
+      <div class="add-button">
+        <a href="{{ url_for('new_student', class_id=request.args.get('class_id', '')) }}" id="add-student-button">Add Student</a>
+      </div>
+    </div>
+  </div> -->
+
+  <div class="columns-container">
+    <div class="column">
+      <h3>Assignments</h3>
+      <div id="assignments-list" class="assignments-list">
+        {% if assignments %}
+          {% for assignment in assignments %}
+            <div class="link">
+              <a class="button" href="{{ url_for('assignment', name=assignment['name']) }}">{{ assignment['name'] }}</a>
+              <a  class="del-link" href="{{ url_for('delete_assignment', name=assignment['name'], class_code=request.args.get('class_id', '')) }}">x</a>
+            </div>
+          {% endfor %}
+        {% else %}
+        <p class="placeholder-text">There are no assignments for this class.</p>
+        {% endif %}
+      </div>
+  
+      <div class="add-button">
+        <a href="{{ url_for('newAssignment', class_id=request.args.get('class_id', '')) }}" id="add-assignment-button">Add Assignment</a>
+      </div>
+    </div>
+  
+    <div class="column">
       <h3>Students</h3>
       <div id="students-list" class="students-list">
         {% if students %}
