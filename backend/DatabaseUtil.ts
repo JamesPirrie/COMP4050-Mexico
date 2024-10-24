@@ -450,11 +450,11 @@ export class dbUtils {
             throw error;
         }
     }
-     async editAssignment(user_id: number, assignment_id: number, class_id: number, name: string, description: string): Promise<Boolean> {
+     async editAssignment(user_id: number, assignment_id: number, class_id: number, name: string, description: string, generic_questions: string): Promise<Boolean> {
         try{
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
-            await sql`UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description} WHERE assignment_id = ${assignment_id};`;
+            await sql`UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description}, generic_questions = ${generic_questions} WHERE assignment_id = ${assignment_id};`;
             return true;
         }
         catch(error){

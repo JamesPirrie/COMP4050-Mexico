@@ -178,12 +178,19 @@ Many endpoints are the same however:
 
 `PUT  /api/assignments - Editing assignments in the database`
 - Token in Authentication Header: Required
-- Input parameters: user_id: number, class_id: number, assignment_id: string, name: string, description: string
+- Input parameters: user_id: number, class_id: number, assignment_id: string, name: string, description: string, generic_questions: JSON
 - Output parameters : {
     success: boolean,
     details: string
 }
-- Description: edit an assignment of assignment_id
+
+- IMPORTANT NOTE: generic_questions MUST be in the following format:
+- "{Question1" : "What is a pancake?", "Question2" : "When is a pancake?", "Question3" : "Why is a pancake?", ...}
+1. The Q in Questions Must be capitalised.
+2. The Question number must start at 1 and increment by 1 until all questions are listed
+3. To make the JSON functions happy: The text must be wrapped in "" as above, {} are also important, same with : and ,
+
+- Description: edit an assignment of assignment_id, grants the ability to add to and edit the generic questions
 
 `DELETE  /api/assignments - Deleting assignments from the database`
 - Token in Authentication Header: Required

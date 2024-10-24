@@ -299,21 +299,37 @@ class dbUtils {
             throw error;
         }
     }
+    // Add student ID to a class array. Then update the student with the class ID in the classes array.
     async addStudentToClass(user_id, student_id, specificClass) {
         try {
             //add verifications
             await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await this.updateStudentClass(specificClass);
             return true;
         }
         catch (error) {
             throw error;
         }
     }
+    // Remove student ID to a class array. Then update the student with the class ID in the classes array.
     async removeStudentFromClass(user_id, student_id, specificClass) {
         try {
             //add verifications
-            await sql `UPDATE class SET students = array_remove(students, ${student_id} WHERE class_id = ${specificClass};`;
+            await sql `UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+            await this.updateStudentClass(specificClass);
             return true;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    // Update classes array in students based on (new) students array in class specificClass.
+    async updateStudentClass(specificClass) {
+        try {
+            console.log(`class: ${specificClass}`);
+            await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`;
+            await sql `WITH to_update AS (SELECT unnest(students) AS student FROM class WHERE class_id = ${specificClass})
+                      UPDATE students SET classes = array_append(classes, ${specificClass}) FROM to_update WHERE student_id = student;`;
         }
         catch (error) {
             throw error;
@@ -407,11 +423,11 @@ class dbUtils {
             throw error;
         }
     }
-    async editAssignment(user_id, assignment_id, class_id, name, description) {
+    async editAssignment(user_id, assignment_id, class_id, name, description, generic_questions) {
         try {
             //add a check that the author is the one sending the request 
             //add a check that the submission exists
-            await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description} WHERE assignment_id = ${assignment_id};`;
+            await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description}, generic_questions = ${generic_questions} WHERE assignment_id = ${assignment_id};`;
             return true;
         }
         catch (error) {

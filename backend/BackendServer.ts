@@ -339,7 +339,6 @@ app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Resp
     const StudentID: number = Number(req.body.student_id);
     const ClassID: number = Number(req.body.class_id);
     try{
-        //TODO REMOVE STUDENTS FROM CLASS
         if (await verifyJWT(AuthHeader, userID) == true){
             const success = await sqlDB.removeStudentFromClass(userID, StudentID, ClassID);
             if(success){
@@ -488,10 +487,27 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
     const ClassID: number = Number(req.body.class_id);
     const Name: string = String(req.body.name);
     const Description: string = String(req.body.description);
+    const GenericQuestions: string = String(req.body.generic_questions);
     try{
         console.log('Received PUT to /api/assignments');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.editAssignment(userID, AssignmentID, ClassID, Name, Description);
+
+            //generic questions stuff
+            var tempValidCheck = GenericQuestions.replace('{','');
+            tempValidCheck = tempValidCheck.replace('}','');
+            var tempValidCheckArr = tempValidCheck.split(',');//get the individual pairs
+    
+            var tempValidCheckFinalArr: string[][] = Array.from({length: tempValidCheckArr.length}, () => new Array(2).fill(' '));//make another array with size[length][2]
+    
+            for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
+                tempValidCheckFinalArr[i] =  tempValidCheckArr[i].split(':');//separate the pair
+                if(!tempValidCheckFinalArr[i][0].includes(`Question${i+1}`)){//is the format not Question : Text
+                    throw new Error("generic_questions must be in format QuestionN : Text, See BackendEndpoint.md for more details");
+                }
+            }
+            const GenericQuestionsJSON = JSON.parse(GenericQuestions);//if its fine then parse into JSON and use later, this throws the errors for incorrect formatting etc
+
+            const success = await sqlDB.editAssignment(userID, AssignmentID, ClassID, Name, Description, GenericQuestionsJSON);
             if (success) {
                 console.log('Edit Assignment successful');
                 res.status(200).json({
