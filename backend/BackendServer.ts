@@ -317,9 +317,9 @@ app.post('/api/classesStudents', upload.none(), async (req: Request, res: Respon
             }
             else{
                 console.log("Add student to class failed");
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "Could not add student to class"
+                    details: "Add student to class failed as User does not posess such a class"
                 });
             }
         }
@@ -350,9 +350,9 @@ app.delete('/api/classesStudents', upload.none(), async (req: Request, res: Resp
             }
             else{
                 console.log("Remove student from class failed");
-                res.status((400)).json({
+                res.status((403)).json({
                     success: false,
-                    details: "Remove student from class failed"
+                    details: "Remove student from class failed as User does not posess such a class"
                 });
             }
         }

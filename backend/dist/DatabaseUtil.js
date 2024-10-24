@@ -61,7 +61,7 @@ class dbUtils {
     async signupUser(email, hashedPassword, user_name, first_name, last_name) {
         try {
             if (await this.loginUserCheck(email) != true) { //if name isnt already present
-                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, TRIM(both '"' from ${email}), ${hashedPassword}, false)`;
+                await sql `INSERT INTO users (username, first_name, last_name, email, pass, is_admin) VALUES (${user_name}, ${first_name}, ${last_name}, ${email}, ${hashedPassword}, false)`;
                 return true;
             }
             else {
@@ -303,9 +303,13 @@ class dbUtils {
     async addStudentToClass(user_id, student_id, specificClass) {
         try {
             //add verifications
-            await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
-            await this.updateStudentClass(specificClass);
-            return true;
+            const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            if (verifyUser[0]['author_id'] == user_id) {
+                await sql `UPDATE class SET students = array_append(students, ${student_id}) WHERE class_id = ${specificClass};`;
+                await this.updateStudentClass(specificClass);
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -315,9 +319,13 @@ class dbUtils {
     async removeStudentFromClass(user_id, student_id, specificClass) {
         try {
             //add verifications
-            await sql `UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
-            await this.updateStudentClass(specificClass);
-            return true;
+            const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+            if (verifyUser[0]['author_id'] == user_id) {
+                await sql `UPDATE class SET students = array_remove(students, ${student_id}) WHERE class_id = ${specificClass};`;
+                await this.updateStudentClass(specificClass);
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
