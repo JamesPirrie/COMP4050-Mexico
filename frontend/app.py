@@ -211,6 +211,9 @@ def assignment():
         # Get submissions and students
         submissions = getSubmissions(assignment_id, session['last_class_id'])
         students = getStudents(session['last_class_id'])
+        # description = getAssignmentDesc(assignment_id)
+        # ulo = getAssignmentULO(assignment_id)
+        # rubric = getRubrics(assignment_id)
         
         return render_template('assignment.html', 
                              submissions=submissions,
@@ -520,7 +523,6 @@ def updateClass(json):
 
 #Assignment functions
 def getAssignments(class_id):
-
     params = {
         'user_id': user.userID,
         'class_id': class_id
@@ -544,6 +546,21 @@ def deleteAssignment(assignmentid):
 
 def updateAssignment(json):
     return requests.put(f'{backend}assignments', json = json)
+
+# def getAssignmentDesc(assignment_id):
+#     params = {
+#             'user_id': user.userID,
+#             'assignment_id': assignment_id
+#     }
+    
+#     print(f"Getting description for assignment_id: {assignment_id}")
+#     response = requests.get(f'{backend}assignments', headers=getHeaders(), params=params)
+    
+#     if response.ok:
+#         resp_data = response.json()
+#         return resp_data.get('data', [])
+#     print(f"Error getting assignments: {response.text}")
+#     return []
 
 #Student functions
 def getStudents(class_id):

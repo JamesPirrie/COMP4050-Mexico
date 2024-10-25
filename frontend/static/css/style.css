@@ -56,6 +56,10 @@ body {
     height: 24px;
     vertical-align: middle;
 }
+.logout-button:hover img {
+    border-radius: 6px;
+    background-color: #E7E4DB;
+}
 
 /* Sidebar Container */
 .main-container {
@@ -178,6 +182,11 @@ body {
     justify-content: center;
 }
 
+.content-box .link .button:hover {
+    border-radius: 5px;
+    background-color: #D6D2C4;
+}
+
 .content-box .link .del-link {
     position: absolute;
     width: 8%;
@@ -187,13 +196,13 @@ body {
     text-decoration: none;
     z-index: 100;
     display: flex;
+    color: #50505050;
     align-items: center;
     justify-content: center;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 5px;
-    color: #ccc;
 }
 
 .content-box .link .del-link:hover {
@@ -301,6 +310,7 @@ body {
     background-color: #E7E4DB;
     padding: 25px;
     border-radius: 10px;
+    text-align: center;
 }
 
 .column .link {
@@ -311,6 +321,12 @@ body {
     padding: 15px;
     width: calc(100% - 20px);
     height: 24px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    display: block;
+    align-items: center;
+    justify-content: center;
 }
 
 .column .link .button {
@@ -323,6 +339,10 @@ body {
     align-items: center;
     justify-content: center;
 }
+.column .link .button:hover{
+    border-radius: 5px;
+    background-color: #D6D2C4;
+}
 
 .column .link .del-link {
     position: absolute;
@@ -330,7 +350,7 @@ body {
     right: 0;
     width: 8%;
     height: 100%;
-    color: #ccc;
+    color: #50505050;
     text-decoration: none;
     z-index: 100;
     display: flex;
