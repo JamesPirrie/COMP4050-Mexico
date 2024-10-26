@@ -16,7 +16,7 @@ import {comparePassword, generateTokenForLogin, hashPassword, verifyJWT} from '.
 
 //Globals
 const PORT = 3000;
-const ROOTDIR = __dirname.slice(0,__dirname.length-5);//get rid of /dist at the end
+export const ROOTDIR = __dirname.slice(0,__dirname.length-5);//get rid of /dist at the end
 var TEMPFILENAME: string;//memory to store StorageEngine's generated name
 
 //Initialisaion
@@ -653,18 +653,22 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
                         throw error;
                     }
                     else{
-                        console.log("File Deleted");
+                        console.log(`File: ${filePath}.json Deleted`);
                     }
                 });
             }
-            fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
-                if(error){
-                    throw error;
-                }
-                else{
-                    console.log("File Deleted");
-                }
-            });
+
+            if(fs.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)){//if theres an ai entry file for this submission
+                fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
+                    if(error){
+                        throw error;
+                    }
+                    else{
+                        console.log(`File: ${filePath} Deleted`);
+                    }
+                });
+            }
+
             const success = await sqlDB.deleteSubmission(userID, SubmissionID);
             if (success){
                 console.log('Delete submission successful');

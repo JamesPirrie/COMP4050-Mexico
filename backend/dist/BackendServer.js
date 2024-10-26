@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ROOTDIR = void 0;
 //Package Imports
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
@@ -16,7 +17,7 @@ const DatabaseUtil_1 = require("./DatabaseUtil");
 const AuthenticationUtil_1 = require("./AuthenticationUtil");
 //Globals
 const PORT = 3000;
-const ROOTDIR = __dirname.slice(0, __dirname.length - 5); //get rid of /dist at the end
+exports.ROOTDIR = __dirname.slice(0, __dirname.length - 5); //get rid of /dist at the end
 var TEMPFILENAME; //memory to store StorageEngine's generated name
 //Initialisaion
 const app = (0, express_1.default)();
@@ -554,7 +555,7 @@ app.get('/api/submissionFile', upload.none(), async (req, res) => {
         console.log('Received GET to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const filePath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID); //still need permissions check: is userID permitted to access this submissionID?
-            res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+            res.sendFile(`${exports.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
                 if (error) {
                     throw error;
                 }
@@ -615,24 +616,26 @@ app.delete('/api/submissions', upload.none(), async (req, res) => {
         console.log('Received DELETE to /api/submissions');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
             const filePath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
-            if (fs_1.default.existsSync(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`)) { //if theres an ai entry file for this submission
-                fs_1.default.unlink(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {
+            if (fs_1.default.existsSync(`${exports.ROOTDIR}/ServerStorage/qGen/${filePath}.json`)) { //if theres an ai entry file for this submission
+                fs_1.default.unlink(`${exports.ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {
                     if (error) {
                         throw error;
                     }
                     else {
-                        console.log("File Deleted");
+                        console.log(`File: ${filePath} Deleted`);
                     }
                 });
             }
-            fs_1.default.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
-                if (error) {
-                    throw error;
-                }
-                else {
-                    console.log("File Deleted");
-                }
-            });
+            if (fs_1.default.existsSync(`${exports.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an ai entry file for this submission
+                fs_1.default.unlink(`${exports.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                    if (error) {
+                        throw error;
+                    }
+                    else {
+                        console.log(`File: ${filePath} Deleted`);
+                    }
+                });
+            }
             const success = await sqlDB.deleteSubmission(userID, SubmissionID);
             if (success) {
                 console.log('Delete submission successful');

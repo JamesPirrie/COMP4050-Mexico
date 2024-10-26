@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.dbUtils = void 0;
 const postgres_1 = __importDefault(require("postgres"));
 require("dotenv/config");
+const fs_1 = __importDefault(require("fs"));
+const BackendServer_1 = require("./BackendServer");
 const sql = (0, postgres_1.default)(`postgres://${process.env.DB_USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(process.env.PORT, 10)}/${process.env.DB}`);
 /* --------------------------------------------------------------------------- */
 class dbUtils {
@@ -355,12 +357,32 @@ class dbUtils {
     //DELETE FUNCTIONS
     async deleteStudent(user_id, student_id) {
         try {
-            //may add a check that the student exists because currently returns true even if the thing doesnt exist     
             //delete all the ai_outputs
             const submissions = await sql `SELECT * FROM submissions WHERE student_id = ${student_id};`;
             for (var i = 0; i < submissions.length; i++) {
                 await sql `DELETE FROM ai_output where submission_id = ${submissions[i]['submission_id']};`;
-                //delete the file too
+                //delete the files
+                const filePath = await this.getSubmissionFilePathForSubID(submissions[i]['submission_id']);
+                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/qGen/${filePath}.json`)) { //if theres an ai entry file for this submission
+                    fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                        else {
+                            console.log(`File: ${filePath} Deleted`);
+                        }
+                    });
+                }
+                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an ai entry file for this submission
+                    fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                        else {
+                            console.log(`File: ${filePath} Deleted`);
+                        }
+                    });
+                }
             }
             //delete all them from the classes
             const classes = await sql `SELECT * FROM class WHERE ${student_id} = ANY(students);`;

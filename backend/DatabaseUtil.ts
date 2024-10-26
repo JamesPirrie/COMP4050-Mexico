@@ -1,5 +1,7 @@
 import postgres from 'postgres';
 import 'dotenv/config';
+import fs from 'fs';
+import { ROOTDIR } from './BackendServer';
 
 const sql = postgres(`postgres://${process.env.DB_USER}:${process.env.PASS}@${process.env.HOST}:${parseInt(<string>process.env.PORT, 10)}/${process.env.DB}`);
 
@@ -376,14 +378,34 @@ export class dbUtils {
     //DELETE FUNCTIONS
 
      async deleteStudent(user_id: number, student_id: number): Promise<Boolean> {
-        try{
-            //may add a check that the student exists because currently returns true even if the thing doesnt exist     
-            
+        try{     
             //delete all the ai_outputs
             const submissions = await sql`SELECT * FROM submissions WHERE student_id = ${student_id};`;
             for(var i = 0; i < submissions.length; i++){
                 await sql`DELETE FROM ai_output where submission_id = ${submissions[i]['submission_id']};`;
-                //delete the file too
+                //delete the files
+                const filePath: string = await this.getSubmissionFilePathForSubID(submissions[i]['submission_id']);
+                if(fs.existsSync(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`)){//if theres an ai entry file for this submission
+                    fs.unlink(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {//delete it
+                        if(error){
+                            throw error;
+                        }
+                        else{
+                            console.log(`File: ${filePath}.json Deleted`);
+                        }
+                    });
+                }
+    
+                if(fs.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)){//if theres an ai entry file for this submission
+                    fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
+                        if(error){
+                            throw error;
+                        }
+                        else{
+                            console.log(`File: ${filePath} Deleted`);
+                        }
+                    });
+                }
             }
 
             //delete all them from the classes

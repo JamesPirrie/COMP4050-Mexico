@@ -113,7 +113,7 @@ Many endpoints are the same however:
 - Removes a student from a class
 
 # Student endpoints
-`GET  /api/allStudents - Getting students of a class from the database`
+`GET  /api/allStudents - Getting all students from the database`
 - Token in Authentication Header: Required
 - Input parameters: user_id: number
 - Output parameters : {
