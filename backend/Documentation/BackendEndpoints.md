@@ -317,32 +317,46 @@ Many endpoints are the same however:
 # Viva endpoints
 `GET  /api/vivas - Getting vivas from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, submission_id: number
 - Output parameters : {
-    
+    data: [
+        {
+        exam_id: number,
+        submission_id: number,
+        student_id: number,
+        marks: number,
+        comments: string,
+        examiner_id: number
+        },
+        ...
+    ]
+    details: string
 }
-- Description:
+- Description: gets all exams for that submission
 
 `POST  /api/vivas - Adding vivas to the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, submission_id: number, student_id: number
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: creates a exam entry for the student with the submission
 
 `PUT  /api/vivas - Editing vivas in the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: edits an exam entry
 
 `DELETE  /api/vivas - Deleting vivas from the database`
 - Token in Authentication Header: Required
-- Input parameters:
+- Input parameters: user_id: number, exam_id: number
 - Output parameters : {
-    
+    success: boolean,
+    details: string
 }
-- Description:
+- Description: deletes an exam entry
