@@ -247,9 +247,9 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
             }
             else{
                 console.log('Error: class Deletion Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: 'Delete class failed'
+                    details: 'Class deletion failed: user not permitted to perform this action'
                 });
             }
         }
@@ -285,9 +285,9 @@ app.put('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             }
             else{
                 console.log('Error: class edit Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "Edit class failed"
+                    details: 'Class edit failed: user not permitted to perform this action'
                 });
             }
         }
@@ -464,9 +464,9 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
             }
             else{
                 console.log('Error: Assignment Deletion Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: `Assignment deletion failed`
+                    details: `Assignment deletion failed: user not permitted to perform this action`
                 });
             }
         }
@@ -516,9 +516,9 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
             }
             else{
                 console.log('Error: Assignment edit Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: `Assignment editing failed`
+                    details: `Assignment editing failed: user not permitted to perform this action`
                 });
             }
         }
@@ -646,29 +646,6 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     try{
         console.log('Received DELETE to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
-            if(fs.existsSync(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`)){//if theres an ai entry file for this submission
-                fs.unlink(`${ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {//delete it
-                    if(error){
-                        throw error;
-                    }
-                    else{
-                        console.log(`File: ${filePath}.json Deleted`);
-                    }
-                });
-            }
-
-            if(fs.existsSync(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)){//if theres an ai entry file for this submission
-                fs.unlink(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//delete the actual submission file
-                    if(error){
-                        throw error;
-                    }
-                    else{
-                        console.log(`File: ${filePath} Deleted`);
-                    }
-                });
-            }
-
             const success = await sqlDB.deleteSubmission(userID, SubmissionID);
             if (success){
                 console.log('Delete submission successful');
@@ -695,12 +672,12 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     }
 });
 
-app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
+app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{ // new file system simply adds a new file instead of deleting old one
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
-    const SubmissionID: number = Number(req.body.submission_id);// i dont think they should be able to edit these
-    const AssignmentID: number = Number(req.body.assignment_id);// i dont think they should be able to edit these
+    const SubmissionID: number = Number(req.body.submission_id);// i dont think they should be able to edit these 
+    const AssignmentID: number = Number(req.body.assignment_id);// i dont think they should be able to edit these - editing this to an invalid value creates an undeletable submission
     const StudentID: number = Number(req.body.student_id);
     const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here? TODO: I think we should give option to edit date but also option to keep same
     try{
@@ -716,9 +693,9 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
             }
             else{
                 console.log('Error: submission edit Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "Editing Submission failed"
+                    details: "Editing Submission failed: user not permitted to perform this action"
                 });
             }
         }
@@ -1343,9 +1320,9 @@ app.delete('/api/vivas', upload.none(), async (req: Request, res: Response) => {
             }
             else{
                 console.log('Error: exam Deletion Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "failed to delete Viva"
+                    details: "failed to delete Viva: user not permitted to perform this action"
                 });
             }
         }
@@ -1382,9 +1359,9 @@ app.put('/api/vivas', upload.none(), async (req: Request, res: Response) =>{
             }
             else{
                 console.log('Error: exam Edit Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "failed to edit Viva"
+                    details: "failed to edit Viva: user not permitted to perform this action"
                 });
             }
         }

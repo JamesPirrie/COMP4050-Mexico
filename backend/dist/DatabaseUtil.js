@@ -357,6 +357,10 @@ class dbUtils {
     //DELETE FUNCTIONS
     async deleteStudent(user_id, student_id) {
         try {
+            const verifyStudent = await sql `SELECT * FROM students WHERE student_id = ${student_id}`;
+            if (verifyStudent.length < 1) {
+                throw new Error('No such Student found');
+            }
             //delete all the ai_outputs
             const submissions = await sql `SELECT * FROM submissions WHERE student_id = ${student_id};`;
             for (var i = 0; i < submissions.length; i++) {
@@ -369,10 +373,11 @@ class dbUtils {
                             throw error;
                         }
                         else {
-                            console.log(`File: ${filePath} Deleted`);
+                            console.log(`File: ${filePath}.json Deleted`);
                         }
                     });
                 }
+                //delete all the submission files
                 if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an ai entry file for this submission
                     fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
                         if (error) {
@@ -389,7 +394,7 @@ class dbUtils {
             for (var i = 0; i < classes.length; i++) {
                 await this.removeStudentFromClass(user_id, student_id, classes[i]['class_id']);
             }
-            await sql `DELETE FROM students WHERE student_id = ${student_id};`;
+            await sql `DELETE FROM students WHERE student_id = ${student_id};`; //this will just delete different users items built on that user but the whole system needs a rework to solve
             await sql `DELETE FROM submissions WHERE student_id = ${student_id};`;
             await sql `DELETE FROM exams WHERE student_id = ${student_id};`;
             return true;
@@ -400,11 +405,40 @@ class dbUtils {
     }
     async deleteSubmission(user_id, submission_id) {
         try {
-            //may add a check that the submission exists
-            //may add a check that the author is the one sending the request
-            await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
-            //delete the file too
-            return true;
+            const verifySubmission = await sql `SELECT * FROM submissions WHERE submission_id = ${submission_id}`;
+            if (verifySubmission.length < 1) {
+                throw new Error('No such Submission found');
+            }
+            const AssignmentID = verifySubmission[0]['assignment_id'];
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
+            const ClassID = verifyAssignment[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                const filePath = await this.getSubmissionFilePathForSubID(submission_id);
+                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/qGen/${filePath}.json`)) { //if theres an ai entry file for this submission
+                    fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/qGen/${filePath}.json`, (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                        else {
+                            console.log(`File: ${filePath}.json Deleted`);
+                        }
+                    });
+                }
+                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an ai entry file for this submission
+                    fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                        else {
+                            console.log(`File: ${filePath} Deleted`);
+                        }
+                    });
+                }
+                await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -412,10 +446,15 @@ class dbUtils {
     }
     async deleteClass(user_id, class_id) {
         try {
-            //may add a check that the class exists
-            //may add a check that the author is the one sending the request
-            await sql `DELETE FROM class WHERE class_id = ${class_id};`;
-            return true;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${class_id}`;
+            if (verifyUser.length < 1) {
+                throw new Error('No such class found');
+            }
+            if (verifyUser[0]['author_id'] === user_id) {
+                await sql `DELETE FROM class WHERE class_id = ${class_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -423,10 +462,17 @@ class dbUtils {
     }
     async deleteAssignment(user_id, assignment_id) {
         try {
-            //may add a check that the assignment exists
-            //may add a check that the author is the one sending the request
-            await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
-            return true;
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id};`;
+            if (verifyAssignment.length < 1) {
+                throw new Error('No such assignment found');
+            }
+            const ClassID = verifyAssignment[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -434,10 +480,21 @@ class dbUtils {
     }
     async deleteExam(user_id, exam_id) {
         try {
-            //may add a check that the exam exists
-            //may add a check that the author is the one sending the request
-            await sql `DELETE FROM exams WHERE exam_id = ${exam_id};`;
-            return true;
+            const verifyExam = await sql `SELECT * FROM exams WHERE exam_id = ${exam_id}`;
+            if (verifyExam.length < 1) {
+                throw new Error('No such Exam found');
+            }
+            const SubmissionID = verifyExam[0]['submission_id'];
+            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${SubmissionID}`;
+            const AssignmentID = verifyAssignment[0]['assignment_id'];
+            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
+            const ClassID = verifyClass[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                await sql `DELETE FROM exams WHERE exam_id = ${exam_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -446,7 +503,10 @@ class dbUtils {
     //EDIT FUNCTIONS
     async editStudent(email, student_id, first_name, last_name) {
         try {
-            //add a check that the student exists
+            const verifyStudent = await sql `SELECT * FROM students WHERE student_id = ${student_id}`;
+            if (verifyStudent.length < 1) {
+                throw new Error('No such Student found');
+            }
             await sql `UPDATE students SET first_name = ${first_name}, last_name = ${last_name}, email = ${email} WHERE student_id = ${student_id};`;
             return true;
         }
@@ -456,10 +516,23 @@ class dbUtils {
     }
     async editSubmission(user_id, submission_id, assignment_id, student_id, submission_date, submission_filepath) {
         try {
-            //add a check that the submission exists
-            //add a check that the author is the one sending the request 
-            await sql `UPDATE submissions SET student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = ${submission_filepath} WHERE submission_id = ${submission_id};`;
-            return true;
+            const verifySubmission = await sql `SELECT * FROM submissions WHERE submission_id = ${submission_id}`;
+            if (verifySubmission.length < 1) {
+                throw new Error('No such Submission found');
+            }
+            const AssignmentID = verifySubmission[0]['assignment_id'];
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
+            const ClassID = verifyAssignment[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                const verifyNewAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id}`;
+                if (verifyNewAssignment.length < 1) {
+                    throw new Error('Assignment specified to be edited in does not exist');
+                }
+                await sql `UPDATE submissions SET student_id = ${student_id}, assignment_id = ${assignment_id}, submission_date = NOW(), submission_filepath = ${submission_filepath} WHERE submission_id = ${submission_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -467,10 +540,15 @@ class dbUtils {
     }
     async editClass(user_id, class_id, session, year, code, title) {
         try {
-            //add a check that the author is the one sending the request 
-            //add a check that the class exists
-            await sql `UPDATE class SET session = ${session}, year = ${year}, code = ${code}, title = ${title} WHERE class_id = ${class_id};`; // more fields added post MVP
-            return true;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${class_id};`;
+            if (verifyUser.length < 1) {
+                throw new Error('No such class found');
+            }
+            if (verifyUser[0]['author_id'] === user_id) {
+                await sql `UPDATE class SET session = ${session}, year = ${year}, code = ${code}, title = ${title} WHERE class_id = ${class_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -478,10 +556,21 @@ class dbUtils {
     }
     async editAssignment(user_id, assignment_id, class_id, name, description, generic_questions) {
         try {
-            //add a check that the author is the one sending the request 
-            //add a check that the submission exists
-            await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description}, generic_questions = ${generic_questions} WHERE assignment_id = ${assignment_id};`;
-            return true;
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id};`;
+            if (verifyAssignment.length < 1) {
+                throw new Error('No such assignment found');
+            }
+            const ClassID = verifyAssignment[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                const verifyNewClass = await sql `SELECT * FROM class WHERE class_id = ${class_id};`;
+                if (verifyNewClass.length < 1) {
+                    throw new Error('Class specified to be edited in does not exist');
+                }
+                await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description}, generic_questions = ${generic_questions} WHERE assignment_id = ${assignment_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -489,10 +578,25 @@ class dbUtils {
     }
     async editExam(user_id, exam_id, submission_id, student_id, examiner_id, marks, comments) {
         try {
-            //add a check that the author is the one sending the request 
-            //add a check that the submission exists
-            await sql `UPDATE assignments SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = ${comments}, examiner_id = ${examiner_id} WHERE exam_id = ${exam_id};`;
-            return true;
+            const verifyExam = await sql `SELECT * FROM exams WHERE exam_id = ${exam_id}`;
+            if (verifyExam.length < 1) {
+                throw new Error('No such Exam found');
+            }
+            const SubmissionID = verifyExam[0]['submission_id'];
+            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${SubmissionID}`;
+            const AssignmentID = verifyAssignment[0]['assignment_id'];
+            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
+            const ClassID = verifyClass[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                const verifyNewSubmission = await sql `SELECT * FROM submissions WHERE submission_id = ${submission_id};`;
+                if (verifyNewSubmission.length < 1) {
+                    throw new Error('submission specified to be edited in does not exist');
+                }
+                await sql `UPDATE exams SET submission_id = ${submission_id}, student_id = ${student_id}, marks = ${marks}, comments = ${comments}, examiner_id = ${examiner_id} WHERE exam_id = ${exam_id};`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
