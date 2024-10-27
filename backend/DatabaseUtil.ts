@@ -147,9 +147,15 @@ export class dbUtils {
     // post assignments based on class.
      async createAssignment(user_id: number, class_id: number, name: string, description: string): Promise<Boolean> {
         try {
-            const users = user_id;
-            await sql`INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, ${name}, ${description});`;
-            return true;
+            const verifyClass = await sql`SELECT * FROM class WHERE class_id = ${class_id}`;
+            if(verifyClass.length < 1){
+                throw new Error('Class not found');
+            }
+            if(verifyClass[0]['author_id'] === user_id){
+                await sql`INSERT INTO assignments (class_id, name, description) VALUES (${class_id}, ${name}, ${description});`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -194,10 +200,17 @@ export class dbUtils {
     // post submissions with document, class, placeholder student
      async createSubmission(user_id: number, assignment_id: number, student_id: number, submission_filepath: string): Promise<Boolean> {
         try {
-            const users = user_id;//not used, but will be used for verification
-            await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                                        (${assignment_id}, ${student_id}, NOW(), ${submission_filepath});`;//for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
-            return true;
+            const verifyAssignment = await sql`SELECT * FROM assignments WHERE assignment_id = ${assignment_id};`;
+            if(verifyAssignment.length < 1){
+                throw new Error('No such Assignment found');
+            }
+            const verifyClass = await sql`SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
+            if(verifyClass[0]['author_id'] = user_id){
+                await sql`INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
+                (${assignment_id}, ${student_id}, NOW(), ${submission_filepath});`;//for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
