@@ -68,7 +68,7 @@ result_id serial primary key,
 assignment_id int4,
 author_id int4,
 rubric_json jsonb,
-generation_date timestamptz,
+generation_date timestamptz
 );
 
 INSERT INTO students (student_id, first_name, last_name, email, classes) VALUES (11111111, 'John', 'Smith', 'test.account@students.mq.edu.au', ARRAY[1]);

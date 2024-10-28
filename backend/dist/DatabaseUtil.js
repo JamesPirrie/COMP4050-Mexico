@@ -302,7 +302,7 @@ class dbUtils {
                     const studentIds = classes[0]['students'];
                     if (studentIds && studentIds.length > 0) {
                         // Get students based on the class 'students' list
-                        const students = await sql `SELECT * FROM students WHERE student_id IN (${sql(studentIds)});`;
+                        const students = await sql `SELECT * FROM students WHERE student_id IN (${(studentIds)});`;
                         return students;
                     }
                     else {
@@ -369,6 +369,47 @@ class dbUtils {
             await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`; //we might need to get rid of duplicates a little annoying
             await sql `WITH to_update AS (SELECT unnest(students) AS student FROM class WHERE class_id = ${specificClass})
                       UPDATE students SET classes = array_append(classes, ${specificClass}) FROM to_update WHERE student_id = student;`;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    // get rubric with user, class, and assignment
+    async getRubricsForAssignments(user_id, specificClass, specificAssignment) {
+        try {
+            const users = user_id;
+            if (users) {
+                const verifyUser = await sql `SELECT author_id FROM class WHERE class_id = ${specificClass};`;
+                if (verifyUser[0]['author_id'] === users) { //verifying that the user is the one that owns this class			
+                    const verifyClass = await sql `SELECT class_id FROM assignments WHERE assignment_id = ${specificAssignment};`;
+                    if (verifyClass[0]['class_id'] === specificClass) { //if the class we have verified the user has control over is the same as the one that corresponds to the assignments
+                        const results = await sql `SELECT * FROM rubric_output WHERE assignment_id = ${specificAssignment};`;
+                        return results.length ? results : undefined;
+                    }
+                }
+            }
+            else {
+                throw new Error('User not found');
+            }
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    // post generated rubric, class, placeholder student
+    async postRubricForAssignment(user_id, assignment_id, rubric) {
+        try {
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id};`;
+            if (verifyAssignment.length < 1) {
+                throw new Error('No such Assignment found');
+            }
+            const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
+            if (verifyClass[0]['author_id'] = user_id) {
+                await sql `INSERT INTO rubric_output (assignment_id, author_id, rubric_json, generation_date) VALUES
+                (${assignment_id}, ${user_id}, ${JSON.parse(rubric)}, NOW());`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -454,6 +495,24 @@ class dbUtils {
                     });
                 }
                 await sql `DELETE FROM submissions WHERE submission_id = ${submission_id};`;
+                return true;
+            }
+            return false;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    async deleteRubric(user_id, rubric_id, class_id) {
+        try {
+            const verifyRubric = await sql `SELECT * FROM rubric_output WHERE result_id = ${rubric_id};`;
+            if (verifyRubric.length < 1) {
+                throw new Error('No such rubric found');
+            }
+            const ClassID = class_id;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                await sql `DELETE FROM rubric_output WHERE result_id = ${rubric_id};`;
                 return true;
             }
             return false;
@@ -579,6 +638,32 @@ class dbUtils {
                     throw new Error('Class specified to be edited in does not exist');
                 }
                 await sql `UPDATE assignments SET class_id = ${class_id}, name = ${name}, description = ${description}, generic_questions = ${generic_questions} WHERE assignment_id = ${assignment_id};`;
+                return true;
+            }
+            return false;
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    async editRubric(user_id, rubric_id, assignment_id, class_id, rubric) {
+        try {
+            const verifyRubric = await sql `SELECT * FROM rubric_output WHERE result_id = ${rubric_id};`;
+            if (verifyRubric.length < 1) {
+                throw new Error('No such assignment found');
+            }
+            const ClassID = verifyRubric[0]['class_id'];
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            if (verifyUser[0]['author_id'] === user_id) {
+                const verifyNewClass = await sql `SELECT * FROM class WHERE class_id = ${class_id};`;
+                if (verifyNewClass.length < 1) {
+                    throw new Error('Class specified to be edited in does not exist');
+                }
+                const verifyNewAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id}`;
+                if (verifyNewAssignment.length < 1) {
+                    throw new Error('Assignment specified to be edited in does not exist');
+                }
+                await sql `UPDATE rubric_output SET rubric_json = ${rubric} WHERE result_id = ${rubric_id};`;
                 return true;
             }
             return false;
