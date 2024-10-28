@@ -313,6 +313,46 @@ Many endpoints are the same however:
 - Description: generates AI questions for an existing submission in the database and stores it
 
 # AI Rubric endpoints
+`GET /api/rubricgen`
+- Token in Authentication Header: Required
+- Input parameters: user_id: string, submission_id: string, project_overview: string, criteria: string, topics: string, goals: string
+- Output parameters : {
+    data: [
+        {
+            fail: string,
+            pass: string,
+            credit: string,
+            distinction: string,
+            high_distinction: string,
+            criteria: string
+        },
+        ...
+    ],
+    details: string
+}
+- IMPORTANT NOTE: the strings in criteria, topics and goals must be formatted in the following way:
+- 1. it must be structured as an array of strings: ["your string goes here","your string goes here","your string goes here",...] 
+- 2. So ensure there is [] , and " as the above example if its not like this you will receive an error
+- Description: Creates and returns an AI generated rubric according to the provided fields
+
+`GET /api/summarygen`
+- Token in Authentication Header: Required
+- Input parameters: user_id: string, submission_id: string
+- Output parameters : {
+    data: string,
+    details: string
+}
+- Description: summarises the pdf stored for the input submission and returns it
+
+`GET /api/feedbackgen`
+- Token in Authentication Header: Required
+- Input parameters: user_id: string, submission_id: string, project_overview: string, criteria: string, topics: string, goals: string
+- Output parameters : {
+    data: string,
+    details: string
+}
+-IMPORTANT NOTE: see IMPORTANT NOTE IN rubricgen
+- Description: creates feedback for an assignment according to a generated rubric like in rubricgen
 
 # Viva endpoints
 `GET  /api/vivas - Getting vivas from the database`

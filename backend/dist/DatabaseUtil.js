@@ -407,7 +407,7 @@ class dbUtils {
             for (var i = 0; i < classes.length; i++) {
                 await this.removeStudentFromClass(user_id, student_id, classes[i]['class_id']);
             }
-            await sql `DELETE FROM students WHERE student_id = ${student_id};`; //this will just delete different users items built on that user but the whole system needs a rework to solve
+            await sql `DELETE FROM students WHERE student_id = ${student_id};`; //this can delete different users items built on that user but the whole system needs a rework to solve
             await sql `DELETE FROM submissions WHERE student_id = ${student_id};`;
             await sql `DELETE FROM exams WHERE student_id = ${student_id};`;
             return true;

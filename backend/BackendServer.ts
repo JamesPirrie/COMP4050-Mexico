@@ -1037,39 +1037,39 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
         });
 	}	
 });
-/*
+
 //AI Rubric Generate and Return
 app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const AuthHeader: string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
-    const SubmissionID: number = Number(req.query.submission_id);
     const ProjectOverview: string = String(req.query.project_overview);
-    const Criteria: string[] = req.query.criteria;
-    const Topics: string[] = req.query.topics;
-    const Goals: string[] = req.query.goals;
+    const Criteria: string = String(req.query.criteria);
+    const Topics: string = String(req.query.topics);
+    const Goals: string = String(req.query.goals);
     try {
         if (await verifyJWT(AuthHeader, userID) == true) {
+            var arrCriteria: string[] = JSON.parse(Criteria);
+            var arrTopics: string[] = JSON.parse(Topics);
+            var arrGoals: string[] = JSON.parse(Goals);
+
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
                 console.log('Error: API_KEY could not be read inside .env')
             }
 
-            let pdfPath; //Refers to file name not full path.
-            pdfPath = String(req.headers.ProjectOverview);
-
             //Construct AI
             let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
 
             //Writes questions/answers file to "./ServerStorage" specified in constructor
-            let doc_id;
             let rubric;
             try {
-                rubric = await ai.createRubric(ProjectOverview,Criteria,Topics,Goals);
+                rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
             }
             catch (error) {
                 console.log('Error: AI Rubric Generation Failed', error);
+                throw error;
             }
             if (rubric != undefined) {
                 if(rubric.length > 0){
@@ -1096,7 +1096,7 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
         }
     }
 	catch (error) {
-	    console.log('Error within POST qgen: ' + error);
+	    console.log('Error within GET rubricgen: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -1124,6 +1124,7 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
             }
             catch (error) {
                 console.log('Error: Get Submission Path from Sub ID Failed', error);
+                throw error;
             }
 
             //Construct AI
@@ -1132,10 +1133,15 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
             //Writes summary file to Promise<string>
             let summary;
             try {
-                let summary = await ai.summarizeSubmission(pdfPath)
+                if(pdfPath != undefined){
+                    summary = await ai.summarizeSubmission(pdfPath)
+                }else{
+                    throw new Error('Could not retreive pdfPath from database');
+                }
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);
+                throw error;
             }
 
             if (summary != undefined) {
@@ -1155,7 +1161,7 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
         }
     }
 	catch (error) {
-	    console.log('Error within POST qgen: ' + error);
+	    console.log('Error within GET summarygen: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -1163,16 +1169,22 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
 	}	
 });
 
-// TODO Clarify with AI team about the nature of "Rubric" input
 //AI Feedback Generate and Return
 app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) => {
     //What we receive
     const AuthHeader: string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
     const SubmissionID: number = Number(req.query.submission_id);
-    const Rubric: string = String(req.query.rubric);
+    const ProjectOverview: string = String(req.query.project_overview);
+    const Criteria: string = String(req.query.criteria);
+    const Topics: string = String(req.query.topics);
+    const Goals: string = String(req.query.goals);
     try {
         if (await verifyJWT(AuthHeader, userID) == true) {
+            var arrCriteria: string[] = JSON.parse(Criteria);
+            var arrTopics: string[] = JSON.parse(Topics);
+            var arrGoals: string[] = JSON.parse(Goals);
+
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
@@ -1190,13 +1202,23 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
             //Construct AI
             let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
 
+            //generate the rubric
+            let rubric;
+            try {
+                rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
+            }
+            catch (error) {
+                console.log('Error: AI Rubric Generation Failed', error);
+                throw error;
+            }
             //Writes feedback file to Promise<string>
             let feedback;
             try {
-                let feedback = await ai.generateFeedback("sample.pdf", Rubric);
+                feedback = await ai.generateFeedback("sample.pdf", rubric);
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);
+                throw error;
             }
 
             if (feedback != undefined) {
@@ -1216,14 +1238,14 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
         }
     }
 	catch (error) {
-	    console.log('Error within POST qgen: ' + error);
+	    console.log('Error within GET feedbackgen: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
         });
 	}	
 });
-*/
+
 //viva endpoints
 app.get('/api/vivas', upload.none(), async (req: Request, res: Response) =>{//list viva for a specific submission
     //What we receive
