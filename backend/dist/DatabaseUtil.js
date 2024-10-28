@@ -252,10 +252,17 @@ class dbUtils {
     // post exams
     async createExams(user_id, submission_id, student_id) {
         try {
-            const users = user_id;
-            await sql `INSERT INTO exams (submission_id, student_id, examiner_id) VALUES
-                                        (${submission_id}, ${student_id}, ${users});`;
-            return true;
+            const verifySubmission = await sql `SELECT * FROM submissions WHERE submission_id = ${submission_id}`;
+            if (verifySubmission.length < 1) {
+                throw new Error('No such submission found');
+            }
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifySubmission[0]['assignment_id']}`;
+            const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
+            if (verifyClass[0]['author_id'] == user_id) {
+                await sql `INSERT INTO exams (submission_id, student_id, examiner_id) VALUES (${submission_id}, ${student_id}, ${user_id});`;
+                return true;
+            }
+            return false;
         }
         catch (error) {
             throw error;
@@ -422,10 +429,8 @@ class dbUtils {
             if (verifySubmission.length < 1) {
                 throw new Error('No such Submission found');
             }
-            const AssignmentID = verifySubmission[0]['assignment_id'];
-            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
-            const ClassID = verifyAssignment[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifySubmission[0]['assignment_id']}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 const filePath = await this.getSubmissionFilePathForSubID(submission_id);
                 if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/qGen/${filePath}.json`)) { //if theres an ai entry file for this submission
@@ -479,8 +484,7 @@ class dbUtils {
             if (verifyAssignment.length < 1) {
                 throw new Error('No such assignment found');
             }
-            const ClassID = verifyAssignment[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 await sql `DELETE FROM assignments WHERE assignment_id = ${assignment_id};`;
                 return true;
@@ -497,12 +501,9 @@ class dbUtils {
             if (verifyExam.length < 1) {
                 throw new Error('No such Exam found');
             }
-            const SubmissionID = verifyExam[0]['submission_id'];
-            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${SubmissionID}`;
-            const AssignmentID = verifyAssignment[0]['assignment_id'];
-            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
-            const ClassID = verifyClass[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${verifyExam[0]['submission_id']}`;
+            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifyAssignment[0]['assignment_id']}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyClass[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 await sql `DELETE FROM exams WHERE exam_id = ${exam_id};`;
                 return true;
@@ -533,10 +534,8 @@ class dbUtils {
             if (verifySubmission.length < 1) {
                 throw new Error('No such Submission found');
             }
-            const AssignmentID = verifySubmission[0]['assignment_id'];
-            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
-            const ClassID = verifyAssignment[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifySubmission[0]['assignment_id']}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 const verifyNewAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${assignment_id}`;
                 if (verifyNewAssignment.length < 1) {
@@ -573,8 +572,7 @@ class dbUtils {
             if (verifyAssignment.length < 1) {
                 throw new Error('No such assignment found');
             }
-            const ClassID = verifyAssignment[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 const verifyNewClass = await sql `SELECT * FROM class WHERE class_id = ${class_id};`;
                 if (verifyNewClass.length < 1) {
@@ -595,12 +593,9 @@ class dbUtils {
             if (verifyExam.length < 1) {
                 throw new Error('No such Exam found');
             }
-            const SubmissionID = verifyExam[0]['submission_id'];
-            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${SubmissionID}`;
-            const AssignmentID = verifyAssignment[0]['assignment_id'];
-            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${AssignmentID}`;
-            const ClassID = verifyClass[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
+            const verifyAssignment = await sql `SELECT * FROM submissions WHERE submission_id = ${verifyExam[0]['submission_id']}`;
+            const verifyClass = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifyAssignment[0]['assignment_id']}`;
+            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${verifyClass[0]['class_id']}`;
             if (verifyUser[0]['author_id'] === user_id) {
                 const verifyNewSubmission = await sql `SELECT * FROM submissions WHERE submission_id = ${submission_id};`;
                 if (verifyNewSubmission.length < 1) {

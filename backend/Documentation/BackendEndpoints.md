@@ -352,7 +352,8 @@ Many endpoints are the same however:
     details: string
 }
 - IMPORTANT NOTE: This rubric needs to be of the same format as the ones in rubricgen that is:
-{"fail" : string, "pass" : string, "credit" : string, "distinction" : string, "high_distinction" : string, "criteria" : string}
+- {"fail" : string, "pass" : string, "credit" : string, "distinction" : string, "high_distinction" : string, "criteria" : string}
+- as with before ensure its proper json so: all fields are wrapped in "" separated with , and : and wrapped in {}
 - Description: creates feedback for an assignment according to a rubric like in rubricgen
 
 # Viva endpoints
