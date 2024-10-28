@@ -903,6 +903,214 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
 });
 
+//rubric endpoints
+app.get('/api/rubrics', upload.none(), async (req: Request, res: Response) =>{
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.query.user_id);
+    const ClassID: number = Number(req.query.class_id);
+    const AssignmentID: number = Number(req.query.assignment_id);
+    try {
+        console.log('Received GET to /api/rubrics');
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const assignmentRubrics = await sqlDB.getRubricsForAssignments(userID, ClassID, AssignmentID);
+            if (assignmentRubrics != undefined) {                                                      //query later (proper error handling)
+                if(assignmentRubrics.length > 0){                
+                    console.log('GET Rubric successful');
+                    res.status(200).json({
+                        data: assignmentRubrics,
+                        details: "Rubric successfully found"
+                    });
+                }
+                else{
+                    res.status(200).json({
+                        data: {},
+                        details: "No Rubric found"
+                    });
+                }
+            }
+            else{
+                console.log('Error: No Rubric Found');
+                res.status(200).json({
+                    data: {},
+                    details: "No Rubric found"
+                });
+            }
+        }
+    }
+    catch (error) {
+        console.log('Error within GET Rubric: ' + error);
+        res.status(400).json({
+            data: {},
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+app.post('/api/rubrics', upload.none(), async (req: Request, res: Response) => {
+    //What we receive
+    const AuthHeader: string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const AssignmentID: number = Number(req.body.assignment_id);
+    const ProjectOverview: string = String(req.body.project_overview);
+    const Criteria: string = String(req.body.criteria);
+    const Topics: string = String(req.body.topics);
+    const Goals: string = String(req.body.goals);
+    try {
+        if (await verifyJWT(AuthHeader, userID) == true) {
+            var arrCriteria: string[] = JSON.parse(Criteria);
+            var arrTopics: string[] = JSON.parse(Topics);
+            var arrGoals: string[] = JSON.parse(Goals);
+
+            const apiKey = process.env.OPENAI_API_KEY || '';
+
+            if (!apiKey) {
+                console.log('Error: API_KEY could not be read inside .env')
+            }
+
+            //Construct AI
+            let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+
+            //Generates Rubric but does not save it anywhere
+            let rubric;
+            try {
+                rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
+            }
+            catch (error) {
+                console.log('Error: AI Rubric Generation Failed', error);
+                throw error;
+            }
+            if (rubric != undefined) {
+                if(rubric.length > 0){
+                    // Add generated rubric to rubric_output table of db
+                    const success = await sqlDB.postRubricForAssignment(userID, AssignmentID, JSON.stringify((rubric)));
+                    if (success) {
+                        console.log('Create rubric db table successful');
+                        res.status(201).json({
+                            success: true,
+                            details: "Rubric db table successfully created"
+                        });
+                    }
+                    else{
+                        console.log('Error: rubric db table Creation Failed');
+                        res.status(400).json({
+                            success: false,
+                            details: "Rubric db table creation failed"
+                        });
+                    }
+                }
+                else{
+                    res.status(200).json({
+                        success: false,
+                        details: "Generated Rubric not found"
+                    });
+                }
+            }
+            else{
+                console.log('Error: Generated Rubric not Found');
+                res.status(200).json({
+                    success: false,
+                    details: "Generated Rubric not found"
+                });
+            }
+        }
+    }
+	catch (error) {
+	    console.log('Error within GET rubricgen: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+	}	
+});
+
+app.delete('/api/rubrics', upload.none(), async (req: Request, res: Response) =>{
+    //what we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const ClassID: number = Number(req.body.class_id);
+    const RubricID: number = Number(req.body.rubric_id);
+    try{
+        console.log('Received DELETE to /api/rubrics');
+        if (await verifyJWT(AuthHeader, userID) == true){
+            const success = await sqlDB.deleteRubric(userID, ClassID, RubricID);
+            if (success){
+                console.log('Delete rubrics successful');
+                res.status(200).json({
+                    success: true,
+                    details: "Rubric successfully deleted"
+                });
+            }
+            else{
+                console.log('Error: rubrics Deletion Failed');
+                res.status(400).json({
+                    success: false,
+                    details: "Rubric deletion failed"
+                });
+            }
+        }
+    }
+    catch(error){
+        console.log('Error within DELETE Rubric: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+app.put('/api/rubrics', upload.none(), async (req: Request, res: Response) =>{
+    //What we receive
+    const AuthHeader : string = String(req.headers.authorization);
+    const userID: number = Number(req.body.user_id);
+    const RubricID: number = Number(req.body.rubric_id);
+    const AssignmentID: number = Number(req.body.assignment_id);
+    const ClassID: number = Number(req.body.class_id);
+    const Rubric: string = String(req.body.generic_questions);
+    try{
+        console.log('Received PUT to /api/assignments');
+        if (await verifyJWT(AuthHeader, userID) == true){
+            /*
+            //Validation check from genQ partially Adapted to Generate Rubric
+            var tempValidCheck: string = Rubric.replace(/{/g,'');//to make them all the same
+            tempValidCheck = tempValidCheck.replace(/}/g,'');
+            var tempValidCheckArr: string[] = tempValidCheck.split(',');//get the individual pairs
+
+            for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
+                tempValidCheckArr[i] = tempValidCheckArr[i].replace(/"/g,'').replace(/ /g,'');//get rid of all "" and spaces
+                if(!(tempValidCheckArr[i].split(':')[0] === `criteria${i+1}`)){//is the format not criteria : Text
+                    throw new Error("Rubric must be in correct format");//, See BackendEndpoint.md for more details
+                }
+            }
+            */
+            const RubricJSON = JSON.parse(Rubric);//if its fine then parse into JSON and use later, this throws the errors for incorrect formatting etc
+            const success = await sqlDB.editRubric(userID, RubricID, AssignmentID, ClassID, RubricJSON);
+            if (success) {
+                console.log('Edit Assignment successful');
+                res.status(200).json({
+                    success: true,
+                    details: `Assignment successfully edited`
+                });
+            }
+            else{
+                console.log('Error: Assignment edit Failed');
+                res.status(403).json({
+                    success: false,
+                    details: `Assignment editing failed: user not permitted to perform this action`
+                });
+            }
+        }
+    }
+    catch(error){
+        console.log('Error within PUT Assignments: ' + error);
+        res.status(400).json({
+            success: false,
+            details: `Server encountered error: ${error}`
+        });
+    }
+});
+
+
 //AI endpoints
 //AI Question Generation 
 app.get('/api/qgen', upload.none(), async (req: Request, res: Response) => {
@@ -1043,6 +1251,7 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
     //What we receive
     const AuthHeader: string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
+    const AssignmentID: number = Number(req.query.assignment_id);
     const ProjectOverview: string = String(req.query.project_overview);
     const Criteria: string = String(req.query.criteria);
     const Topics: string = String(req.query.topics);
@@ -1073,6 +1282,23 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
             }
             if (rubric != undefined) {
                 if(rubric.length > 0){
+                    // Add generated rubric to rubric_output table of db
+                    const success = await sqlDB.postRubricForAssignment(userID, AssignmentID, JSON.stringify((rubric)));
+                    if (success) {
+                        console.log('Create rubric db table successful');
+                        res.status(201).json({
+                            success: true,
+                            details: "Rubric db table successfully created"
+                        });
+                    }
+                    else{
+                        console.log('Error: rubric db table Creation Failed');
+                        res.status(400).json({
+                            success: false,
+                            details: "Rubric db table creation failed"
+                        });
+                    }
+                    // Return rubric for Get
                     console.log('GET Rubric successful');
                     res.status(200).json({
                         data: rubric,
