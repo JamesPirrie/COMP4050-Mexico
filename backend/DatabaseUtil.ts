@@ -320,7 +320,7 @@ export class dbUtils {
                     const studentIds = classes[0]['students'];
                     if (studentIds && studentIds.length > 0) {
                         // Get students based on the class 'students' list
-                        const students = await sql`SELECT * FROM students WHERE student_id IN (${sql(studentIds)});`;
+                        const students = await sql`SELECT * FROM students WHERE student_id IN (${(studentIds)});`;
                         return students;
                     } else {
                         throw new Error('No students found');
