@@ -432,7 +432,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
                 console.log('Error: Assignment Creation Failed');
                 res.status(400).json({
                     success: false,
-                    details: `Assignment Creation Failed`
+                    details: `Assignment Creation Failed: user not permitted to perform this action`
                 });
             }
         }
@@ -622,9 +622,9 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
             }
             else{
                 console.log('Error: submission Creation Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "Submission creation failed"
+                    details: "Submission creation failed: user not permitted to perform this action"
                 });
             }
         }
@@ -658,7 +658,7 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
                 console.log('Error: submission Deletion Failed');
                 res.status(400).json({
                     success: false,
-                    details: "Submission deletion failed"
+                    details: "Submission deletion failed: user not permitted to perform this action"
                 });
             }
         }
@@ -1294,9 +1294,9 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{ //
             }
             else{
                 console.log('Error: Exam Creation Failed');
-                res.status(400).json({
+                res.status(403).json({
                     success: false,
-                    details: "failed to create Viva"
+                    details: "failed to create Viva: user not permitted to perform this action"
                 });
             }
         }
