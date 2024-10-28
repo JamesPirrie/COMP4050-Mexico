@@ -346,13 +346,14 @@ Many endpoints are the same however:
 
 `GET /api/feedbackgen`
 - Token in Authentication Header: Required
-- Input parameters: user_id: string, submission_id: string, project_overview: string, criteria: string, topics: string, goals: string
+- Input parameters: user_id: string, submission_id: string, rubric: string
 - Output parameters : {
     data: string,
     details: string
 }
--IMPORTANT NOTE: see IMPORTANT NOTE IN rubricgen
-- Description: creates feedback for an assignment according to a generated rubric like in rubricgen
+- IMPORTANT NOTE: This rubric needs to be of the same format as the ones in rubricgen that is:
+{"fail" : string, "pass" : string, "credit" : string, "distinction" : string, "high_distinction" : string, "criteria" : string}
+- Description: creates feedback for an assignment according to a rubric like in rubricgen
 
 # Viva endpoints
 `GET  /api/vivas - Getting vivas from the database`

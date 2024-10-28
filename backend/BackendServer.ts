@@ -1175,15 +1175,10 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
     const AuthHeader: string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
     const SubmissionID: number = Number(req.query.submission_id);
-    const ProjectOverview: string = String(req.query.project_overview);
-    const Criteria: string = String(req.query.criteria);
-    const Topics: string = String(req.query.topics);
-    const Goals: string = String(req.query.goals);
+    const Rubric: string = String(req.query.rubric);
     try {
         if (await verifyJWT(AuthHeader, userID) == true) {
-            var arrCriteria: string[] = JSON.parse(Criteria);
-            var arrTopics: string[] = JSON.parse(Topics);
-            var arrGoals: string[] = JSON.parse(Goals);
+            var parsedRubric = JSON.parse(Rubric);
 
             const apiKey = process.env.OPENAI_API_KEY || '';
 
@@ -1202,19 +1197,10 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
             //Construct AI
             let ai = AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
 
-            //generate the rubric
-            let rubric;
-            try {
-                rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
-            }
-            catch (error) {
-                console.log('Error: AI Rubric Generation Failed', error);
-                throw error;
-            }
             //Writes feedback file to Promise<string>
             let feedback;
             try {
-                feedback = await ai.generateFeedback("sample.pdf", rubric);
+                feedback = await ai.generateFeedback("sample.pdf", parsedRubric);
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);

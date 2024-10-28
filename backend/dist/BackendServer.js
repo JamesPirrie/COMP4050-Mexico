@@ -1120,15 +1120,10 @@ app.get('/api/feedbackgen', upload.none(), async (req, res) => {
     const AuthHeader = String(req.headers.authorization);
     const userID = Number(req.query.user_id);
     const SubmissionID = Number(req.query.submission_id);
-    const ProjectOverview = String(req.query.project_overview);
-    const Criteria = String(req.query.criteria);
-    const Topics = String(req.query.topics);
-    const Goals = String(req.query.goals);
+    const Rubric = String(req.query.rubric);
     try {
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            var arrCriteria = JSON.parse(Criteria);
-            var arrTopics = JSON.parse(Topics);
-            var arrGoals = JSON.parse(Goals);
+            var parsedRubric = JSON.parse(Rubric);
             const apiKey = process.env.OPENAI_API_KEY || '';
             if (!apiKey) {
                 console.log('Error: API_KEY could not be read inside .env');
@@ -1142,19 +1137,10 @@ app.get('/api/feedbackgen', upload.none(), async (req, res) => {
             }
             //Construct AI
             let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
-            //generate the rubric
-            let rubric;
-            try {
-                rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
-            }
-            catch (error) {
-                console.log('Error: AI Rubric Generation Failed', error);
-                throw error;
-            }
             //Writes feedback file to Promise<string>
             let feedback;
             try {
-                feedback = await ai.generateFeedback("sample.pdf", rubric);
+                feedback = await ai.generateFeedback("sample.pdf", parsedRubric);
             }
             catch (error) {
                 console.log('Error: AI Generation Failed', error);
