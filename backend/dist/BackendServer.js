@@ -900,7 +900,7 @@ app.get('/api/rubrics', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within GET Rubric: ' + error);
+        console.log('Error within GET Rubrics: ' + error);
         res.status(400).json({
             data: {},
             details: `Server encountered error: ${error}`
@@ -972,7 +972,7 @@ app.post('/api/rubrics', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within GET rubricgen: ' + error);
+        console.log('Error within POST rubrics: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -1006,7 +1006,7 @@ app.delete('/api/rubrics', upload.none(), async (req, res) => {
         }
     }
     catch (error) {
-        console.log('Error within DELETE Rubric: ' + error);
+        console.log('Error within DELETE Rubrics: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`
@@ -1045,23 +1045,23 @@ app.put('/api/rubrics', upload.none(), async (req, res) => {
             }
             const success = await sqlDB.editRubric(userID, RubricID, AssignmentID, ClassID, parsedRubric);
             if (success) {
-                console.log('Edit Assignment successful');
+                console.log('Edit rubric successful');
                 res.status(200).json({
                     success: true,
-                    details: `Assignment successfully edited`
+                    details: `rubric successfully edited`
                 });
             }
             else {
-                console.log('Error: Assignment edit Failed');
+                console.log('Error: rubric edit Failed');
                 res.status(403).json({
                     success: false,
-                    details: `Assignment editing failed: user not permitted to perform this action`
+                    details: `rubric editing failed: user not permitted to perform this action`
                 });
             }
         }
     }
     catch (error) {
-        console.log('Error within PUT Assignments: ' + error);
+        console.log('Error within PUT rubrics: ' + error);
         res.status(400).json({
             success: false,
             details: `Server encountered error: ${error}`

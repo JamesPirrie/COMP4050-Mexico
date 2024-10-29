@@ -652,7 +652,6 @@ class dbUtils {
             if (verifyRubric.length < 1) {
                 throw new Error('No such assignment found');
             }
-            console.log("hi");
             const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifyRubric[0]['assignment_id']}`;
             const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyClass[0]['author_id'] === user_id) {
