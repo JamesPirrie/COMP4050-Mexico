@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, url_for, redirect, session
+from flask import Flask, flash, request, render_template, url_for, redirect, session
 from datetime import date
 import requests
 import json
@@ -211,6 +211,9 @@ def assignment():
         # Get submissions and students
         submissions = getSubmissions(assignment_id, session['last_class_id'])
         students = getStudents(session['last_class_id'])
+        # description = getAssignmentDesc(assignment_id)
+        # ulo = getAssignmentULO(assignment_id)
+        # rubric = getRubrics(assignment_id)
         
         return render_template('assignment.html', 
                              submissions=submissions,
@@ -333,6 +336,11 @@ def new_project():
             assignment_name = a['name']
 
     return render_template('newProject.html', students=students, assignment_name=assignment_name)
+
+@app.route('/delete_submission', methods = ['GET'])
+def delete_submission():
+    deleteSubmission(request.args.get('submission_id', ''))
+    return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
 
 @app.route('/logout')
 def logout():
@@ -517,7 +525,6 @@ def updateClass(json):
 
 #Assignment functions
 def getAssignments(class_id):
-
     params = {
         'user_id': user.userID,
         'class_id': class_id
@@ -541,6 +548,21 @@ def deleteAssignment(assignmentid):
 
 def updateAssignment(json):
     return requests.put(f'{backend}assignments', json = json)
+
+# def getAssignmentDesc(assignment_id):
+#     params = {
+#             'user_id': user.userID,
+#             'assignment_id': assignment_id
+#     }
+    
+#     print(f"Getting description for assignment_id: {assignment_id}")
+#     response = requests.get(f'{backend}assignments', headers=getHeaders(), params=params)
+    
+#     if response.ok:
+#         resp_data = response.json()
+#         return resp_data.get('data', [])
+#     print(f"Error getting assignments: {response.text}")
+#     return []
 
 #Student functions
 def getStudents(class_id):
@@ -619,7 +641,8 @@ def postSubmission(files, json):
     return requests.post(f'{backend}submissions', files = files, data = json, headers=getHeaders())
 
 def deleteSubmission(submissionid):
-    return requests.delete(f'{backend}submissions', json = {'email': user.email, 'submission_id': submissionid})
+    json = {'user_id': user.userID, 'submission_id': submissionid}
+    return requests.delete(f'{backend}submissions', json = json, headers=getHeaders())
 
 def updateSubmission(json):
     return requests.put(f'{backend}submissions', json = json)

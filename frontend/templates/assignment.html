@@ -6,7 +6,7 @@
     <h2>{{ request.args.get('name', '') }}</h2>
 </div>
 
-<div class="content-box">
+<!-- <div class="content-box">
     {% if submissions.data %} 
         {% for submission in submissions.data %}
             <div class="link">
@@ -15,7 +15,7 @@
                         <a class = "button" href="{{ url_for('submission', submission_id=submission.submission_id) }}">
                             Viva for {{ student.first_name }} {{ student.last_name }}
                         </a>
-                        <a class="del-link">x</a>
+                        <a  class="del-link" href="{{ url_for('delete_submission', submission_id=submission.submission_id, class_code=request.args.get('class_id', '')) }}">x</a>
                     {% endif %}
                 {% endfor %}
             </div>
@@ -29,5 +29,38 @@
             Add Viva
         </a>
     </div>
+</div> -->
+
+<div class="columns-container">
+    <div class="column">
+        <h3>Details</h3>
+        <p> Here we can display assignment desc, ULOs & rubric, or just rubric alone.</p>
+    </div>
+
+    <div class="column">
+        {% if submissions.data %} 
+            {% for submission in submissions.data %}
+                <div class="link">
+                    {% for student in students %}
+                        {% if student.student_id == submission.student_id %}
+                            <a class = "button" href="{{ url_for('submission', submission_id=submission.submission_id) }}">
+                                Viva for {{ student.first_name }} {{ student.last_name }}
+                            </a>
+                            <a  class="del-link" href="{{ url_for('delete_submission', submission_id=submission.submission_id, class_code=request.args.get('class_id', '')) }}">x</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %} 
+        {% else %}
+            <p>There are no submissions for this assignment.</p>
+        {% endif %}
+
+        <div class="add-button">
+            <a href="{{ url_for('new_project', class_id=request.args.get('class', '')) }}" id="add-submission-button">
+                Add Viva
+            </a>
+        </div>
+    </div>
+    
 </div>
 {% endblock %}
