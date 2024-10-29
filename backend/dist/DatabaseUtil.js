@@ -197,7 +197,7 @@ class dbUtils {
             const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyClass[0]['author_id'] = user_id) {
                 await sql `INSERT INTO submissions (assignment_id, student_id, submission_date, submission_filepath) VALUES
-                (${assignment_id}, ${student_id}, NOW(), ${submission_filepath});`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
+                (${assignment_id}, ${student_id}, NOW(), ${submission_filepath});`;
                 return true;
             }
             return false;
@@ -366,7 +366,7 @@ class dbUtils {
     async updateStudentClass(specificClass) {
         try {
             console.log(`class: ${specificClass}`);
-            await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`; //we might need to get rid of duplicates a little annoying
+            await sql `UPDATE students SET classes = array_remove(classes, ${specificClass});`;
             await sql `WITH to_update AS (SELECT unnest(students) AS student FROM class WHERE class_id = ${specificClass})
                       UPDATE students SET classes = array_append(classes, ${specificClass}) FROM to_update WHERE student_id = student;`;
         }
@@ -406,7 +406,7 @@ class dbUtils {
             const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
             if (verifyClass[0]['author_id'] = user_id) {
                 await sql `INSERT INTO rubric_output (assignment_id, author_id, rubric_json, generation_date) VALUES
-                (${assignment_id}, ${user_id}, ${JSON.parse(rubric)}, NOW());`; //for NOW() to work correctly we need to do SET TIMEZONE with aus but leaving until later for now
+                (${assignment_id}, ${user_id}, ${JSON.parse(rubric)}, NOW());`;
                 return true;
             }
             return false;
@@ -439,7 +439,7 @@ class dbUtils {
                     });
                 }
                 //delete all the submission files
-                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an ai entry file for this submission
+                if (fs_1.default.existsSync(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`)) { //if theres an entry file for this submission
                     fs_1.default.unlink(`${BackendServer_1.ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {
                         if (error) {
                             throw error;

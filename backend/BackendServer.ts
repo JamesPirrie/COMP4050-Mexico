@@ -1168,11 +1168,13 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
     const userID: number = Number(req.body.user_id);
     const SubmissionID: number = Number(req.body.submission_id);
     try {
+        console.log('Received POST to /api/qgen');
         if (await verifyJWT(AuthHeader, userID) == true) {
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             let pdfPath; //Refers to file name not full path.
@@ -1180,7 +1182,8 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             }
             catch (error) {
-                console.log('Error: Get Submission Path from Sub ID Failed', error);
+                console.log('Error: Get Submission Path from Sub ID Failed: ' + error);
+                throw error;
             }
 
             //Construct AI
@@ -1193,9 +1196,13 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);//currently generating 6 questions
                     doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
                 }
+                else{
+                    throw new Error('Could not resolve PDF path for specified submission');
+                }
             }
             catch (error) {
-                console.log('Error: AI Generation Failed', error);
+                console.log('Error: AI Generation Failed: ' + error);
+                throw error;
             }
 
             if (doc_id) {
@@ -1205,24 +1212,21 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     questions = await ai.getQuestions(doc_id);
                 }
                 catch (error) {
-                    console.log('Error: Assigning questions to location failed', error);
+                    console.log('Error: Could not retreive and read questions in respective .json file ' + error);
+                    throw new Error('Could not retreive and read questions in respective .json file');
                 }
                 //Insert generated AI Questions into results table for submission_id
                 if (questions) {
                     sqlDB.postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
-                } else {
+                } 
+                else {
                     console.log('Error within POST qgen: Assigning questions to location failed');
-                    res.status(500).json({
-                        success: false,
-                        details: "Could not assign questions to internal storage location"
-                    });
+                    throw new Error('Could not assign questions to internal storage location');
                 }
-            } else {
+            } 
+            else {
                 console.log('Error within POST qgen: AI Generation Failed');
-                res.status(500).json({
-                    success: false,
-                    details: "AI generation failed"
-                });
+                throw new Error('Could not assign questions to internal storage location');
             }
 
             //verify any questions exist for submission
