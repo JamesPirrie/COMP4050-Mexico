@@ -1020,25 +1020,30 @@ app.put('/api/rubrics', upload.none(), async (req, res) => {
     const RubricID = Number(req.body.rubric_id);
     const AssignmentID = Number(req.body.assignment_id);
     const ClassID = Number(req.body.class_id);
-    const Rubric = String(req.body.generic_questions);
+    const Rubric = String(req.body.rubric);
     try {
         console.log('Received PUT to /api/assignments');
         if (await (0, AuthenticationUtil_1.verifyJWT)(AuthHeader, userID) == true) {
-            /*
-            //Validation check from genQ partially Adapted to Generate Rubric
-            var tempValidCheck: string = Rubric.replace(/{/g,'');//to make them all the same
-            tempValidCheck = tempValidCheck.replace(/}/g,'');
-            var tempValidCheckArr: string[] = tempValidCheck.split(',');//get the individual pairs
-
-            for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
-                tempValidCheckArr[i] = tempValidCheckArr[i].replace(/"/g,'').replace(/ /g,'');//get rid of all "" and spaces
-                if(!(tempValidCheckArr[i].split(':')[0] === `criteria${i+1}`)){//is the format not criteria : Text
-                    throw new Error("Rubric must be in correct format");//, See BackendEndpoint.md for more details
-                }
+            const parsedRubric = JSON.parse(Rubric);
+            if (parsedRubric.fail == undefined) { //checks to ensure that rubric is valid
+                throw new Error('Could not read \'fail\' inside received rubric');
             }
-            */
-            const RubricJSON = JSON.parse(Rubric); //if its fine then parse into JSON and use later, this throws the errors for incorrect formatting etc
-            const success = await sqlDB.editRubric(userID, RubricID, AssignmentID, ClassID, RubricJSON);
+            if (parsedRubric.pass == undefined) {
+                throw new Error('Could not read \'pass\' inside received rubric');
+            }
+            if (parsedRubric.credit == undefined) {
+                throw new Error('Could not read \'credit\' inside received rubric');
+            }
+            if (parsedRubric.distinction == undefined) {
+                throw new Error('Could not read \'distinction\' inside received rubric');
+            }
+            if (parsedRubric.high_distinction == undefined) {
+                throw new Error('Could not read \'high_distinction\' inside received rubric');
+            }
+            if (parsedRubric.criteria == undefined) {
+                throw new Error('Could not read \'criteria\' inside received rubric');
+            }
+            const success = await sqlDB.editRubric(userID, RubricID, AssignmentID, ClassID, parsedRubric);
             if (success) {
                 console.log('Edit Assignment successful');
                 res.status(200).json({

@@ -652,9 +652,10 @@ class dbUtils {
             if (verifyRubric.length < 1) {
                 throw new Error('No such assignment found');
             }
-            const ClassID = verifyRubric[0]['class_id'];
-            const verifyUser = await sql `SELECT * FROM class WHERE class_id = ${ClassID}`;
-            if (verifyUser[0]['author_id'] === user_id) {
+            console.log("hi");
+            const verifyAssignment = await sql `SELECT * FROM assignments WHERE assignment_id = ${verifyRubric[0]['assignment_id']}`;
+            const verifyClass = await sql `SELECT * FROM class WHERE class_id = ${verifyAssignment[0]['class_id']}`;
+            if (verifyClass[0]['author_id'] === user_id) {
                 const verifyNewClass = await sql `SELECT * FROM class WHERE class_id = ${class_id};`;
                 if (verifyNewClass.length < 1) {
                     throw new Error('Class specified to be edited in does not exist');

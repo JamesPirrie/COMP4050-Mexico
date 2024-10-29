@@ -305,7 +305,7 @@ Many endpoints are the same however:
 
 `POST  /api/qgen - Generating and then adding questions to the database`
 - Token in Authentication Header: Required
-- Input parameters: user_id: string, submission_id: string
+- Input parameters: user_id: number, submission_id: number
 - Output parameters : {
     success: boolean,
     details: string
@@ -315,7 +315,7 @@ Many endpoints are the same however:
 # AI Rubric endpoints
 `GET /api/rubricgen`
 - Token in Authentication Header: Required
-- Input parameters: user_id: string, submission_id: string, project_overview: string, criteria: string, topics: string, goals: string
+- Input parameters: user_id: number, submission_id: number, project_overview: string, criteria: string, topics: string, goals: string
 - Output parameters : {
     data: [
         {
@@ -335,9 +335,59 @@ Many endpoints are the same however:
 - 2. So ensure there is [] , and " as the above example if its not like this you will receive an error
 - Description: Creates and returns an AI generated rubric according to the provided fields
 
+`GET /api/rubrics`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, class_id: number, assignment_id: number
+- Output parameters: {
+    data: [
+        {
+            fail: string,
+            pass: string,
+            credit: string,
+            distinction: string,
+            high_distinction: string,
+            criteria: string
+        },
+        ...
+    ],
+    details: string
+}
+- Description: returns rubrics stored in the database
+`POST /api/rubrics`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, assignment_id: number, project_overview: string, criteria: string, topics: string, goals: string
+- Output parameters: {
+    success: boolean,
+    details: string
+}
+- IMPORTANT NOTE: the strings in criteria, topics and goals must be formatted in the following way:
+- 1. it must be structured as an array of strings: ["your string goes here","your string goes here","your string goes here",...] 
+- 2. So ensure there is [] , and " as the above example if its not like this you will receive an error
+- Description: Generates a rubric using AI and stores it in the database
+
+`DELETE /api/rubrics`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, class_id: number, rubric_id: number
+- Output parameters: {
+    success: boolean,
+    details: string
+}
+- Description: deletes a stored rubric in the database
+`PUT /api/rubrics`
+- Token in Authentication Header: Required
+- Input parameters: user_id: number, assignment_id: number ,class_id: number, rubric_id: number, rubric: string
+- Output parameters: {
+    success: boolean,
+    details: string
+}
+- IMPORTANT NOTE: This rubric needs to be of the same format as the ones generated that is:
+- {"fail" : string, "pass" : string, "credit" : string, "distinction" : string, "high_distinction" : string, "criteria" : string} extra fields will be ignored
+- as with before ensure its proper json so: all fields are wrapped in "" separated with , and : and wrapped in {}
+- Description: edits a stored rubric in the database
+
 `GET /api/summarygen`
 - Token in Authentication Header: Required
-- Input parameters: user_id: string, submission_id: string
+- Input parameters: user_id: number, submission_id: number
 - Output parameters : {
     data: string,
     details: string
@@ -346,7 +396,7 @@ Many endpoints are the same however:
 
 `GET /api/feedbackgen`
 - Token in Authentication Header: Required
-- Input parameters: user_id: string, submission_id: string, rubric: string
+- Input parameters: user_id: number, submission_id: number, rubric: string, 
 - Output parameters : {
     data: string,
     details: string
