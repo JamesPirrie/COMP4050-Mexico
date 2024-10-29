@@ -33,7 +33,7 @@ const storageEngine = multer.diskStorage({
     filename: async (req, file, callBack) => {
         TEMPFILENAME = await sqlDB.getEmailbyUserID(req.body.user_id) + '_' +  Date.now() + '.PDF';//construct a name from the email of the user + unix time
         console.log('Received file: ' + file);
-        callBack(null, TEMPFILENAME); //notes for now: we are nulling the errors well fix that later
+        callBack(null, TEMPFILENAME); //we are nulling the errors
     }                                                                                                                                                  
 });                                                                                     
 const upload = multer({storage : storageEngine});                                       
@@ -109,8 +109,8 @@ app.post('/api/login',  upload.none(), async (req: Request, res: Response) => {
             success: false,
             token: "",
             userID: "",
-            details:`Server encountered error: ${error}`//this method of sending back the error object could be a security concern so we should look into this later
-        });                                             //but for now it will give them some information about the problem
+            details:`Server encountered error: ${error}`//this will give them some information about the problem
+        });                                             
     }      
 });
 
@@ -124,7 +124,7 @@ app.post('/api/signup', upload.none(), async (req: Request, res: Response) => {
 
     try {
         console.log('Received POST to /api/signup');
-        if (await sqlDB.signupUser(Email, await hashPassword(Password), Username, FirstName, LastName) === true) {//TODO: ADD THE REST OF THE FIELDS
+        if (await sqlDB.signupUser(Email, await hashPassword(Password), Username, FirstName, LastName) === true) {
             console.log('signup with: ' + Email + ' successful');
             res.status(200).json({
                 success: true,
@@ -194,9 +194,9 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
 // Currently this creates a class with the user as Author, in the future this should be adding User to class Array and another end point should create classes
 app.post('/api/classes', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
-    const AuthHeader : string = String(req.headers.authorization);
+    const AuthHeader: string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
-    const Session : number = Number(req.body.session);
+    const Session: number = Number(req.body.session);
     const Year: number = Number(req.body.year);
     const Title: string = String(req.body.title);
     const Code: string = String(req.body.code);
@@ -237,7 +237,7 @@ app.delete('/api/classes', upload.none(), async (req: Request, res: Response) =>
     try{
         console.log('Received DELETE to /api/classes');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.deleteClass(userID, ClassID);//email is placeholder for now
+            const success = await sqlDB.deleteClass(userID, ClassID);
             if (success) {
                 console.log(`Delete class successful`);
                 res.status(200).json({
@@ -420,7 +420,7 @@ app.post('/api/assignments', upload.none(), async (req: Request, res: Response) 
     try {
         console.log('Received POST to /api/assignments');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.createAssignment(userID, ClassID, Name, Description); // more fields added post MVP
+            const success = await sqlDB.createAssignment(userID, ClassID, Name, Description);
             if (success) {
                 console.log('Create Assignment successful');
                 res.status(201).json({
@@ -454,7 +454,7 @@ app.delete('/api/assignments', upload.none(), async (req: Request, res: Response
     try{
         console.log('Received DELETE to /api/assignments');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.deleteAssignment(userID, AssignmentID);//email is placeholder for now
+            const success = await sqlDB.deleteAssignment(userID, AssignmentID);
             if (success) {
                 console.log('Delete Assignment successful');
                 res.status(200).json({
@@ -499,7 +499,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
             var tempValidCheckArr: string[] = tempValidCheck.split(',');//get the individual pairs
 
             for(var i: number = 0; i < tempValidCheckArr.length; i++){//for each pair
-                tempValidCheckArr[i] = tempValidCheckArr[i].replace(/"/g,'').replace(/ /g,'');//get rid of all "" and spaces
+                tempValidCheckArr[i] = tempValidCheckArr[i].replace(/"/g,'').replace(/ /g,'');//get rid of all " and spaces
                 if(!(tempValidCheckArr[i].split(':')[0] === `Question${i+1}`)){//is the format not Question : Text
                     throw new Error("generic_questions must be in correct format");//, See BackendEndpoint.md for more details
                 }
@@ -533,7 +533,7 @@ app.put('/api/assignments', upload.none(), async (req: Request, res: Response) =
 });
 
 //submission endpoints
-app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{//we might need an endpoint for sending the actual file back to them if needed from frontend
+app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
@@ -542,8 +542,8 @@ app.get('/api/submissions', upload.none(), async (req: Request, res: Response) =
     try {
         console.log('Received GET to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const userSubmissions = await sqlDB.getSubmissionsForAssignments(userID, ClassID, AssignmentID);//sending this an assignmentID that doesnt exist results incorrect error fix inside
-            if (userSubmissions != undefined) {                                                      //query later (proper error handling)
+            const userSubmissions = await sqlDB.getSubmissionsForAssignments(userID, ClassID, AssignmentID);
+            if (userSubmissions != undefined) {                                                      
                 if(userSubmissions.length > 0){                
                     console.log('GET submissions successful');
                     res.status(200).json({
@@ -583,7 +583,7 @@ app.get('/api/submissionFile', upload.none(), async (req: Request, res: Response
     try{
         console.log('Received GET to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);//still need permissions check: is userID permitted to access this submissionID?
+            const filePath: string = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             res.sendFile(`${ROOTDIR}/ServerStorage/PDF_Storage/${filePath}`, (error) => {//status code defaults to 200 anyway
                 if(error){
                     throw error;
@@ -614,7 +614,7 @@ app.post('/api/submissions', upload.single('submission_PDF') , async (req: Reque
         if (await verifyJWT(AuthHeader, userID) == true){
             const success = await sqlDB.createSubmission(userID, AssignmentID, StudentID, TEMPFILENAME);
             if (success) {
-                console.log('Create submission successful');//we need a mechanism to actually know if theres an actual file here or if the request fails we dont still add the file
+                console.log('Create submission successful');
                 res.status(201).json({
                     success: true,
                     details: "Submission successfully created"
@@ -672,14 +672,14 @@ app.delete('/api/submissions', upload.none(), async (req: Request, res: Response
     }
 });
 
-app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{ // new file system simply adds a new file instead of deleting old one
+app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request, res: Response) =>{
     //what we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
-    const SubmissionID: number = Number(req.body.submission_id);// i dont think they should be able to edit these 
-    const AssignmentID: number = Number(req.body.assignment_id);// i dont think they should be able to edit these - editing this to an invalid value creates an undeletable submission
+    const SubmissionID: number = Number(req.body.submission_id);
+    const AssignmentID: number = Number(req.body.assignment_id);
     const StudentID: number = Number(req.body.student_id);
-    const SubmissionDate: string = String(req.body.submission_date);//do we update the submission date here? TODO: I think we should give option to edit date but also option to keep same
+    const SubmissionDate: string = String(req.body.submission_date);
     try{
         console.log('Received PUT to /api/submissions');
         if (await verifyJWT(AuthHeader, userID) == true){
@@ -710,8 +710,8 @@ app.put('/api/submissions', upload.single('submission_PDF'), async (req: Request
 });
 
 //student endpoints
-app.get('/api/allStudents', upload.none(), async (req: Request, res: Response) =>{//im adding this because i dont get how they are going to get a full list of students
-    const AuthHeader : string = String(req.headers.authorization);//my preference would be to have each user have their own list of students
+app.get('/api/allStudents', upload.none(), async (req: Request, res: Response) =>{
+    const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.query.user_id);
     try{
         console.log('Received GET to /api/allStudents');
@@ -832,7 +832,7 @@ app.post('/api/students', upload.none(), async (req: Request, res: Response) =>{
     }
 });
 
-app.delete('/api/students', upload.none(), async (req: Request, res: Response) =>{//for deleting students
+app.delete('/api/students', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
@@ -870,7 +870,7 @@ app.put('/api/students', upload.none(), async (req: Request, res: Response) =>{
     //What we receive
     const AuthHeader : string = String(req.headers.authorization);
     const userID: number = Number(req.body.user_id);
-    const Email: string = String(req.query.email);//this is the student email not the user email
+    const Email: string = String(req.body.email);//this is the student email not the user email
     const StudentID: number = Number(req.body.student_id);
     const FirstName: string = String(req.body.first_name);
     const LastName: string = String(req.body.last_name);
@@ -914,7 +914,7 @@ app.get('/api/rubrics', upload.none(), async (req: Request, res: Response) =>{
         console.log('Received GET to /api/rubrics');
         if (await verifyJWT(AuthHeader, userID) == true){
             const assignmentRubrics = await sqlDB.getRubricsForAssignments(userID, ClassID, AssignmentID);
-            if (assignmentRubrics != undefined) {                                                      //query later (proper error handling)
+            if (assignmentRubrics != undefined) {                                                      
                 if(assignmentRubrics.length > 0){                
                     console.log('GET Rubric successful');
                     res.status(200).json({
@@ -1517,7 +1517,7 @@ app.post('/api/vivas', upload.none(), async (req: Request, res: Response) =>{ //
     try {
         console.log('Received POST to /api/vivas');
         if (await verifyJWT(AuthHeader, userID) == true){
-            const success = await sqlDB.createExams(userID, SubmissionID, StudentID); // more fields added post MVP
+            const success = await sqlDB.createExams(userID, SubmissionID, StudentID);
             if (success) {
                 console.log('Create Exam successful');
                 res.status(201).json({

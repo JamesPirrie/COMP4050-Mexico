@@ -11,7 +11,7 @@ The exception to this is the /api/submissionFile endpoint which will send back a
 
 # Endpoints
 # A Quick note
-Many endpoints are the same however:
+Since MVP Many endpoints are the same however:
 - Endpoints that used to simply return true or false now return a json containing `success: true` or `success: false`
 - Endpoints that used to return data such as GET endpoints now return `data : { data goes here }`
 - All endpoints now additionally return a `details: this contains what happened` item in their json responses also containing error messages'
@@ -21,7 +21,6 @@ Many endpoints are the same however:
 - All dates are sent and expected to be received in ISO-8601 format eg. (2024-9-24T08:18:20.437Z)
 
 # Account endpoints 
-
 `POST  /api/login - Logging in a user`
 - Token in Authentication Header: None
 - Input parameters: email: string, password: string.
@@ -36,7 +35,7 @@ Many endpoints are the same however:
 
 `POST  /api/signup - Signing up a user`
 - Token in Authentication Header: None
-- Input parameters: email: string, password: string, user_name:string, first_name: string, last_name: string
+- Input parameters: email: string, password: string, user_name: string, first_name: string, last_name: string
 
 - Output parameters : { 
     success: boolean, 
