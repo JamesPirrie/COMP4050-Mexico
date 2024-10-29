@@ -19,6 +19,7 @@ Since MVP Many endpoints are the same however:
 - The Server will read `all other requests from the body`. 
 - All endpoints except signup and login require an authentication `bearer token` inside the Authentication header, and a `user_id` field. This token: string will be provided upon log in along with the user_id.
 - All dates are sent and expected to be received in ISO-8601 format eg. (2024-9-24T08:18:20.437Z)
+- All AI generation endpoints can fail due to packet loss, AI simply not responding etc, in these cases simply resend the request
 
 # Account endpoints 
 `POST  /api/login - Logging in a user`
