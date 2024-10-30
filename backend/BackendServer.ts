@@ -159,7 +159,7 @@ app.get('/api/classes', upload.none(), async (req: Request, res: Response) =>{
             const userClasses = await sqlDB.getClasses(userID);//get the classes for the user assigned to that email
             if(userClasses != undefined){                               //because userClasses.length only works here not != null and because userClasses is optional
                 if (userClasses.length > 0) {                          //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
-                    console.log('GET classes successful' + userClasses);
+                    console.log('GET classes successful');
                     res.status(200).json({
                         data: userClasses,
                         details: "Classes successfully found"
@@ -965,7 +965,8 @@ app.post('/api/rubrics', upload.none(), async (req: Request, res: Response) => {
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             //Construct AI
@@ -977,8 +978,8 @@ app.post('/api/rubrics', upload.none(), async (req: Request, res: Response) => {
                 rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
             }
             catch (error) {
-                console.log('Error: AI Rubric Generation Failed', error);
-                throw error;
+                console.log('Error: AI Rubric Generation Failed: ' +  error);
+                throw error + ', please try again';
             }
             if (rubric != undefined) {
                 if(rubric.length > 0){
@@ -1168,11 +1169,13 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
     const userID: number = Number(req.body.user_id);
     const SubmissionID: number = Number(req.body.submission_id);
     try {
+        console.log('Received POST to /api/qgen');
         if (await verifyJWT(AuthHeader, userID) == true) {
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             let pdfPath; //Refers to file name not full path.
@@ -1180,7 +1183,8 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                 pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             }
             catch (error) {
-                console.log('Error: Get Submission Path from Sub ID Failed', error);
+                console.log('Error: Get Submission Path from Sub ID Failed: ' + error);
+                throw error;
             }
 
             //Construct AI
@@ -1193,9 +1197,13 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     const q_and_a = await ai.generateNQuestionsAndAnswers(pdfPath, 6);//currently generating 6 questions
                     doc_id = await ai.saveQuestionsAndAnswers(q_and_a, pdfPath + ".json");
                 }
+                else{
+                    throw new Error('Could not resolve the submission filepath');
+                }
             }
             catch (error) {
-                console.log('Error: AI Generation Failed', error);
+                console.log('Error: AI Generation Failed: ' + error);
+                throw error + ", please try again";
             }
 
             if (doc_id) {
@@ -1205,28 +1213,23 @@ app.post('/api/qgen', upload.none(), async (req: Request, res: Response) => {
                     questions = await ai.getQuestions(doc_id);
                 }
                 catch (error) {
-                    console.log('Error: Assigning questions to location failed', error);
+                    console.log('Error: Could not retreive and read questions in respective .json file ' + error);
+                    throw new Error('Could not retreive and read questions in respective .json file');
                 }
                 //Insert generated AI Questions into results table for submission_id
                 if (questions) {
                     sqlDB.postAIOutputForSubmission(SubmissionID, JSON.stringify((questions)));
-                } else {
+                } 
+                else {
                     console.log('Error within POST qgen: Assigning questions to location failed');
-                    res.status(500).json({
-                        success: false,
-                        details: "Could not assign questions to internal storage location"
-                    });
+                    throw new Error('Could not assign questions to internal storage location');
                 }
-            } else {
+            } 
+            else {
                 console.log('Error within POST qgen: AI Generation Failed');
-                res.status(500).json({
-                    success: false,
-                    details: "AI generation failed"
-                });
+                throw new Error('Could not assign questions to internal storage location');
             }
 
-            //verify any questions exist for submission
-            // TODO This section needs to be improved post MVP, currently only checks if generation worked at least once.
             const foundAIQs = sqlDB.getQuestions(SubmissionID);
             if (foundAIQs != undefined) {
                 console.log('AI question generation successful');
@@ -1272,7 +1275,8 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             //Construct AI
@@ -1284,33 +1288,24 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
                 rubric = await ai.createRubric(ProjectOverview, arrCriteria, arrTopics, arrGoals);
             }
             catch (error) {
-                console.log('Error: AI Rubric Generation Failed', error);
-                throw error;
+                console.log('Error: AI Rubric Generation Failed: ' + error);
+                throw error + ', please try again';
             }
             if (rubric != undefined) {
                 if(rubric.length > 0){
                     // Add generated rubric to rubric_output table of db
                     const success = await sqlDB.postRubricForAssignment(userID, AssignmentID, JSON.stringify((rubric)));
                     if (success) {
-                        console.log('Create rubric db table successful');
-                        res.status(201).json({
-                            success: true,
-                            details: "Rubric db table successfully created"
+                        console.log('GET Rubric successful');
+                        res.status(200).json({
+                            data: rubric,
+                            details: "Rubric generation/get successfully"
                         });
                     }
                     else{
-                        console.log('Error: rubric db table Creation Failed');
-                        res.status(400).json({
-                            success: false,
-                            details: "Rubric db table creation failed"
-                        });
+                        console.log('Error: Rubric db table creation Failed');
+                        throw new Error('Rubric db table creation Failed');
                     }
-                    // Return rubric for Get
-                    console.log('GET Rubric successful');
-                    res.status(200).json({
-                        data: rubric,
-                        details: "Rubric generation/get successfully"
-                    });
                 }
                 else{
                     res.status(200).json({
@@ -1332,7 +1327,7 @@ app.get('/api/rubricgen', upload.none(), async (req: Request, res: Response) => 
 	    console.log('Error within GET rubricgen: ' + error);
         res.status(400).json({
             success: false,
-            details: `Server encountered error: ${error}`
+            details: `Server encountered error: ${error}, please try again`
         });
 	}	
 });
@@ -1348,7 +1343,8 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             let pdfPath; //Refers to file name not full path.
@@ -1356,7 +1352,7 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
                 pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             }
             catch (error) {
-                console.log('Error: Get Submission Path from Sub ID Failed', error);
+                console.log('Error: Get Submission Path from Sub ID Failed: ' + error);
                 throw error;
             }
 
@@ -1368,13 +1364,14 @@ app.get('/api/summarygen', upload.none(), async (req: Request, res: Response) =>
             try {
                 if(pdfPath != undefined){
                     summary = await ai.summarizeSubmission(pdfPath)
-                }else{
-                    throw new Error('Could not retreive pdfPath from database');
+                }
+                else{
+                    throw new Error('failed to summarise submission, please try again');
                 }
             }
             catch (error) {
-                console.log('Error: AI Generation Failed', error);
-                throw error;
+                console.log('Error: AI Generation Failed: ' + error);
+                throw error + ', please try again';
             }
 
             if (summary != undefined) {
@@ -1416,7 +1413,8 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
             const apiKey = process.env.OPENAI_API_KEY || '';
 
             if (!apiKey) {
-                console.log('Error: API_KEY could not be read inside .env')
+                console.log('Error: API_KEY could not be read inside .env');
+                throw new Error('API_KEY could not be read inside .env');
             }
 
             let pdfPath; //Refers to file name not full path.
@@ -1424,7 +1422,8 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
                 pdfPath = await sqlDB.getSubmissionFilePathForSubID(SubmissionID);
             }
             catch (error) {
-                console.log('Error: Get Submission Path from Sub ID Failed', error);
+                console.log('Error: Get Submission Path from Sub ID Failed: ' + error);
+                throw error;
             }
 
             //Construct AI
@@ -1436,8 +1435,8 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
                 feedback = await ai.generateFeedback("sample.pdf", parsedRubric);
             }
             catch (error) {
-                console.log('Error: AI Generation Failed', error);
-                throw error;
+                console.log('Error: AI Generation Failed: ' + error);
+                throw error + ', please try again';
             }
 
             if (feedback != undefined) {
@@ -1445,7 +1444,7 @@ app.get('/api/feedbackgen', upload.none(), async (req: Request, res: Response) =
                     res.status(200).json({
                         data: feedback,
                         details: "Feedback generation/get successfully"
-                });
+                    });
             }
             else{
                 console.log('Error: Generated Feedback not Found');

@@ -270,6 +270,10 @@ class dbUtils {
     }
     async addStudent(email, student_id, first_name, last_name) {
         try {
+            const verifyStudent = await sql `SELECT * FROM students WHERE student_id = ${student_id}`;
+            if (verifyStudent.length > 0) {
+                throw new Error('Student already exists in database');
+            }
             await sql `INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                         (${student_id}, ${first_name}, ${last_name}, ${email});`;
             return true;
