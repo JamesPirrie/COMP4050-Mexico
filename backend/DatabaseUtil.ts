@@ -286,6 +286,10 @@ export class dbUtils {
 
      async addStudent(email: string, student_id: number, first_name: string, last_name: string): Promise<Boolean> {
         try {
+            const verifyStudent = await sql`SELECT * FROM students WHERE student_id = ${student_id}`;
+            if(verifyStudent.length > 0){
+                throw new Error('Student already exists in database');
+            }
             await sql`INSERT INTO students (student_id, first_name, last_name, email) VALUES
                                         (${student_id}, ${first_name}, ${last_name}, ${email});`;
             return true;
@@ -295,7 +299,7 @@ export class dbUtils {
         }
     }
 
-     async getAllStudents() {//placeholder for the students get endpoint
+     async getAllStudents() {
         try{
             const students = await sql`SELECT * FROM students`;
             return students;
