@@ -1,4 +1,5 @@
-from flask import Flask, flash, request, render_template, url_for, redirect, session
+from flask import Flask, flash, request, render_template, url_for, redirect, session, send_file
+from fpdf import FPDF
 from datetime import date
 import requests
 import json
@@ -9,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-backend = "http://localhost:3000/api/"
+backend = "http://127.0.0.1:3000/api/"
 
 app = Flask(__name__)
 app.secret_key = 'SUPERSECRETKEY'
@@ -319,14 +320,15 @@ def new_project():
         
         # Create submission and get submission ID
         response = postSubmission(files, jsons)
-        if response.status_code == 200:
+        print(response.status_code)
+        if response.status_code == 201:
             # Get the latest submission for this student/assignment
             submissions = getSubmissions(session['last_assignment_id'], session['last_class_id'])
             if submissions:
-                latest_submission = max(submissions, key=lambda x: x['submission_id'])
+                latest_submission = max(submissions['data'], key=lambda x: int(x['submission_id']))
                 return redirect(url_for('submission', submission_id=latest_submission['submission_id']))
             
-        return redirect(url_for('generate', submission_id=submissions[submission_id]))
+        return redirect(url_for('classes'))
     
     students = getStudents(session['last_class_id'])
     assignment_name = ""
@@ -411,6 +413,9 @@ def submission():
         logger.error(f"Submissions response: {submissions_response}")
         return redirect(url_for('classes'))
 
+#-----------------------------------
+# Generate routes
+
 @app.route('/generate')
 def generate():
     if not isAuthenticated():
@@ -453,6 +458,18 @@ def generate():
     except Exception as e:
         logger.error(f"Error in generate route: {e}")
         return redirect(url_for('submission', submission_id=submission_id))
+
+@app.route('/export_pdf', methods=['POST'])
+def export_pdf():
+    json_data = getRubrics(request.args.get('class_id', ''), request.args.get('assignmment_id', ''))
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=15)
+    for key, value in json_data.items():
+        pdf.cell(200, 10, txt=f"{key}: {value}", ln=True, align='L')
+    pdf.output("export.pdf")
+    return send_file("export.pdf", as_attachment=True)
+
 
 #-----------------------------------------------------------------------------------------------------------------
 #Helper Functions
@@ -707,8 +724,32 @@ def postQuestion(json_data):
     
     
 #Rubric functions
-def getRubrics(userid, submissionid, projectoverview, criteria, topics, goals):
-    return json.loads(requests.get(f'{backend}rubricgen?user_id={userid}&submission_id={submissionid}&project_overview={projectoverview}&criteria={criteria}&topics={topics}&goals={goals}').content)
+def getRubrics(classid, assignmentid):
+    return json.loads(requests.get(f'{backend}rubricgen', params={'user_id': user.userID, 'class_id': classid, 'assignment_id': assignmentid}).content)
+
+def postRubric(assignment_id, project_overview, criteria, topics, goals):
+
+    # Send as form data with string values
+    form_data = {
+        'user_id': str(user.userID),
+        'assignment_id': str(assignment_id),
+        'project_overview': str(project_overview),
+        'criteria': str(criteria),
+        'topics': str(topics),
+        'goals': str(goals),
+    }
+        
+        
+    response = requests.post(
+        f'{backend}rubrics',
+        data=form_data,
+        timeout=30
+    )
+        
+    if response.status_code == 200:
+        return response
+    else:
+        return None
 
 def getSummary(userid, submissionid):
     return json.loads(requests.get(f'{backend}summarygen?user_id={userid}&submission_id={submissionid}').content)
