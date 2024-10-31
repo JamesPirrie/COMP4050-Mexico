@@ -260,7 +260,6 @@ def assignment():
                              submissions=submissions,
                              students=students,
                              assignment_id=assignment_id,
-                             students=students, 
                              assignment_desc=assignment_desc)
     
     except Exception as e:
