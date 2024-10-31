@@ -318,7 +318,7 @@ def delete_student():
 def rubric():
     rubrics = getRubrics(session['last_class_id'], request.args.get('assignment_id', ''))
     print(rubrics)
-    return render_template('rubric.html', rubrics=rubrics)
+    return render_template('rubric.html', rubrics=rubrics, assignment_id=request.args.get('assignment_id', ''), class_id=session['last_class_id'])
 
 @app.route('/new_rubric', methods=['GET', 'POST'])
 def new_rubric():
@@ -495,16 +495,41 @@ def generate():
         logger.error(f"Error in generate route: {e}")
         return redirect(url_for('submission', submission_id=submission_id))
 
-@app.route('/export_pdf', methods=['POST'])
+@app.route('/export_pdf', methods=['GET'])
 def export_pdf():
-    json_data = getRubrics(request.args.get('class_id', ''), request.args.get('assignmment_id', ''))
-    pdf = FPDF()
+    rubrics = getRubrics(session['last_class_id'], request.args.get('assignment_id', ''))
+    print(rubrics['data'][0]['rubric_json'])
+    pdf = FPDF('L', 'mm', 'A4')
     pdf.add_page()
-    pdf.set_font("Arial", size=15)
-    for key, value in json_data.items():
-        pdf.cell(200, 10, txt=f"{key}: {value}", ln=True, align='L')
+    pdf.set_font("Arial", size=11)
+    tallest = 0
+    for x in rubrics['data'][0]['rubric_json']:
+        top=pdf.y + 5
+        pdf.multi_cell(pdf.w * 0.9, 5, f"{x['criteria']}", 0, 1)
+        offset = pdf.w/5.2
+        pdf.multi_cell(offset, 5, f"{x['fail']}", 1, 1)
+        if (pdf.y > tallest): tallest = pdf.y
+        pdf.y = top
+        pdf.x += offset
+        pdf.multi_cell(offset, 5, f"{x['pass']}", 1, 1)
+        if (pdf.y > tallest): tallest = pdf.y
+        pdf.y = top
+        pdf.x += offset*2
+        pdf.multi_cell(offset, 5, f"{x['credit']}", 1, 1)
+        if (pdf.y > tallest): tallest = pdf.y
+        pdf.y = top
+        pdf.x += offset*3
+        pdf.multi_cell(offset, 5, f"{x['distinction']}", 1, 1)
+        if (pdf.y > tallest): tallest = pdf.y
+        pdf.y = top
+        pdf.x += offset*4
+        pdf.multi_cell(offset, 5, f"{x['high_distinction']}", 1, 1)
+        if (pdf.y > tallest): tallest = pdf.y
+        pdf.y = tallest
+        pdf.ln()
     pdf.output("export.pdf")
     return send_file("export.pdf", as_attachment=True)
+    return render_template('dashboard.html')
 
 
 #-----------------------------------------------------------------------------------------------------------------

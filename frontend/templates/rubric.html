@@ -29,6 +29,11 @@
     {% else %}
     <p class="placeholder-text">The rubric could not be found :<</p>
     {% endif %}
+    <div class="add-button">
+        <a href="{{ url_for('export_pdf', class_id=class_id, assignment_id=assignment_id) }}" id="add-submission-button">
+            Download Rubric
+        </a>
+    </div>
 </div>
 
 <!-- Darkmode  -->
