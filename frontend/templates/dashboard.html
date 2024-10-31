@@ -4,15 +4,24 @@
 
 {% block content %}
 <div class="welcome-box">
-    <h2>Dashboard</h2>
+    <h1>Dashboard</h1>
     <p>Welcome to VivaMQ, your favourite viva marking assistant! Simply start a new project, upload a file and we do the rest!</p>
 </div>
-<div class="content-box">
-    <p>Start New Project</p>
-    <a href="{{ url_for('new_project') }}" title="New Project">
-    <img src="{{ url_for('static', filename='icons/plus.png') }}" alt="New Project">
-    </a>
+<div class="columns-container">
+    <div class="column">
+        <h3>Number of Classes</h3>
+        <p>{{class_count}}</pp>
+    </div>
+    <div class="column">
+        <h3>Number of Assignments</h3>
+        <p>{{assignment_count}}</p>
+    </div>
+    <div class="column">
+        <h3>Number of Students</h3>
+        <p>{{student_count}}</p>
+    </div>
 </div>
+
 
 <!-- Darkmode  -->
 <script>

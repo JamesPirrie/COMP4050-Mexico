@@ -130,8 +130,30 @@ def loginDirect():
 
 @app.route('/dashboard')
 def dashboard():
-    # add request.get assignments to display
-    return render_template('dashboard.html')
+    if not isAuthenticated():
+        return redirect(url_for('login'))
+        
+    try:
+        # Get all classes for the user
+        classes = getClasses()
+        class_count = len(classes)
+        
+        # Get assignments for all classes
+        assignment_count = 0
+        student_count = 0
+        for class_item in classes:
+            assignments = getAssignments(class_item['class_id'])
+            assignment_count += len(assignments)
+            students = getStudents(class_item['class_id'])
+            student_count += len(students)
+            
+        return render_template('dashboard.html', 
+                             class_count=class_count,
+                             assignment_count=assignment_count,
+                             student_count = student_count)
+    except Exception as e:
+        print(f"Error fetching dashboard data: {e}")
+        return redirect(url_for('login'))
 
 #-----------------------------------
 #Class and Unit Routes
