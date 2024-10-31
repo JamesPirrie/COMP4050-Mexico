@@ -1134,7 +1134,9 @@ app.post('/api/qgen', upload.none(), async (req, res) => {
                 throw error;
             }
             //Construct AI
+            console.log('Calling AI');
             let ai = comp4050ai_1.AiFactory.makeAi('./ServerStorage/PDF_Storage', './ServerStorage/qGEN', apiKey);
+            console.log('Called AI');
             //Writes questions/answers file to "./ServerStorage" specified in constructor
             let doc_id;
             try {

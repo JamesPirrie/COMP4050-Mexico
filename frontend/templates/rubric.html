@@ -1,30 +1,34 @@
 {% extends 'base.html' %}
 
-{% block title %}VivaMQ Classes{% endblock %}
+{% block title %}VivaMQ Rubrics{% endblock %}
 
 {% block content %}
 <div class="welcome-box">
-    <h2>Classes</h2>
-    <p>This is where we display a list of classes, based on userID and backend DB results.</p>
+    <h2>Rubrics</h2>
+    <p>This is where we display the rubrics</p>
     {% if error %}
         <p class="error">{{ error }}</p>
     {% endif %}
 </div>
 <div class="content-box">
-    {% if classes %}
-    {% for class in classes %}
-    <div class="link">
-        <a class="button" href="{{ url_for('unit', class_id=class['code']) }}">{{ class['code'] }}</a>
-        <a class="del-link" href="{{ url_for('delete_class', class_id=class['code']) }}">x</a>
-    </div>
-    {% endfor %}
+    {% if rubrics %}
+    <table>
+        {% for x in rubrics.data[0].rubric_json %}
+        <div class="qa-pair">
+            <div class="question">
+                <b>Criteria:</b> {{ x.criteria }} <br> <br>
+                <b>Fail:</b> {{ x.fail }} <br>
+                <b>Pass:</b> {{ x.pass }} <br>
+                <b>Credit:</b> {{ x.credit }} <br>
+                <b>Distinction:</b> {{ x.distinction }} <br>
+                <b>High Distinction:</b> {{ x.high_distinction }}
+            </div>
+        </div>
+        {% endfor %}
+    </table>
     {% else %}
-    <p class="placeholder-text">There are no classes for this user.</p>
+    <p class="placeholder-text">The rubric could not be found :<</p>
     {% endif %}
-    <div class="button-spacer"></div>
-    <div class="add-button">
-        <a href="{{ url_for('new_class')}}">Add New Class</a>
-    </div>
 </div>
 
 <!-- Darkmode  -->

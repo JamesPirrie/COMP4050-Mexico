@@ -240,7 +240,8 @@ def assignment():
         
         return render_template('assignment.html', 
                              submissions=submissions,
-                             students=students)
+                             students=students,
+                             assignment_id=assignment_id)
     except Exception as e:
         logger.error(f"Error in assignment route: {e}")
         return redirect(url_for('classes'))
@@ -312,6 +313,19 @@ def delete_student():
 
 #-----------------------------------
 #Viva and Rubric Routes
+
+@app.route('/rubric')
+def rubric():
+    rubrics = getRubrics(session['last_class_id'], request.args.get('assignment_id', ''))
+    print(rubrics)
+    return render_template('rubric.html', rubrics=rubrics)
+
+@app.route('/new_rubric', methods=['GET', 'POST'])
+def new_rubric():
+    if request.method == 'POST':
+        print(postRubric(request.args.get('assignment_id',''), request.form['overview'], request.form['criteria'], request.form['topics'], request.form['goals']))
+        return redirect(url_for('rubric', assignment_id=request.args.get('assignment_id', '')))
+    return render_template('newRubric.html')
 
 #fix to recieve viva submission_id as query
 @app.route('/vivas')
@@ -747,28 +761,29 @@ def postQuestion(json_data):
     
 #Rubric functions
 def getRubrics(classid, assignmentid):
-    return json.loads(requests.get(f'{backend}rubricgen', params={'user_id': user.userID, 'class_id': classid, 'assignment_id': assignmentid}).content)
+    return json.loads(requests.get(f'{backend}rubrics', params={'user_id': user.userID, 'class_id': classid, 'assignment_id': assignmentid}, headers=getHeaders()).content)
 
 def postRubric(assignment_id, project_overview, criteria, topics, goals):
 
     # Send as form data with string values
     form_data = {
-        'user_id': str(user.userID),
-        'assignment_id': str(assignment_id),
+        'user_id': int(user.userID),
+        'assignment_id': int(assignment_id),
         'project_overview': str(project_overview),
         'criteria': str(criteria),
         'topics': str(topics),
         'goals': str(goals),
     }
-        
+    print(form_data)
         
     response = requests.post(
         f'{backend}rubrics',
-        data=form_data,
-        timeout=30
+        json=form_data,
+        timeout=30,
+        headers=getHeaders()
     )
         
-    if response.status_code == 200:
+    if response.ok:
         return response
     else:
         return None

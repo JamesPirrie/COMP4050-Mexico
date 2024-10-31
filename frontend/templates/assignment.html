@@ -35,6 +35,16 @@
     <div class="column">
         <h3>Details</h3>
         <p> Here we can display assignment desc, ULOs & rubric, or just rubric alone.</p>
+        <div class="add-button">
+            <a href="{{ url_for('new_rubric', assignment_id=assignment_id) }}" id="add-submission-button">
+                Add Rubric
+            </a>
+        </div>
+        <div class="add-button">
+            <a href="{{ url_for('rubric', assignment_id=assignment_id) }}" id="add-submission-button">
+                View Rubric
+            </a>
+        </div>
     </div>
 
     <div class="column">
