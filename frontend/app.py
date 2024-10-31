@@ -228,20 +228,41 @@ def assignment():
         assignments = getAssignments(session['last_class_id'])
         for a in assignments:
             if a['name'] == request.args.get('name', ''):
+                assignment_name = a['name']
                 assignment_id = a['assignment_id']
+                assignment_desc = a['description']
+                generic_questions = a['generic_questions']
                 session['last_assignment_id'] = assignment_id
                 
         # Get submissions and students
         submissions = getSubmissions(assignment_id, session['last_class_id'])
         students = getStudents(session['last_class_id'])
-        # description = getAssignmentDesc(assignment_id)
-        # ulo = getAssignmentULO(assignment_id)
-        # rubric = getRubrics(assignment_id)
+
+        #Updating generic questions
+        # generic_questions = request.form['questions']
+        # json = {
+        #     'user_id': user.userID,
+        #     'class_id': session['last_class_id'],
+        #     'assignment_id': assignment_id,
+        #     'name': assignment_name,
+        #     'description': assignment_desc,
+        #     'generic_questions': generic_questions
+        # }
+        # updateAssignment(json)
+        
+        # return render_template('assignment.html', 
+        #                      submissions=submissions,
+        #                      students=students, 
+        #                      assignment_desc=assignment_desc,
+        #                      generic_questions=generic_questions)
         
         return render_template('assignment.html', 
                              submissions=submissions,
                              students=students,
-                             assignment_id=assignment_id)
+                             assignment_id=assignment_id,
+                             students=students, 
+                             assignment_desc=assignment_desc)
+    
     except Exception as e:
         logger.error(f"Error in assignment route: {e}")
         return redirect(url_for('classes'))
@@ -302,7 +323,7 @@ def new_student():
             return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
         else:
             print("Failed to create student or add to class")
-            return redirect(url_for('classes'))
+            return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
             
     return render_template('newStudent.html')
 
@@ -344,16 +365,14 @@ def new_project():
         pdf = request.files['pdf_file']
         files = {'submission_PDF': pdf}
         student_id = request.form['student']
-        generic_questions = request.form['questions']
         jsons = {
             'user_id': user.userID,
             'assignment_id': session['last_assignment_id'],
             'student_id': student_id,
             'submission_date': str(date.today()),
             'submission_filepath': pdf.filename,
-            'generic_ questions': generic_questions
         }
-        
+
         # Create submission and get submission ID
         response = postSubmission(files, jsons)
         print(response.status_code)
@@ -372,8 +391,12 @@ def new_project():
     for a in assignments:
         if a['assignment_id'] == session['last_assignment_id']:
             assignment_name = a['name']
+            generic_questions = a['generic_questions']
 
-    return render_template('newProject.html', students=students, assignment_name=assignment_name)
+    return render_template('newProject.html', 
+                           students=students, 
+                           assignment_name=assignment_name, 
+                           generic_questions=generic_questions)
 
 @app.route('/delete_submission', methods = ['GET'])
 def delete_submission():

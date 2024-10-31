@@ -494,7 +494,7 @@ body.dark-mode textarea::placeholder {
 
 body.dark-mode .settings-button {
     background-color: #A6192E;
-    color: #ffffff;
+    color: #f4f4f4;
 }
 
 body.dark-mode .settings-button:hover {

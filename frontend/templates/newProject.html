@@ -9,9 +9,8 @@
     <form action="{{ url_for('new_project') }}" enctype="multipart/form-data" method="post" class="create-form">
     <div class="columns-container">
         <div class="column">
-            <h3>Viva Questions</h3>
-            <p>Write your own questions below</p>
-            <textarea name="questions" rows="15" cols="30" placeholder="Write your own questions here" style="resize:none; width:100%"></textarea>
+            <h3>Generic Questions</h3>
+            <p>{{generic_questions}}</p>
         </div>
         
         <div class="column">
