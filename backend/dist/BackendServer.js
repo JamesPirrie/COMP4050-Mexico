@@ -143,7 +143,7 @@ app.get('/api/classes', upload.none(), async (req, res) => {
             const userClasses = await sqlDB.getClasses(userID); //get the classes for the user assigned to that email
             if (userClasses != undefined) { //because userClasses.length only works here not != null and because userClasses is optional
                 if (userClasses.length > 0) { //typescript or javascript doesnt let me do userClasses?.length alone so theres the != undefined there
-                    console.log('GET classes successful' + userClasses);
+                    console.log('GET classes successful');
                     res.status(200).json({
                         data: userClasses,
                         details: "Classes successfully found"
