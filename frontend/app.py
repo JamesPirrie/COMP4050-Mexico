@@ -339,12 +339,14 @@ def delete_student():
 def rubric():
     rubrics = getRubrics(session['last_class_id'], request.args.get('assignment_id', ''))
     print(rubrics)
+    if not rubrics:
+        return redirect(url_for('classes'))
     return render_template('rubric.html', rubrics=rubrics, assignment_id=request.args.get('assignment_id', ''), class_id=session['last_class_id'])
 
 @app.route('/new_rubric', methods=['GET', 'POST'])
 def new_rubric():
     if request.method == 'POST':
-        print(postRubric(request.args.get('assignment_id',''), request.form['overview'], request.form['criteria'], request.form['topics'], request.form['goals']))
+        print(postRubric(request.args.get('assignment_id',''), request.form['overview'], f'[\"{request.form['criteria']}\"]', f'[\"{request.form['topics']}\"]', f'[\"{request.form['goals']}\"]'))
         return redirect(url_for('rubric', assignment_id=request.args.get('assignment_id', '')))
     return render_template('newRubric.html')
 
