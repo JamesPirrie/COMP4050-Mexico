@@ -358,10 +358,11 @@ def rubric():
 @app.route('/new_rubric', methods=['GET', 'POST'])
 def new_rubric():
     if request.method == 'POST':
+        overview = request.form['overview']
         criteria = '["'+request.form['criteria']+'"]'
         topics = '["'+request.form['topics']+'"]'
         goals = '["'+request.form['goals']+'"]'
-        print(postRubric(request.args.get('assignment_id',''), criteria, topics, goals))
+        print(postRubric(request.args.get('assignment_id',''), overview, criteria, topics, goals))
         return redirect(url_for('rubric', assignment_id=request.args.get('assignment_id', '')))
     return render_template('newRubric.html')
 
