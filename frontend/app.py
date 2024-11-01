@@ -225,11 +225,11 @@ def unit():
 #-----------------------------------
 #Assignment Routes
 
-@app.route('/assignment')
+@app.route('/assignment', methods = ['GET', 'POST'])
 def assignment():
     if not isAuthenticated():
         return redirect(url_for('login'))
-        
+
     try:
         assignments = getAssignments(session['last_class_id'])
         for a in assignments:
@@ -243,25 +243,26 @@ def assignment():
         # Get submissions and students
         submissions = getSubmissions(assignment_id, session['last_class_id'])
         students = getStudents(session['last_class_id'])
+        
+        if request.method == 'POST':
+            generic_questions = str(request.form['questions'])
+            print(generic_questions)
+            json = {
+                'user_id': user.userID,
+                'class_id': session['last_class_id'],
+                'assignment_id': assignment_id,
+                'name': assignment_name,
+                'description': assignment_desc,
+                'generic_questions': '{"Question 1": "'+generic_questions+'"}'
+            }
+            updateAssignment(json)
+            
+            return render_template('assignment.html', 
+                                submissions=submissions,
+                                students=students, 
+                                assignment_desc=assignment_desc,
+                                generic_questions=generic_questions)
 
-        #Updating generic questions
-        # generic_questions = request.form['questions']
-        # json = {
-        #     'user_id': user.userID,
-        #     'class_id': session['last_class_id'],
-        #     'assignment_id': assignment_id,
-        #     'name': assignment_name,
-        #     'description': assignment_desc,
-        #     'generic_questions': generic_questions
-        # }
-        # updateAssignment(json)
-        
-        # return render_template('assignment.html', 
-        #                      submissions=submissions,
-        #                      students=students, 
-        #                      assignment_desc=assignment_desc,
-        #                      generic_questions=generic_questions)
-        
         return render_template('assignment.html', 
                              submissions=submissions,
                              students=students,
@@ -669,7 +670,7 @@ def deleteAssignment(assignmentid):
     return requests.delete(f'{backend}assignments', json = json, headers=getHeaders())
 
 def updateAssignment(json):
-    return requests.put(f'{backend}assignments', json = json)
+    return requests.put(f'{backend}assignments', json = json, headers=getHeaders())
 
 # def getAssignmentDesc(assignment_id):
 #     params = {
