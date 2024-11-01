@@ -11,6 +11,17 @@
 </head>
 <body>
     <div class="login-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <div class="login-box">
             <img src="{{ url_for('static', filename='icons/MqLogo.png') }}" alt="MQ Logo" class="logo">
             <h1 style="color: #A6192E;">VivaMQ Login</h1>

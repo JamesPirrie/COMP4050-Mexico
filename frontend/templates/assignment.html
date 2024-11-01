@@ -4,7 +4,7 @@
 
 <div class="welcome-box">
     <h2>{{ request.args.get('name', '') }}</h2>
-    <p>{{assignment_desc}}</p>
+    <p><strong>Description: </strong>{{assignment_desc}}</p>
 </div>
 
 <!-- <div class="content-box">
@@ -34,18 +34,9 @@
 
 <div class="columns-container">
     <div class="column">
-        <h3>Details</h3>
-        <p> Here we can display assignment desc, ULOs & rubric, or just rubric alone.</p>
-        <div class="add-button">
-            <a href="{{ url_for('new_rubric', assignment_id=assignment_id) }}" id="add-submission-button">
-                Add Rubric
-            </a>
-        </div>
-        <div class="add-button">
-            <a href="{{ url_for('rubric', assignment_id=assignment_id) }}" id="add-submission-button">
-                View Rubric
-            </a>
-        </div>
+        <h3>Generic Questions</h3>
+        <p>Write your own questions below</p>
+        <textarea name="questions" rows="15" cols="30" placeholder="Write your own questions here" value="{{generic_questions}}" style="resize:none; width:100%"></textarea>
     </div>
 
     <div class="column">
@@ -76,8 +67,16 @@
 </div>
 
 <div class="content-box">
-    <h3>Generic Questions</h3>
-    <p>Write your own questions below</p>
-        <textarea name="questions" rows="15" cols="30" placeholder="Write your own questions here" value="{{generic_questions}}" style="resize:none; width:100%"></textarea>
+    <h3>Rubric</h3>
+        <div class="add-button">
+            <a href="{{ url_for('new_rubric', assignment_id=assignment_id) }}" id="add-submission-button">
+                Add Rubric
+            </a>
+        </div>
+        <div class="add-button">
+            <a href="{{ url_for('rubric', assignment_id=assignment_id) }}" id="add-submission-button">
+                View Rubric
+            </a>
+        </div>
 </div>
 {% endblock %}

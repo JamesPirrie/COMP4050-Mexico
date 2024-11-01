@@ -185,6 +185,10 @@ def new_class():
             'code': code
         }
         postClass(json)
+        if len(code) <= 8 or (code[:4].isalpha() and code[4:].isdigit()):
+            flash("Class created successfully!", "success")
+        else:
+            flash("Class code cannot be more than 8 characters.", "error")
         return redirect(url_for('classes'))
     return render_template('newclass.html')
 
@@ -193,6 +197,8 @@ def delete_class():
     classId = getClassId(request.args.get('class_id', ''))
     print('deleting ' + str(classId))
     deleteClass(classId)
+
+    flash("Class deleted successfully!", "info")
     return redirect(url_for('classes'))
 
 @app.route('/unit')
@@ -281,6 +287,9 @@ def newAssignment():
         desc = request.form['desc']
         json = {'user_id': user.userID, 'class_id': class_id, 'name': name, 'description': desc}
         postAssignment(json)
+
+        flash("Assignment created successfully!", "success")
+
         return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
     return render_template('newAssignment.html')
 
@@ -289,6 +298,7 @@ def delete_assignment():
     assignment_id = getAssignmentId(request.args.get('name', ''), request.args.get('class_code', ''))
     print('deleting ' + str(assignment_id))
     deleteAssignment(assignment_id)
+    flash("Assignment deleted successfully!", "info")
     return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
 
 #-----------------------------------
@@ -316,12 +326,13 @@ def new_student():
             'last_name': lname,
             'email': f"{fname}.{lname}@students.mq.edu.au"  # Generate a default email or get from form
         }
-        
         if postStudent(json):
             print("Student created and added to class successfully")
+            flash("Student created successfully!", "success")
             return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
         else:
             print("Failed to create student or add to class")
+            flash("Student ID must be 8 integers.", "error")
             return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
             
     return render_template('newStudent.html')
@@ -329,6 +340,8 @@ def new_student():
 @app.route('/delete_student', methods = ['GET'])
 def delete_student():
     deleteStudent(request.args.get('student_id', ''))
+    flash("Student deletec successfully!", "info")
+
     return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
 
 #-----------------------------------
@@ -405,11 +418,14 @@ def new_project():
 @app.route('/delete_submission', methods = ['GET'])
 def delete_submission():
     deleteSubmission(request.args.get('submission_id', ''))
+    flash("Submission deleted successfully!", "info")
+
     return redirect(url_for('unit', class_id=request.args.get('class_id', '')))
 
 @app.route('/logout')
 def logout():
     user.userAuthenticated = False
+    flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
 @app.route('/submission')

@@ -15,7 +15,7 @@
         
         <div class="column">
             <h3>Use our AI Tool</h3>
-            <p>Upload a document and generate some questions below.</p>
+            <p>Upload a document and generate some questions below. Max file size is 1.25MB. </p>
             <input type="file" name="pdf_file" accept=".pdf" required>
             <label for="student">Assign a Student:</label>
             <select name="student" id="student" required>
@@ -24,7 +24,7 @@
                     <option value="{{ student.student_id }}">{{ student.first_name }} {{ student.last_name }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="small-button">Generate/Regenerate</button>
+            <button type="submit" class="small-button"><h3><strong>Upload</strong></h3></button>
         </div>
     </div>
     </form>
@@ -35,4 +35,5 @@
         document.body.classList.add('dark-mode');
     }
 </script>
+
 {% endblock %}
