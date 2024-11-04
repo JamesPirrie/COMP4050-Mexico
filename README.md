@@ -4,6 +4,7 @@ Team Mexico COMP4050
 # File Structure
 
 # Quickstart (for marking purposes)
+The Webserver is live at [121.209.43.160:8080](http://121.209.43.160:8080)
 If the webserver is down:
 1. ensure that you have [python3](https://www.python.org/downloads/) installed
 2. run `sudo ./run_remote.sh` (this will spin up a local webserver that connects to the remote backend server. This allows AI functionality to remain)
