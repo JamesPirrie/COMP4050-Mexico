@@ -65,7 +65,7 @@ export function generateTokenForLogin(Email: string, UserID: number) : string {
 
 //Function to hash a password using bcrypt
 //param password - The plain text password to hash
-//returns A promise that resolves to the hashed password*/
+//returns A promise that resolves to the hashed password
 export async function hashPassword(password: string): Promise<string> {
     try {
         const salt = await bcrypt.genSalt(SALT_ROUNDS);
@@ -79,7 +79,7 @@ export async function hashPassword(password: string): Promise<string> {
 //Function to compare a plain text password with a hashed password
 //param password - The plain text password
 //param hash - The hashed password
-//returns A promise that resolves to true if passwords match, false otherwise*/
+//returns A promise that resolves to true if passwords match, false otherwise
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
     try {
         const isMatch = await bcrypt.compare(password, hash);
