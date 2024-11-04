@@ -61,10 +61,10 @@ This function generates a new JWT when a user logs in successfully.
 This function hashes a plain text password using bcrypt, a secure hashing algorithm that incorporates salting and multiple rounds of hashing.
 
 - **Salt Generation**:
-  - Randomly generated based on `SALT_ROUNDS`. This encryption process uses the salt multiple times based on the specified `SALT_ROUNDS` value.
+  - Randomly generated based on `SALT_ROUNDS`.
 
 - **Password Hashing**:
-  - Hashes the password with the salt.
+  - Hashes the password with the salt, this is repeated as many times as the `SALT_ROUNDS` value with a newly generated salt.
   - Returns the hashed password.
 
 #### Compare Password (`comparePassword` function)
