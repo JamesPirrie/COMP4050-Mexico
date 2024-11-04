@@ -3,6 +3,17 @@ Team Mexico COMP4050
 
 # File Structure
 
+# Quickstart (for marking purposes)
+If the webserver is down:
+1. ensure that you have [python3](https://www.python.org/downloads/) installed
+2. run `sudo ./run_remote.sh` (this will spin up a local webserver that connects to the remote backend server. This allows AI functionality to remain)
+3. connect to the local webserver on [127.0.0.1:5000](127.0.0.1:5000)
+
+# Quickstart (for development)
+In order to run VivaMQ locally:
+1. ensure that you have [python3](https://www.python.org/downloads/) and [node](https://github.com/nvm-sh/nvm) installed
+2. For Mac and Linux, run `./run.sh` (you may need to give execute permissions, use `sudo ./run.sh`)
+3. If the script fails, or you are on another operating system (Windows), follow manual build instructions below
 
 # Running the Webserver
 In order to run the webserver

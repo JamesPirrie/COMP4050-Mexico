@@ -5,6 +5,7 @@ import requests
 import json
 import uuid
 import time
+import sys
 import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -861,5 +862,14 @@ def postRubric(assignment_id, project_overview, criteria, topics, goals):
 def getSummary(userid, submissionid):
     return json.loads(requests.get(f'{backend}summarygen?user_id={userid}&submission_id={submissionid}').content)
 
+def main():
+    if len(sys.argv) > 1:
+        print(f"Using backend URL: {sys.argv[1]}")
+        global backend
+        backend = sys.argv[1]
+    else:
+        print("Using default backend URL")
+
 if __name__ == '__main__':
+    main()
     app.run(debug=True)
