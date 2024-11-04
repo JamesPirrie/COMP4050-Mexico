@@ -75,7 +75,7 @@ This file contains documentation for the database tables and columns. Please not
 | rubric_json | jsonb | Generated rubric stored as JSON. |
 | generation_date | timestamptz | |
 # Database Utility Functions
-##Login/Out Functions
+## Login/Out Functions
 `getUserIDbyEmail' | `async getUserIDbyEmail(email: string): Promise<number>`
 - Input parameters: email: string
 - Output parameters : Promise<number>
