@@ -76,8 +76,20 @@ This file contains documentation for the database tables and columns. Please not
 | generation_date | timestamptz | |
 # Database Utility Functions
 ## Login/Out Functions
-`getUserIDbyEmail' | `async getUserIDbyEmail(email: string): Promise<number>`
+`getUserIDbyEmail` | `async getUserIDbyEmail(email: string): Promise<number>`
 - Input parameters: email: string
 - Output parameters : Promise<number>
-- Description: Function takes a given Email and returns the first user_ID in the database with that email. Else it returns "null"
+- Description: Function takes a given Email and returns the first user_id in the database with that email. If there is no such user it returns `null`.
+- Function is Asynchronous 
 
+`getEmailbyUserID` | `async getEmailbyUserID(user_id: number): Promise<String>`
+- Input parameters: user_id: number
+- Output parameters : Promise<String>
+- Description: Function takes a given database user_id and returns the email field for a user in the database with that user_id. If there is nothing in the user's email field, it returns `undefined`.
+- Function is Asynchronous 
+
+`loginUserCheck` | `async loginUserCheck(email: string): Promise<Boolean>`
+- Input parameters: email: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given email and checks if any user on the database has that email in their email field. If the email is tied to a user it returns `true`, else it returns `false`.
+- Function is Asynchronous 
