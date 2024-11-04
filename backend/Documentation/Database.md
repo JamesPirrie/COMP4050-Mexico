@@ -124,7 +124,7 @@ It should be noted that all scenarios not mentioned in the utilization of the be
 ## Classes Functions
 `getClasses` | `async getClasses(user_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
 - Input parameters: user_id: number
-- Output parameters : Promise<postgres.RowList<postgres.Row[]>
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
 - Description: Function takes a given user_id then provides all database fields for all Class table records where that user_id is the author. If user_id paramater is not defined, it returns `undefined`.
 - Function is Asynchronous 
 
@@ -153,9 +153,9 @@ It should be noted that all scenarios not mentioned in the utilization of the be
 - Function is Asynchronous
   
 ## Assignments Functions
-`getClasses` | `async getAssignments(user_id: number, specificClass: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+`getAssignments` | `async getAssignments(user_id: number, specificClass: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
 - Input parameters: user_id: number, specificClass: number
-- Output parameters : Promise<postgres.RowList<postgres.Row[]>
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
 - Description: Function takes a given user_id and class_id, if the given user has the authority to edit the given class, it returns all fields for all records in the Assignments table which have the given class_id. If there are no such assignments records, it returns `undefined`.
 - Function is Asynchronous 
 
@@ -168,7 +168,7 @@ It should be noted that all scenarios not mentioned in the utilization of the be
 `deleteAssignment` | `async deleteAssignment(user_id: number, assignment_id: number): Promise<Boolean>`
 - Input parameters: user_id: number, assignment_id: number
 - Output parameters : Promise<Boolean>
-- Description: Function takes a given user_id and assignment_id, if the user for that user_id exists, and has the authority to delete the given assignment (if it exists), then it will delete the record in the Assignments table for that class_id and return `true`. Else, it returns `false`.
+- Description: Function takes a given user_id and assignment_id, if the user for that user_id exists, and has the authority to delete the given assignment (if it exists), then it will delete the record in the Assignments table for that assignment_id and return `true`. Else, it returns `false`.
 - Function is Asynchronous
   
 `editAssignment` | `async editAssignment(user_id: number, assignment_id: number, class_id: number, name: string, description: string, generic_questions: string): Promise<Boolean>`
@@ -178,3 +178,120 @@ It should be noted that all scenarios not mentioned in the utilization of the be
 - Function is Asynchronous
   
 ## Submissions Functions
+`getSubmissionFilePathForSubID` | `async getSubmissionFilePathForSubID(specificSubmission: number): Promise<string>`
+- Input parameters: specificSubmission: number
+- Output parameters : Promise<string>
+- Description: Function takes a given specificSubmission(submission_id) and returns the `submission_filepath` field for the record in the Submissions table with the given submission_id.
+- Function is Asynchronous 
+
+`getSubmissionsForAssignments` | `async getSubmissionsForAssignments(user_id: number, specificClass: number, specificAssignment: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+- Input parameters: user_id: number, specificClass: number, specificAssignment: number
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
+- Description: Function takes a given user_id and specificClass(class_id) and specificAssignment(assignment_id), if the given user has the authority to edit the given class, it returns all fields for all records in the Submissions table which have the given assignment_id. If there are no such submissions records, it returns `undefined`.
+- Function is Asynchronous 
+
+`createSubmission` | `async createSubmission(user_id: number, assignment_id: number, student_id: number, submission_filepath: string): Promise<Boolean>`
+- Input parameters: user_id: number, assignment_id: number, student_id: number, submission_filepath: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes several paramaters including a user_id and classID, if the user for the given id exists, and has the authority to edit the given class, then it inserts the paramaters into the fields of a new record in the Submissions table tied to the given assignment_id and returns `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+`deleteSubmission` | `async deleteSubmission(user_id: number, submission_id: number): Promise<Boolean>`
+- Input parameters: user_id: number, submission_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given user_id and submission_id, if the user for that user_id exists, and has the authority to delete the given submission (if it exists), then it will delete the record in the Submissions table for that submission_id, then delete the stored file at the name specified by the `submission_filepath`, and then, return `true`. Else, it returns `false`.
+- Function is Asynchronous
+  
+`editSubmission` | `async editSubmission(user_id: number, submission_id: number, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string): Promise<Boolean>`
+- Input parameters: user_id: number, submission_id: number, assignment_id: number, student_id: number, submission_date: string, submission_filepath: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes several paramaters including a user_id and submission_id, if the user for the given id exists, and has the authority to edit the given submission(if it exists), then it will update the submission record fields to the given paramaters and return `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+`getPDFFile` | `async getPDFFile(student_id: number, assignment_id: number): Promise<string | undefined>`
+- Input parameters: specificSubmission: number
+- Output parameters : Promise<string | undefined>
+- Description: Function takes a given student_id and assignment_id then returns the `submission_filepath` field for the record in the Submissions table with the given student_id and assignment_id. If no such submission record exists it returns `null`.
+- Function is Asynchronous
+
+`postAIOutputForSubmission` | `async postAIOutputForSubmission(submission_id: number, generated_questions: string): Promise<Boolean>`
+- Input parameters: submission_id: number, generated_questions: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given submission_id and the output of the AI question generation function then edits the generated_questions and generation_date fields of the submission with the given id. It then returns `true`.
+- Function is Asynchronous
+
+`getQuestions` | `async getQuestions(submission_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+- Input parameters: submission_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given submission_id then returns all fields for all records in the ai_output table with the given submission_id ordered by the generation_date field. If no such records are found, it returns `undefined`.
+- Function is Asynchronous
+
+## VivaExam Functions
+`getExams` | `async getExams(submission_id: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+- Input parameters: submission_id: number
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
+- Description: Function takes a given submission_id then returns all fields for all records in the Exams table which have the given submission_id. If there are no such exam records, it returns `undefined`.
+- Function is Asynchronous 
+
+`createExams` | `async createExams(user_id: number, submission_id: number, student_id: number): Promise<Boolean>`
+- Input parameters: user_id: number, submission_id: number, student_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a user_id, submission_id and student_id, then if the user for the given id exists, and has the authority to edit the given class, then it inserts the paramaters into the fields of a new record in the Exams table and returns `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+`deleteExam` | `async deleteExam(user_id: number, exam_id: number): Promise<Boolean>`
+- Input parameters: user_id: number, exam_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given user_id and exam_id, if the user for that user_id exists, and has the authority to delete the given exam (if it exists), then it will delete the record in the Exams table for that exam_id and return `true`. Else, it returns `false`.
+- Function is Asynchronous
+  
+`editExam` | `async editExam(user_id: number, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string): Promise<Boolean>`
+- Input parameters: user_id: number, exam_id: number, submission_id: number, student_id: number, examiner_id: number, marks: number, comments: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes several paramaters including a user_id and exam_id, if the user for the given id exists, and has the authority to edit the given exam(if it exists), then it will update the exam record fields to the given paramaters and return `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+## Students Functions
+`getStudentsByClass` | `async getStudentsByClass(user_id: number, specificClass: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+- Input parameters: user_id: number, specificClass: number
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
+- Description: Function takes a given specificClass(class_id) and user_id checks if the user has the authority to edit the given class, then returns all fields for all records in the Students table which have their student_id listed in the given class's studentIds field. If there are no such student records, it returns `undefined`.
+- Function is Asynchronous
+
+`addStudentToClass` | `async addStudentToClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean>`
+- Input parameters: user_id: number, student_id: number, specificClass: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given specificClass(class_id) and user_id checks if the user has the authority to edit the given class, then adds the given student_id to the given class's studentIds field, returning true after. Else, it returns `false`.
+- Function is Asynchronous
+
+`removeStudentFromClass` | `async removeStudentFromClass(user_id: number, student_id: number, specificClass: number): Promise<Boolean>`
+- Input parameters: user_id: number, student_id: number, specificClass: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given specificClass(class_id) and user_id checks if the user has the authority to edit the given class, then removes the given student_id to the given class's studentIds field, returning true after. Else, it returns `false`.
+- Function is Asynchronous
+
+`updateStudentClass` | `async updateStudentClass(specificClass: number): Promise<void>`
+- Input parameters: specificClass: number
+- Output parameters : Promise<void>
+- Description: Function takes a given specificClass(class_id) then seeks all student records listed in the given class's studentIds field, these student records then have their classes field updated to include or remove the class as appropriate.
+- Function is Asynchronous
+
+`getAllStudents` | `async getAllStudents()`
+- Input parameters: NONE
+- Output parameters : `any`, but takes the form of Promise<postgres.RowList<postgres.Row[]>
+- Description: Function returns all fields for all records in the Students table.
+- Function is Asynchronous
+
+`deleteStudent` | async deleteStudent(user_id: number, student_id: number): Promise<Boolean>`
+- Input parameters: user_id: number, student_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given user_id and student_id, if the user for that user_id exists, and has the authority to delete the given student (if it exists), then it will delete the record in the Students table for that student_id, then trace the database to delete every submission tied to that student and it's corresponding stored files, and finally, return `true`. Else, it returns `false`.
+- Function is Asynchronous
+  
+`editStudent` | `async editStudent(email: string, student_id: number, first_name: string, last_name: string): Promise<Boolean>`
+- Input parameters: email: string, student_id: number, first_name: string, last_name: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes several paramaters then check if a record exists for the given student_id, then it will update the students record fields to the given paramaters and return `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+## Rubric Functions
