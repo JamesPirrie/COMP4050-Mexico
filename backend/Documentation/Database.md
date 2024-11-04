@@ -295,3 +295,26 @@ It should be noted that all scenarios not mentioned in the utilization of the be
 - Function is Asynchronous
 
 ## Rubric Functions
+`getRubricsForAssignments` | `async getRubricsForAssignments(user_id: number, specificClass: number, specificAssignment: number): Promise<postgres.RowList<postgres.Row[]> | undefined>`
+- Input parameters: user_id: number, specificClass: number, specificAssignment: number
+- Output parameters : Promise<postgres.RowList<postgres.Row[]> | undefined>
+- Description: Function takes a given user_id, specificClass(class_id) and specificAssignment(assignment_id), checks if the given user has the authority to access the given class, then returns all fields for all records in the Rubric_Output table which have the given assignment_id. If there are no such rubric_output records, it returns `undefined`.
+- Function is Asynchronous 
+
+`postRubricForAssignment` | `async postRubricForAssignment(user_id: number, assignment_id: number, rubric: string): Promise<Boolean>`
+- Input parameters: user_id: number, assignment_id: number, rubric: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes a user_id, assignment_id and rubric, then if the user for the given id exists, and has the authority to edit the given assigment, then it inserts the paramaters into the fields of a new record in the Rubric_Output table and returns `true`. Else, it returns `false`.
+- Function is Asynchronous
+
+`deleteRubric` | `async deleteRubric(user_id: number, rubric_id: number, class_id: number): Promise<Boolean>`
+- Input parameters: user_id: number, rubric_id: number, class_id: number
+- Output parameters : Promise<Boolean>
+- Description: Function takes a given user_id and rubric_id(result_id), if the user for that user_id exists, and has the authority to delete the given rubric (if it exists), then it will delete the record in the Rubric_Output table for that result_id and return `true`. Else, it returns `false`.
+- Function is Asynchronous
+  
+`editRubric` | `async editRubric(user_id: number, rubric_id: number, assignment_id: number, class_id: number, rubric: string): Promise<Boolean>`
+- Input parameters: user_id: number, rubric_id: number, assignment_id: number, class_id: number, rubric: string
+- Output parameters : Promise<Boolean>
+- Description: Function takes several paramaters including a user_id and rubric_id, if the user for the given id exists, and has the authority to edit the given rubric_output(if it exists), then it will update the rubric_output record fields to the given paramaters and return `true`. Else, it returns `false`.
+- Function is Asynchronous
